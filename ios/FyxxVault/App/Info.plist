@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>FyxxVault utilise Face ID pour déverrouiller votre coffre de manière sécurisée.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>FyxxVault utilise la caméra pour scanner les QR codes TOTP afin de configurer l'authentification à deux facteurs.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<true/>
+	<key>ITSEncryptionExportComplianceCode</key>
+	<string></string>
+</dict>
+</plist>
