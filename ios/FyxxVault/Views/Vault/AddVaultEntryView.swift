@@ -42,9 +42,8 @@ struct AddVaultEntryView: View {
                                 ForEach(VaultCategory.allCases) { cat in
                                     Button {
                                         category = cat
-                                        if cat != .login && customFields.isEmpty {
-                                            customFields = cat.suggestedFieldKeys.map { VaultCustomField(key: $0, value: "") }
-                                        }
+                                        // Reset custom fields to match new category
+                                        customFields = cat.suggestedFieldKeys.map { VaultCustomField(key: $0, value: "") }
                                     } label: {
                                         HStack(spacing: 6) {
                                             Image(systemName: cat.iconName).font(.system(size: 11))
@@ -61,46 +60,17 @@ struct AddVaultEntryView: View {
                         }
                     }.fvGlass()
 
-                    FVTextField(title: "Nom du compte", text: $title)
-                    FVTextField(title: "Site web", text: $website)
-                    FVTextField(title: "Identifiant / Email", text: $username)
+                    // Category-specific fields
+                    categoryFields
 
-                    if category == .creditCard {
-                        FVTextField(title: "Numéro de carte", text: Binding(
-                            get: { customFields.first(where: { $0.key == "Numéro de carte" })?.value ?? "" },
-                            set: { val in if let idx = customFields.firstIndex(where: { $0.key == "Numéro de carte" }) { customFields[idx].value = val } }
-                        ))
-                        HStack(spacing: 12) {
-                            FVTextField(title: "Expiration", text: Binding(
-                                get: { customFields.first(where: { $0.key == "Date d'expiration" })?.value ?? "" },
-                                set: { val in if let idx = customFields.firstIndex(where: { $0.key == "Date d'expiration" }) { customFields[idx].value = val } }
-                            ))
-                            FVTextField(title: "CVV", text: Binding(
-                                get: { customFields.first(where: { $0.key == "CVV" })?.value ?? "" },
-                                set: { val in if let idx = customFields.firstIndex(where: { $0.key == "CVV" }) { customFields[idx].value = val } }
-                            ), secure: true)
-                        }
-                    }
-
-                    if category != .secureNote {
-                        FVTextField(title: "Mot de passe", text: $password)
-                        PasswordStrengthView(password: password)
-                        PasswordGeneratorView(policy: $policy) { password = PasswordToolkit.generate(policy: policy) }
-                    }
+                    // Notes (always shown)
                     FVTextField(title: "Notes", text: $notes)
-
-                    // Expiration policy
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Expiration du mot de passe").font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(.white)
-                        Picker("Expiration", selection: $expirationPolicy) {
-                            ForEach(PasswordExpirationPolicy.allCases) { p in Text(p.label).tag(p) }
-                        }.pickerStyle(.menu).foregroundStyle(FVColor.cyan)
-                    }.fvGlass()
 
                     Toggle("Marquer en favori", isOn: $isFavorite).toggleStyle(.switch).fvGlass()
 
-                    // Warnings
-                    if isReusedPassword && !password.isEmpty {
+                    // Warnings (only for categories with passwords)
+                    if category == .login || category == .wifiPassword || category == .softwareLicense,
+                       isReusedPassword && !password.isEmpty {
                         Text("Attention: ce mot de passe est déjà utilisé sur un autre compte.")
                             .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(.orange)
                             .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
@@ -121,15 +91,17 @@ struct AddVaultEntryView: View {
                             .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
                     }
 
-                    // MFA
-                    VStack(alignment: .leading, spacing: 10) {
-                        Toggle("Activer MFA TOTP", isOn: $mfaEnabled).toggleStyle(.switch)
-                        if mfaEnabled {
-                            FVTextField(title: "Clé secrète ou URL otpauth://", text: $mfaSecret, secure: true)
-                            Button("Scanner un QR code") { showScanner = true }
-                                .font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.cyan)
-                        }
-                    }.fvGlass()
+                    // MFA (only for login accounts)
+                    if category == .login {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Toggle("Activer MFA TOTP", isOn: $mfaEnabled).toggleStyle(.switch)
+                            if mfaEnabled {
+                                FVTextField(title: "Clé secrète ou URL otpauth://", text: $mfaSecret, secure: true)
+                                Button("Scanner un QR code") { showScanner = true }
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.cyan)
+                            }
+                        }.fvGlass()
+                    }
 
                     // Custom fields
                     VStack(alignment: .leading, spacing: 10) {
@@ -184,6 +156,94 @@ struct AddVaultEntryView: View {
             let result = await PasswordBreachService.compromisedCount(password: password)
             pwnedCount = result
             pwnedLookupFailed = (result == nil)
+        }
+    }
+
+    // MARK: - Category-Specific Fields
+
+    private func fieldBinding(_ key: String) -> Binding<String> {
+        Binding(
+            get: { customFields.first(where: { $0.key == key })?.value ?? "" },
+            set: { val in
+                if let idx = customFields.firstIndex(where: { $0.key == key }) {
+                    customFields[idx].value = val
+                }
+            }
+        )
+    }
+
+    @ViewBuilder
+    private var categoryFields: some View {
+        switch category {
+        case .login:
+            FVTextField(title: "Nom du compte", text: $title)
+            FVTextField(title: "Site web", text: $website)
+            FVTextField(title: "Identifiant / Email", text: $username)
+            FVTextField(title: "Mot de passe", text: $password)
+            PasswordStrengthView(password: password)
+            PasswordGeneratorView(policy: $policy) { password = PasswordToolkit.generate(policy: policy) }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Expiration du mot de passe").font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+                Picker("Expiration", selection: $expirationPolicy) {
+                    ForEach(PasswordExpirationPolicy.allCases) { p in Text(p.label).tag(p) }
+                }.pickerStyle(.menu).foregroundStyle(FVColor.cyan)
+            }.fvGlass()
+
+        case .creditCard:
+            FVTextField(title: "Nom de la carte", text: $title)
+            FVTextField(title: "Titulaire", text: $username)
+            FVTextField(title: "Numéro de carte", text: fieldBinding("Numéro de carte"))
+                .keyboardType(.numberPad)
+            HStack(spacing: 12) {
+                FVTextField(title: "MM/AA", text: fieldBinding("Date d'expiration"))
+                    .keyboardType(.numberPad)
+                FVTextField(title: "CVV", text: fieldBinding("CVV"), secure: true)
+                    .keyboardType(.numberPad)
+            }
+
+        case .identity:
+            FVTextField(title: "Nom complet", text: $title)
+            FVTextField(title: "Prénom", text: fieldBinding("Prénom"))
+            FVTextField(title: "Nom", text: fieldBinding("Nom"))
+            FVTextField(title: "Date de naissance", text: fieldBinding("Date de naissance"))
+            FVTextField(title: "Adresse", text: fieldBinding("Adresse"))
+            FVTextField(title: "Téléphone", text: fieldBinding("Téléphone"))
+                .keyboardType(.phonePad)
+            FVTextField(title: "Email", text: $username)
+                .keyboardType(.emailAddress)
+
+        case .secureNote:
+            FVTextField(title: "Titre de la note", text: $title)
+
+        case .wifiPassword:
+            FVTextField(title: "Nom du réseau", text: $title)
+            FVTextField(title: "SSID", text: fieldBinding("SSID"))
+            FVTextField(title: "Mot de passe Wi-Fi", text: $password, secure: true)
+            PasswordStrengthView(password: password)
+            FVTextField(title: "Type de sécurité (WPA2, WPA3...)", text: fieldBinding("Type de sécurité"))
+
+        case .softwareLicense:
+            FVTextField(title: "Nom du logiciel", text: $title)
+            FVTextField(title: "Site web", text: $website)
+            FVTextField(title: "Clé de licence", text: $password)
+            FVTextField(title: "Email du compte", text: $username)
+            FVTextField(title: "Version", text: fieldBinding("Version"))
+            FVTextField(title: "Date d'achat", text: fieldBinding("Date d'achat"))
+
+        case .passport:
+            FVTextField(title: "Nom complet", text: $title)
+            FVTextField(title: "Numéro de passeport", text: fieldBinding("Numéro"))
+            FVTextField(title: "Pays émetteur", text: fieldBinding("Pays"))
+            FVTextField(title: "Date d'expiration", text: fieldBinding("Date d'expiration"))
+            FVTextField(title: "Date de naissance", text: fieldBinding("Date de naissance"))
+
+        case .bankAccount:
+            FVTextField(title: "Nom du compte", text: $title)
+            FVTextField(title: "Banque", text: fieldBinding("Banque"))
+            FVTextField(title: "IBAN", text: fieldBinding("IBAN"))
+            FVTextField(title: "BIC / SWIFT", text: fieldBinding("BIC"))
+            FVTextField(title: "Numéro de compte", text: fieldBinding("Numéro de compte"))
+            FVTextField(title: "Titulaire", text: $username)
         }
     }
 }
