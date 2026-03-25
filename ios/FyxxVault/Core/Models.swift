@@ -23,6 +23,15 @@ enum PasswordStrength: String {
     case fort = "Fort"
     case excellent = "Excellent"
 
+    var label: String {
+        switch self {
+        case .faible: return String(localized: "strength.weak")
+        case .moyen: return String(localized: "strength.medium")
+        case .fort: return String(localized: "strength.strong")
+        case .excellent: return String(localized: "strength.excellent")
+        }
+    }
+
     var color: SwiftUI.Color {
         switch self {
         case .faible: return .red
@@ -67,12 +76,12 @@ enum PasswordExpirationPolicy: Int, CaseIterable, Identifiable, Codable {
     var id: Int { rawValue }
     var label: String {
         switch self {
-        case .none: return "Jamais"
-        case .days30: return "30 jours"
-        case .days60: return "60 jours"
-        case .days90: return "90 jours"
-        case .days180: return "6 mois"
-        case .days365: return "1 an"
+        case .none: return String(localized: "expiration.never")
+        case .days30: return String(localized: "expiration.30days")
+        case .days60: return String(localized: "expiration.60days")
+        case .days90: return String(localized: "expiration.90days")
+        case .days180: return String(localized: "expiration.6months")
+        case .days365: return String(localized: "expiration.1year")
         }
     }
 }
@@ -91,14 +100,14 @@ enum VaultCategory: String, Codable, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .login: "Identifiant"
-        case .creditCard: "Carte bancaire"
-        case .identity: "Identité"
-        case .secureNote: "Note sécurisée"
-        case .wifiPassword: "Wi-Fi"
-        case .softwareLicense: "Licence logicielle"
-        case .passport: "Passeport"
-        case .bankAccount: "Compte bancaire"
+        case .login: String(localized: "category.login")
+        case .creditCard: String(localized: "category.creditCard")
+        case .identity: String(localized: "category.identity")
+        case .secureNote: String(localized: "category.secureNote")
+        case .wifiPassword: String(localized: "category.wifiPassword")
+        case .softwareLicense: String(localized: "category.softwareLicense")
+        case .passport: String(localized: "category.passport")
+        case .bankAccount: String(localized: "category.bankAccount")
         }
     }
 
@@ -131,13 +140,13 @@ enum VaultCategory: String, Codable, CaseIterable, Identifiable {
     var suggestedFieldKeys: [String] {
         switch self {
         case .login: []
-        case .creditCard: ["Numéro de carte", "Date d'expiration", "CVV", "Titulaire"]
-        case .identity: ["Prénom", "Nom", "Date de naissance", "Adresse", "Téléphone"]
+        case .creditCard: [String(localized: "field.cardNumber"), String(localized: "field.expirationDate"), "CVV", String(localized: "field.cardHolder")]
+        case .identity: [String(localized: "field.firstName"), String(localized: "field.lastName"), String(localized: "field.birthDate"), String(localized: "field.address"), String(localized: "field.phone")]
         case .secureNote: []
-        case .wifiPassword: ["SSID", "Type de sécurité"]
-        case .softwareLicense: ["Clé de licence", "Version", "Date d'achat"]
-        case .passport: ["Numéro", "Pays", "Date d'expiration", "Date de naissance"]
-        case .bankAccount: ["IBAN", "BIC", "Numéro de compte", "Banque"]
+        case .wifiPassword: ["SSID", String(localized: "field.securityType")]
+        case .softwareLicense: [String(localized: "field.licenseKey"), String(localized: "field.version"), String(localized: "field.purchaseDate")]
+        case .passport: [String(localized: "field.number"), String(localized: "field.country"), String(localized: "field.expirationDate"), String(localized: "field.birthDate")]
+        case .bankAccount: ["IBAN", "BIC", String(localized: "field.accountNumber"), String(localized: "field.bank")]
         }
     }
 }

@@ -14,9 +14,9 @@ struct VaultReorderView: View {
                 }
                 .onMove(perform: vaultStore.reorderEntries)
             }
-            .navigationTitle("Réorganiser")
+            .navigationTitle(String(localized: "reorder.title"))
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(String(localized: "common.close")) { dismiss() } }
                 ToolbarItem(placement: .primaryAction) { EditButton() }
             }
         }

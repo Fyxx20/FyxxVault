@@ -48,31 +48,31 @@ struct EditVaultEntryView: View {
                     }
                     .fvGlass()
 
-                    FVTextField(title: "Nom du compte", text: $title)
-                    FVTextField(title: "Site web", text: $website)
-                    FVTextField(title: "Identifiant / Email", text: $username)
-                    FVTextField(title: "Mot de passe", text: $password)
+                    FVTextField(title: String(localized: "vault.field.account.name"), text: $title)
+                    FVTextField(title: String(localized: "vault.field.website"), text: $website)
+                    FVTextField(title: String(localized: "vault.field.username"), text: $username)
+                    FVTextField(title: String(localized: "vault.field.password"), text: $password)
                     PasswordStrengthView(password: password)
-                    FVTextField(title: "Notes", text: $notes)
+                    FVTextField(title: String(localized: "vault.field.notes"), text: $notes)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Expiration du mot de passe").font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(.white)
-                        Picker("Expiration", selection: $expirationPolicy) {
+                        Text(String(localized: "vault.field.password.expiration")).font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+                        Picker(String(localized: "vault.field.expiration"), selection: $expirationPolicy) {
                             ForEach(PasswordExpirationPolicy.allCases) { p in Text(p.label).tag(p) }
                         }.pickerStyle(.menu).foregroundStyle(FVColor.cyan)
                     }.fvGlass()
 
-                    Toggle("Favori", isOn: $isFavorite).toggleStyle(.switch).fvGlass()
+                    Toggle(String(localized: "vault.edit.favorite"), isOn: $isFavorite).toggleStyle(.switch).fvGlass()
                     VStack(alignment: .leading, spacing: 10) {
-                        Toggle("Activer MFA", isOn: $mfaEnabled).toggleStyle(.switch)
-                        if mfaEnabled { FVTextField(title: "Secret MFA", text: $mfaSecret, secure: true) }
+                        Toggle(String(localized: "vault.edit.enable.mfa"), isOn: $mfaEnabled).toggleStyle(.switch)
+                        if mfaEnabled { FVTextField(title: String(localized: "vault.field.mfa.secret.short"), text: $mfaSecret, secure: true) }
                     }.fvGlass()
 
                     if isDuplicateEntry {
-                        Text("Doublon détecté.").foregroundStyle(.orange).frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+                        Text(String(localized: "vault.warning.duplicate.short")).foregroundStyle(.orange).frame(maxWidth: .infinity, alignment: .leading).fvGlass()
                     }
 
-                    FVButton(title: "Enregistrer") {
+                    FVButton(title: String(localized: "vault.action.save.changes")) {
                         guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !password.isEmpty, !isDuplicateEntry else { return }
                         let updated = VaultEntry(
                             id: entry.id,
@@ -99,9 +99,9 @@ struct EditVaultEntryView: View {
                 }
                 .padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 26)
             }
-            .navigationTitle("Modifier")
+            .navigationTitle(String(localized: "vault.edit.nav.title"))
             .fvInlineNavTitle()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() }.foregroundStyle(FVColor.cyan) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(String(localized: "vault.action.close")) { dismiss() }.foregroundStyle(FVColor.cyan) } }
             .background(FVAnimatedBackground())
             .onAppear {
                 title = entry.title; username = entry.username; password = entry.password

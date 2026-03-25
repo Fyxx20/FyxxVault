@@ -45,18 +45,18 @@ struct VaultEntryCard: View {
                         Text(entry.title).font(FVFont.title(compact ? 16 : 18)).foregroundStyle(.white)
                         if entry.isFavorite { Image(systemName: "star.fill").font(.system(size: 12)).foregroundStyle(.yellow.opacity(0.9)) }
                         if entry.isExpired {
-                            Label("Expiré", systemImage: "clock.badge.exclamationmark.fill")
+                            Label(String(localized: "vault.card.expired"), systemImage: "clock.badge.exclamationmark.fill")
                                 .font(.system(size: 10, weight: .bold)).foregroundStyle(FVColor.danger)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
                                 .background(.red.opacity(0.15)).clipShape(Capsule())
                         } else if entry.isExpiringSoon {
-                            Label("Expire bientôt", systemImage: "clock.fill")
+                            Label(String(localized: "vault.card.expiring.soon"), systemImage: "clock.fill")
                                 .font(.system(size: 10, weight: .bold)).foregroundStyle(.orange)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
                                 .background(.orange.opacity(0.15)).clipShape(Capsule())
                         }
                         if let breachCount, breachCount > 0 {
-                            Label("Compromis (\(breachCount) fuite(s))", systemImage: "exclamationmark.triangle.fill")
+                            Label(String(localized: "vault.card.breached \(breachCount)"), systemImage: "exclamationmark.triangle.fill")
                                 .font(.system(size: 10, weight: .bold)).foregroundStyle(FVColor.danger)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
                                 .background(FVColor.danger.opacity(0.15)).clipShape(Capsule())
@@ -110,7 +110,7 @@ struct VaultEntryCard: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: didCopyPassword ? "checkmark.circle.fill" : "doc.on.doc")
-                        Text(didCopyPassword ? "Copié" : "Copier")
+                        Text(didCopyPassword ? String(localized: "vault.card.copied") : String(localized: "vault.card.copy"))
                     }
                     .font(FVFont.caption(11))
                     .foregroundStyle(didCopyPassword ? FVColor.cyan : FVColor.silver)
@@ -119,7 +119,7 @@ struct VaultEntryCard: View {
                     .clipShape(Capsule())
                     .overlay(Capsule().strokeBorder(Color.white.opacity(0.1), lineWidth: 1))
                 }
-                Button(revealPassword ? "Masquer" : "Afficher") { revealPassword.toggle() }
+                Button(revealPassword ? String(localized: "vault.card.hide") : String(localized: "vault.card.reveal")) { revealPassword.toggle() }
                     .font(FVFont.caption(11))
                     .foregroundStyle(FVColor.silver)
                     .padding(.horizontal, 10).padding(.vertical, 6)
@@ -129,7 +129,7 @@ struct VaultEntryCard: View {
             }
 
             if entry.expirationPolicy != .none, let days = entry.daysUntilExpiration {
-                Text(days < 0 ? "Mot de passe expiré depuis \(abs(days)) jour(s)" : "Expire dans \(days) jour(s) (\(entry.expirationPolicy.label))")
+                Text(days < 0 ? String(localized: "vault.card.password.expired.since \(abs(days))") : String(localized: "vault.card.password.expires.in \(days) \(entry.expirationPolicy.label)"))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(days < 0 ? .red : (days < 14 ? .orange : .white.opacity(0.55)))
             }
@@ -137,7 +137,7 @@ struct VaultEntryCard: View {
             if !entry.notes.isEmpty { Text(entry.notes).font(FVFont.body(13)).foregroundStyle(.white.opacity(0.67)) }
 
             if entry.mfaEnabled && entry.mfaType == .totp {
-                Button(showMFACode ? "Masquer le code 2FA" : "Afficher le code 2FA") { showMFACode.toggle(); fvHaptic(.light) }
+                Button(showMFACode ? String(localized: "vault.card.mfa.hide") : String(localized: "vault.card.mfa.show")) { showMFACode.toggle(); fvHaptic(.light) }
                     .font(FVFont.body(12)).foregroundStyle(FVColor.cyan)
                 if showMFACode { TOTPCodePanel(secretInput: entry.mfaSecret, accentMode: accentMode, onCopy: onCopyMFA) }
             }

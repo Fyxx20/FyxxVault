@@ -12,7 +12,7 @@ struct VaultLockView: View {
     var body: some View {
         VStack(spacing: 18) {
             Spacer(minLength: 0)
-            FVBrandHeader(subtitle: "Coffre verrouillé")
+            FVBrandHeader(subtitle: String(localized: "lock.header.subtitle"))
             VStack(spacing: 12) {
                 Image(systemName: "lock.shield.fill")
                     .font(.system(size: 42))
@@ -24,52 +24,52 @@ struct VaultLockView: View {
                         .font(.system(size: 13, weight: .medium, design: .rounded))
                 }
 
-                FVButton(title: "Déverrouiller avec Face ID / Touch ID") {
+                FVButton(title: String(localized: "lock.button.biometric")) {
                     Task { _ = await appLock.unlockWithBiometrics() }
                 }
 
-                FVTextField(title: "Mot de passe maître", text: $masterPassword, secure: true)
+                FVTextField(title: String(localized: "lock.field.master_password"), text: $masterPassword, secure: true)
                 if !masterUnlockError.isEmpty {
                     Text(masterUnlockError)
                         .foregroundStyle(FVColor.danger.opacity(0.9))
                         .font(.system(size: 13, weight: .medium, design: .rounded))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                FVButton(title: "Déverrouiller avec mot de passe") {
+                FVButton(title: String(localized: "lock.button.password")) {
                     if authManager.verifyMasterPasswordForVaultUnlock(masterPassword) {
                         appLock.forceUnlock()
                         masterPassword = ""
                         masterUnlockError = ""
                     } else {
-                        masterUnlockError = "Mot de passe maître incorrect."
+                        masterUnlockError = String(localized: "lock.error.wrong_password")
                     }
                 }
 
                 if showRecoveryKeyEntry {
-                    FVTextField(title: "Clé de récupération (XXXX-XXXX-...)", text: $recoveryKeyInput)
+                    FVTextField(title: String(localized: "lock.field.recovery_key"), text: $recoveryKeyInput)
                     if !recoveryKeyError.isEmpty {
                         Text(recoveryKeyError).foregroundStyle(FVColor.danger.opacity(0.9))
                             .font(.system(size: 13, weight: .medium, design: .rounded))
                     }
-                    FVButton(title: "Déverrouiller avec clé de récupération") {
+                    FVButton(title: String(localized: "lock.button.recovery")) {
                         if authManager.unlockWithRecoveryKey(recoveryKeyInput) {
                             appLock.forceUnlock()
                             recoveryKeyInput = ""
                             recoveryKeyError = ""
                         } else {
-                            recoveryKeyError = "Clé de récupération invalide."
+                            recoveryKeyError = String(localized: "lock.error.invalid_recovery")
                         }
                     }
                 }
 
-                Button(showRecoveryKeyEntry ? "Annuler la récupération" : "Utiliser la clé de récupération") {
+                Button(showRecoveryKeyEntry ? String(localized: "lock.button.cancel_recovery") : String(localized: "lock.button.use_recovery")) {
                     showRecoveryKeyEntry.toggle()
                     recoveryKeyError = ""
                 }
                 .foregroundStyle(FVColor.violet.opacity(0.9))
                 .font(.system(size: 13, weight: .medium, design: .rounded))
 
-                Button("Retour à la connexion") { authManager.logout(); appLock.forceUnlock() }
+                Button(String(localized: "lock.button.back_to_login")) { authManager.logout(); appLock.forceUnlock() }
                     .foregroundStyle(FVColor.silver.opacity(0.84))
                     .font(.system(size: 14, weight: .medium, design: .rounded))
             }

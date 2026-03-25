@@ -62,7 +62,7 @@ struct VaultSettingsView: View {
                 .padding(.bottom, 24)
             }
             .scrollIndicators(.hidden)
-            .navigationTitle("Paramètres")
+            .navigationTitle(String(localized: "settings.nav.title"))
             .fvInlineNavTitle()
             .sheet(isPresented: $showTrash) { VaultTrashView(vaultStore: vaultStore) }
             .sheet(isPresented: $showActivityLog) { ActivityLogView(vaultStore: vaultStore) }
@@ -82,61 +82,61 @@ struct VaultSettingsView: View {
                 .presentationDetents([.height(285)])
                 .presentationDragIndicator(.visible)
             }
-            .confirmationDialog("Vider la corbeille ?", isPresented: $showEmptyTrashConfirm, titleVisibility: .visible) {
-                Button("Vider", role: .destructive) { vaultStore.emptyTrash() }
-                Button("Annuler", role: .cancel) {}
-            } message: { Text("Tous les éléments supprimés seront effacés définitivement.") }
-            .confirmationDialog("Purger le journal d'activité ?", isPresented: $showClearLogConfirm, titleVisibility: .visible) {
-                Button("Purger", role: .destructive) { vaultStore.clearActivityLog() }
-                Button("Annuler", role: .cancel) {}
-            } message: { Text("Cette action est irréversible.") }
-            .confirmationDialog("Forcer une rotation de clé ?", isPresented: $showRotateKeyConfirm, titleVisibility: .visible) {
-                Button("Lancer", role: .destructive) { vaultStore.rotateVaultKeyNow(); alertMessage = "Clé du coffre renouvelée."; showAlert = true }
-                Button("Annuler", role: .cancel) {}
-            } message: { Text("Une nouvelle clé AES-256 sera générée pour le coffre local.") }
-            .confirmationDialog("Réinitialiser les préférences ?", isPresented: $showResetPrefsConfirm, titleVisibility: .visible) {
-                Button("Réinitialiser", role: .destructive) { resetPreferencesToDefault() }
-                Button("Annuler", role: .cancel) {}
-            } message: { Text("Seules les préférences d'interface et confidentialité seront réinitialisées.") }
-            .confirmationDialog("Attention — Export en clair", isPresented: $showCSVExportWarning, titleVisibility: .visible) {
-                Button("Exporter quand même", role: .destructive) { performCSVExport() }
-                Button("Annuler", role: .cancel) {}
+            .confirmationDialog(String(localized: "settings.dialog.empty_trash.title"), isPresented: $showEmptyTrashConfirm, titleVisibility: .visible) {
+                Button(String(localized: "settings.dialog.empty_trash.confirm"), role: .destructive) { vaultStore.emptyTrash() }
+                Button(String(localized: "settings.dialog.cancel"), role: .cancel) {}
+            } message: { Text(String(localized: "settings.dialog.empty_trash.message")) }
+            .confirmationDialog(String(localized: "settings.dialog.clear_log.title"), isPresented: $showClearLogConfirm, titleVisibility: .visible) {
+                Button(String(localized: "settings.dialog.clear_log.confirm"), role: .destructive) { vaultStore.clearActivityLog() }
+                Button(String(localized: "settings.dialog.cancel"), role: .cancel) {}
+            } message: { Text(String(localized: "settings.dialog.clear_log.message")) }
+            .confirmationDialog(String(localized: "settings.dialog.rotate_key.title"), isPresented: $showRotateKeyConfirm, titleVisibility: .visible) {
+                Button(String(localized: "settings.dialog.rotate_key.confirm"), role: .destructive) { vaultStore.rotateVaultKeyNow(); alertMessage = String(localized: "settings.alert.key_rotated"); showAlert = true }
+                Button(String(localized: "settings.dialog.cancel"), role: .cancel) {}
+            } message: { Text(String(localized: "settings.dialog.rotate_key.message")) }
+            .confirmationDialog(String(localized: "settings.dialog.reset_prefs.title"), isPresented: $showResetPrefsConfirm, titleVisibility: .visible) {
+                Button(String(localized: "settings.dialog.reset_prefs.confirm"), role: .destructive) { resetPreferencesToDefault() }
+                Button(String(localized: "settings.dialog.cancel"), role: .cancel) {}
+            } message: { Text(String(localized: "settings.dialog.reset_prefs.message")) }
+            .confirmationDialog(String(localized: "settings.dialog.csv_export.title"), isPresented: $showCSVExportWarning, titleVisibility: .visible) {
+                Button(String(localized: "settings.dialog.csv_export.confirm"), role: .destructive) { performCSVExport() }
+                Button(String(localized: "settings.dialog.cancel"), role: .cancel) {}
             } message: {
-                Text("L'export CSV contient tous tes mots de passe en texte clair. Ne l'envoie pas par email ou messagerie non chiffrée. Supprime-le après usage.")
+                Text(String(localized: "settings.dialog.csv_export.message"))
             }
-            .alert("Info", isPresented: $showAlert) { Button("OK", role: .cancel) {} } message: { Text(alertMessage) }
-            .alert("Phrase secrète backup", isPresented: $showExportPrompt) {
-                SecureField("Au moins 10 caractères", text: $backupPassphrase)
-                Button("Exporter") {
+            .alert(String(localized: "settings.alert.info"), isPresented: $showAlert) { Button("OK", role: .cancel) {} } message: { Text(alertMessage) }
+            .alert(String(localized: "settings.alert.backup_passphrase.title"), isPresented: $showExportPrompt) {
+                SecureField(String(localized: "settings.alert.backup_passphrase.placeholder"), text: $backupPassphrase)
+                Button(String(localized: "settings.alert.backup_passphrase.export")) {
                     do {
                         let data = try vaultStore.exportBackup(passphrase: backupPassphrase)
                         exportDocument = BackupFileDocument(data: data)
                         showFileExporter = true
-                    } catch { alertMessage = "Échec export. Vérifie la phrase secrète."; showAlert = true }
+                    } catch { alertMessage = String(localized: "settings.alert.export_failed"); showAlert = true }
                     backupPassphrase = ""
                 }
-                Button("Annuler", role: .cancel) {}
-            } message: { Text("Cette phrase sera nécessaire pour restaurer le backup.") }
-            .alert("Phrase secrète import", isPresented: $showImportPrompt) {
-                SecureField("Phrase secrète", text: $backupPassphrase)
-                Button("Importer") {
+                Button(String(localized: "settings.dialog.cancel"), role: .cancel) {}
+            } message: { Text(String(localized: "settings.alert.backup_passphrase.message")) }
+            .alert(String(localized: "settings.alert.import_passphrase.title"), isPresented: $showImportPrompt) {
+                SecureField(String(localized: "settings.alert.import_passphrase.placeholder"), text: $backupPassphrase)
+                Button(String(localized: "settings.alert.import_passphrase.import")) {
                     guard let data = pendingImportData else { return }
                     do { try vaultStore.importBackup(data, passphrase: backupPassphrase) }
-                    catch { alertMessage = "Import refusé (phrase invalide ou fichier altéré)."; showAlert = true }
+                    catch { alertMessage = String(localized: "settings.alert.import_failed"); showAlert = true }
                     pendingImportData = nil; backupPassphrase = ""
                 }
-                Button("Annuler", role: .cancel) { pendingImportData = nil; backupPassphrase = "" }
-            } message: { Text("Entre la phrase utilisée pendant l'export.") }
+                Button(String(localized: "settings.dialog.cancel"), role: .cancel) { pendingImportData = nil; backupPassphrase = "" }
+            } message: { Text(String(localized: "settings.alert.import_passphrase.message")) }
             .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [UTType.fyxxVaultBackup], allowsMultipleSelection: false) { result in
                 switch result {
                 case .success(let urls):
                     guard let url = urls.first, let data = try? Data(contentsOf: url) else { return }
                     pendingImportData = data; showImportPrompt = true
-                case .failure: alertMessage = "Impossible de lire le fichier."; showAlert = true
+                case .failure: alertMessage = String(localized: "settings.alert.file_read_failed"); showAlert = true
                 }
             }
             .fileExporter(isPresented: $showFileExporter, document: exportDocument, contentType: .fyxxVaultBackup, defaultFilename: "FyxxVault-Backup-\(Int(Date().timeIntervalSince1970))") { result in
-                if case .failure = result { alertMessage = "Export annulé ou échoué."; showAlert = true }
+                if case .failure = result { alertMessage = String(localized: "settings.alert.export_cancelled"); showAlert = true }
             }
             .background(FVAnimatedBackground())
             .tint(FVColor.cyan)
@@ -146,20 +146,26 @@ struct VaultSettingsView: View {
     private var headerCard: some View {
         let audit = vaultStore.securityAudit
         let score = audit.score
-        let level = score < 40 ? "Critique" : (score < 70 ? "Fragile" : (score < 85 ? "Correct" : (score < 95 ? "Solide" : "Excellent")))
+        let level: String = {
+            if score < 40 { return String(localized: "settings.score.critical") }
+            if score < 70 { return String(localized: "settings.score.fragile") }
+            if score < 85 { return String(localized: "settings.score.fair") }
+            if score < 95 { return String(localized: "settings.score.solid") }
+            return String(localized: "settings.score.excellent")
+        }()
 
         return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Préférences FyxxVault")
+                    Text(String(localized: "settings.header.title"))
                         .font(FVFont.heading(30))
                         .foregroundStyle(.white)
-                    Text("Centre de contrôle du coffre")
+                    Text(String(localized: "settings.header.subtitle"))
                         .font(FVFont.caption(12))
                         .foregroundStyle(FVColor.mist.opacity(0.9))
                 }
                 Spacer()
-                FVTag(text: "\(score)/100 • \(level)", color: score >= 85 ? FVColor.success : (score >= 70 ? FVColor.warning : FVColor.danger))
+                FVTag(text: "\(score)/100 \u{2022} \(level)", color: score >= 85 ? FVColor.success : (score >= 70 ? FVColor.warning : FVColor.danger))
             }
 
             HStack(spacing: 8) {
@@ -167,7 +173,7 @@ struct VaultSettingsView: View {
                 if authManager.hasRecoveryKey {
                     FVTag(text: "Recovery Key", color: FVColor.violet)
                 }
-                FVTag(text: "\(vaultStore.entries.count) comptes", color: FVColor.silver)
+                FVTag(text: String(localized: "settings.header.accounts_count \(vaultStore.entries.count)"), color: FVColor.silver)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -176,12 +182,12 @@ struct VaultSettingsView: View {
 
     private var accountSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "person.crop.circle", title: "COMPTE")
-            Button("Changer le mot de passe maître") { showChangePassword = true }
+            FVSectionHeader(icon: "person.crop.circle", title: String(localized: "settings.section.account"))
+            Button(String(localized: "settings.account.change_password")) { showChangePassword = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
             HStack(spacing: 10) {
-                FVTag(text: "Compte local", color: FVColor.cyan)
-                FVTag(text: "Chiffrement actif", color: FVColor.success)
+                FVTag(text: String(localized: "settings.account.local"), color: FVColor.cyan)
+                FVTag(text: String(localized: "settings.account.encryption_active"), color: FVColor.success)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
@@ -189,18 +195,18 @@ struct VaultSettingsView: View {
 
     private var cloudSyncSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "cloud.fill", title: "SYNCHRONISATION CLOUD")
+            FVSectionHeader(icon: "cloud.fill", title: String(localized: "settings.section.cloud_sync"))
             HStack {
-                Text("Statut")
+                Text(String(localized: "settings.cloud.status"))
                     .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundStyle(FVColor.mist)
                 Spacer()
                 if syncService.isCloudAuthenticated {
-                    FVTag(text: "Connecté", color: FVColor.success)
+                    FVTag(text: String(localized: "settings.cloud.connected"), color: FVColor.success)
                 } else if syncService.cloudEmail != nil {
-                    FVTag(text: "Verrouillé", color: FVColor.warning)
+                    FVTag(text: String(localized: "settings.cloud.locked"), color: FVColor.warning)
                 } else {
-                    FVTag(text: "Non configuré", color: FVColor.mist)
+                    FVTag(text: String(localized: "settings.cloud.not_configured"), color: FVColor.mist)
                 }
             }
             if let email = syncService.cloudEmail {
@@ -208,9 +214,9 @@ struct VaultSettingsView: View {
                     .font(.system(size: 12, design: .rounded))
                     .foregroundStyle(FVColor.cyan.opacity(0.8))
             }
-            Button("Configurer la synchronisation cloud") { showCloudSync = true }
+            Button(String(localized: "settings.cloud.configure")) { showCloudSync = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Text("Chiffrement zero-knowledge : le serveur ne voit que des données chiffrées.")
+            Text(String(localized: "settings.cloud.zero_knowledge_note"))
                 .font(FVFont.caption(11))
                 .foregroundStyle(FVColor.mist.opacity(0.75))
         }
@@ -219,21 +225,21 @@ struct VaultSettingsView: View {
 
     private var maskedEmailSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "envelope.badge.shield.half.filled", title: "EMAILS MASQUÉS")
+            FVSectionHeader(icon: "envelope.badge.shield.half.filled", title: String(localized: "settings.section.masked_emails"))
             HStack {
-                Text("Statut")
+                Text(String(localized: "settings.cloud.status"))
                     .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundStyle(FVColor.mist)
                 Spacer()
                 if maskedEmailService.isConfigured {
-                    FVTag(text: "\(maskedEmailService.aliases.count) alias", color: FVColor.success)
+                    FVTag(text: String(localized: "settings.masked.alias_count \(maskedEmailService.aliases.count)"), color: FVColor.success)
                 } else {
-                    FVTag(text: "Non configuré", color: FVColor.mist)
+                    FVTag(text: String(localized: "settings.cloud.not_configured"), color: FVColor.mist)
                 }
             }
-            Button("Emails masqués (\(maskedEmailService.aliases.count))") { showMaskedEmails = true }
+            Button(String(localized: "settings.masked.button \(maskedEmailService.aliases.count)")) { showMaskedEmails = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Text("Protège ton vrai email avec des alias uniques via addy.io.")
+            Text(String(localized: "settings.masked.description"))
                 .font(FVFont.caption(11))
                 .foregroundStyle(FVColor.mist.opacity(0.75))
         }
@@ -242,21 +248,21 @@ struct VaultSettingsView: View {
 
     private var securitySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "lock.shield", title: "SÉCURITÉ")
-            Toggle("Verrouillage automatique", isOn: $autoLockEnabled).toggleStyle(.switch)
+            FVSectionHeader(icon: "lock.shield", title: String(localized: "settings.section.security"))
+            Toggle(String(localized: "settings.security.auto_lock"), isOn: $autoLockEnabled).toggleStyle(.switch)
             if autoLockEnabled {
-                Stepper("Délai auto-lock: \(autoLockMinutes) min", value: $autoLockMinutes, in: 1...15)
+                Stepper(String(localized: "settings.security.auto_lock_delay \(autoLockMinutes)"), value: $autoLockMinutes, in: 1...15)
                     .foregroundStyle(.white.opacity(0.85))
             }
-            Toggle("Déverrouillage biométrique", isOn: $biometricUnlock).toggleStyle(.switch)
-            Toggle("Verrouiller en cas de capture d'écran", isOn: $screenshotLockEnabled).toggleStyle(.switch)
-            Toggle("Effacer le presse-papier après copie", isOn: $clipboardAutoClear).toggleStyle(.switch)
+            Toggle(String(localized: "settings.security.biometric_unlock"), isOn: $biometricUnlock).toggleStyle(.switch)
+            Toggle(String(localized: "settings.security.screenshot_lock"), isOn: $screenshotLockEnabled).toggleStyle(.switch)
+            Toggle(String(localized: "settings.security.clipboard_clear"), isOn: $clipboardAutoClear).toggleStyle(.switch)
             if clipboardAutoClear {
-                Picker("Délai effacement", selection: $clipboardClearDelay) {
+                Picker(String(localized: "settings.security.clear_delay"), selection: $clipboardClearDelay) {
                     Text("15s").tag(15); Text("30s").tag(30); Text("60s").tag(60)
                 }.pickerStyle(.segmented)
             }
-            Text("5 échecs biométriques déclenchent le mode panic.")
+            Text(String(localized: "settings.security.panic_note"))
                 .font(FVFont.caption(11))
                 .foregroundStyle(FVColor.mist.opacity(0.75))
         }
@@ -265,11 +271,11 @@ struct VaultSettingsView: View {
 
     private var privacySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "eye.slash", title: "CONFIDENTIALITÉ")
-            Toggle("Masquer les mots de passe par défaut", isOn: $hidePasswordsByDefault).toggleStyle(.switch)
-            Toggle("Masquer les codes MFA par défaut", isOn: $hideMFACodeByDefault).toggleStyle(.switch)
-            Toggle("Retour haptique", isOn: $hapticsEnabled).toggleStyle(.switch)
-            Button("Réinitialiser les préférences visuelles") { showResetPrefsConfirm = true }
+            FVSectionHeader(icon: "eye.slash", title: String(localized: "settings.section.privacy"))
+            Toggle(String(localized: "settings.privacy.hide_passwords"), isOn: $hidePasswordsByDefault).toggleStyle(.switch)
+            Toggle(String(localized: "settings.privacy.hide_mfa"), isOn: $hideMFACodeByDefault).toggleStyle(.switch)
+            Toggle(String(localized: "settings.privacy.haptic_feedback"), isOn: $hapticsEnabled).toggleStyle(.switch)
+            Button(String(localized: "settings.privacy.reset_visual")) { showResetPrefsConfirm = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.silver))
         }
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
@@ -277,16 +283,16 @@ struct VaultSettingsView: View {
 
     private var dataSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "externaldrive", title: "DONNÉES")
-            Button("Ouvrir la corbeille (\(vaultStore.trashEntries.count))") { showTrash = true }
+            FVSectionHeader(icon: "externaldrive", title: String(localized: "settings.section.data"))
+            Button(String(localized: "settings.data.trash \(vaultStore.trashEntries.count)")) { showTrash = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Button("Journal d'activité (\(vaultStore.activityLog.count))") { showActivityLog = true }
+            Button(String(localized: "settings.data.activity_log \(vaultStore.activityLog.count)")) { showActivityLog = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Button("Réorganiser les entrées") { showReorder = true }
+            Button(String(localized: "settings.data.reorder")) { showReorder = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Button("Purger le journal d'activité local") { showClearLogConfirm = true }
+            Button(String(localized: "settings.data.purge_log")) { showClearLogConfirm = true }
                 .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.9)))
-            Button("Vider la corbeille") { showEmptyTrashConfirm = true }
+            Button(String(localized: "settings.data.empty_trash")) { showEmptyTrashConfirm = true }
                 .buttonStyle(FVSettingsButton(tint: .red.opacity(0.9)))
         }
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
@@ -294,14 +300,14 @@ struct VaultSettingsView: View {
 
     private var backupSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "archivebox", title: "SAUVEGARDES")
-            Button("Exporter une sauvegarde chiffrée (recommandé)") { showExportPrompt = true }
+            FVSectionHeader(icon: "archivebox", title: String(localized: "settings.section.backups"))
+            Button(String(localized: "settings.backup.export_encrypted")) { showExportPrompt = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Button("Importer une sauvegarde") { showFileImporter = true }
+            Button(String(localized: "settings.backup.import")) { showFileImporter = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Button("Importer depuis CSV (Bitwarden / 1Password)") { showImportCSV = true }
+            Button(String(localized: "settings.backup.import_csv")) { showImportCSV = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Text("Le format .fyxx.backup est chiffré et vérifié en intégrité.")
+            Text(String(localized: "settings.backup.format_note"))
                 .font(FVFont.caption(11))
                 .foregroundStyle(FVColor.mist.opacity(0.75))
         }
@@ -310,16 +316,16 @@ struct VaultSettingsView: View {
 
     private var advancedSecuritySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "gearshape.2", title: "AVANCÉ")
-            Button("Rotation manuelle de la clé du coffre") { showRotateKeyConfirm = true }
+            FVSectionHeader(icon: "gearshape.2", title: String(localized: "settings.section.advanced"))
+            Button(String(localized: "settings.advanced.rotate_key")) { showRotateKeyConfirm = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.violet))
-            Button("Exporter CSV (données sensibles non chiffrées)") { pendingCSVType = 0; showCSVExportWarning = true }
+            Button(String(localized: "settings.advanced.export_csv")) { pendingCSVType = 0; showCSVExportWarning = true }
                 .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.85)))
-            Button("Exporter CSV Bitwarden (données sensibles)") { pendingCSVType = 1; showCSVExportWarning = true }
+            Button(String(localized: "settings.advanced.export_csv_bitwarden")) { pendingCSVType = 1; showCSVExportWarning = true }
                 .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.85)))
-            Button("Exporter CSV 1Password (données sensibles)") { pendingCSVType = 2; showCSVExportWarning = true }
+            Button(String(localized: "settings.advanced.export_csv_1password")) { pendingCSVType = 2; showCSVExportWarning = true }
                 .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.85)))
-            Text("Les exports CSV doivent être supprimés juste après import.")
+            Text(String(localized: "settings.advanced.csv_warning"))
                 .font(FVFont.caption(11))
                 .foregroundStyle(FVColor.warning.opacity(0.85))
         }
@@ -328,7 +334,7 @@ struct VaultSettingsView: View {
 
     private var logoutButton: some View {
         Button { showLogoutSheet = true } label: {
-            Label("Se déconnecter", systemImage: "rectangle.portrait.and.arrow.right")
+            Label(String(localized: "settings.button.logout"), systemImage: "rectangle.portrait.and.arrow.right")
                 .font(FVFont.title(17))
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
         }
@@ -342,7 +348,7 @@ struct VaultSettingsView: View {
         case 1: csv = vaultStore.exportBitwardenCSV()
         default: csv = vaultStore.exportOnePasswordCSV()
         }
-        alertMessage = "CSV copié dans le presse-papier. Supprimez le fichier après usage."
+        alertMessage = String(localized: "settings.alert.csv_copied")
         showAlert = true
         ClipboardService.copy(csv)
     }
@@ -357,7 +363,7 @@ struct VaultSettingsView: View {
         hideMFACodeByDefault = false
         hapticsEnabled = true
         screenshotLockEnabled = true
-        alertMessage = "Préférences réinitialisées."
+        alertMessage = String(localized: "settings.alert.prefs_reset")
         showAlert = true
     }
 }

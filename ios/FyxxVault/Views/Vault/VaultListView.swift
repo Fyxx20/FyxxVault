@@ -58,13 +58,13 @@ struct VaultListView: View {
                     // Header
                     HStack(alignment: .top, spacing: 12) {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Coffre")
+                            Text(String(localized: "vault.title"))
                                 .font(FVFont.display(32))
                                 .foregroundStyle(.white)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.85)
 
-                            Text("Stockage chiffré local • accès MFA par entrée")
+                            Text(String(localized: "vault.subtitle"))
                                 .font(FVFont.caption(11))
                                 .kerning(0.8)
                                 .foregroundStyle(FVColor.mist.opacity(0.78))
@@ -79,7 +79,7 @@ struct VaultListView: View {
                                 .font(FVFont.display(28))
                                 .foregroundStyle(.white)
                                 .contentTransition(.numericText())
-                            Text("COMPTES")
+                            Text(String(localized: "vault.header.accounts"))
                                 .font(FVFont.caption(10))
                                 .kerning(1.8)
                                 .foregroundStyle(FVColor.mist.opacity(0.86))
@@ -120,7 +120,7 @@ struct VaultListView: View {
 
                     HStack(spacing: 8) {
                         Image(systemName: "magnifyingglass").foregroundStyle(FVColor.mist.opacity(0.75))
-                        TextField("Recherche", text: $query).fvPlatformTextEntry().foregroundStyle(.white)
+                        TextField(String(localized: "vault.list.search"), text: $query).fvPlatformTextEntry().foregroundStyle(.white)
                     }
                     .padding(.horizontal, 16).padding(.vertical, 14)
                     .background(Color.white.opacity(0.05))
@@ -174,7 +174,7 @@ struct VaultListView: View {
                             .overlay(Capsule().strokeBorder(FVColor.cyan.opacity(0.15)))
                         }
                         Spacer()
-                        Button(selectionMode ? "Terminer" : "Sélectionner") {
+                        Button(selectionMode ? String(localized: "vault.list.done") : String(localized: "vault.list.select")) {
                             selectionMode.toggle()
                             if !selectionMode { selectedEntryIDs.removeAll() }
                         }
@@ -214,14 +214,14 @@ struct VaultListView: View {
                     if selectionMode {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 16) {
-                                Text("\(selectedEntryIDs.count) sélectionné(s)")
+                                Text(String(localized: "vault.list.selected \(selectedEntryIDs.count)"))
                                     .font(FVFont.caption(11))
                                     .kerning(1.2)
                                     .foregroundStyle(FVColor.mist.opacity(0.9))
-                                Button("Taguer") { showBulkTagPrompt = true }.font(FVFont.caption(12)).foregroundStyle(FVColor.cyan)
-                                Button("Déplacer") { showBulkFolderPrompt = true }.font(FVFont.caption(12)).foregroundStyle(FVColor.cyan)
-                                Button("Favori") { vaultStore.bulkSetFavorite(entryIDs: selectedEntryIDs, value: true) }.font(FVFont.caption(12)).foregroundStyle(.yellow.opacity(0.9))
-                                Button("Supprimer") { showBulkDeleteConfirm = true }.font(FVFont.caption(12)).foregroundStyle(FVColor.danger.opacity(0.9))
+                                Button(String(localized: "vault.list.tag")) { showBulkTagPrompt = true }.font(FVFont.caption(12)).foregroundStyle(FVColor.cyan)
+                                Button(String(localized: "vault.list.move")) { showBulkFolderPrompt = true }.font(FVFont.caption(12)).foregroundStyle(FVColor.cyan)
+                                Button(String(localized: "vault.list.favorite")) { vaultStore.bulkSetFavorite(entryIDs: selectedEntryIDs, value: true) }.font(FVFont.caption(12)).foregroundStyle(.yellow.opacity(0.9))
+                                Button(String(localized: "vault.list.delete")) { showBulkDeleteConfirm = true }.font(FVFont.caption(12)).foregroundStyle(FVColor.danger.opacity(0.9))
                             }
                             .padding(.vertical, 2)
                         }
@@ -238,7 +238,7 @@ struct VaultListView: View {
                     }
 
                     if filteredEntries.isEmpty {
-                        FVEmptyState(icon: "lock.rectangle.stack", title: "Aucun mot de passe", subtitle: "Ajoute ton premier compte sécurisé")
+                        FVEmptyState(icon: "lock.rectangle.stack", title: String(localized: "vault.list.empty.title"), subtitle: String(localized: "vault.list.empty.subtitle"))
                     } else {
                         LazyVStack(spacing: 12) {
                             ForEach(Array(filteredEntries.enumerated()), id: \.element.id) { index, entry in
@@ -275,9 +275,9 @@ struct VaultListView: View {
 
             if showUndoDeleteToast {
                 HStack {
-                    Text("Compte supprimé").font(FVFont.caption(13)).foregroundStyle(.white)
+                    Text(String(localized: "vault.list.toast.deleted")).font(FVFont.caption(13)).foregroundStyle(.white)
                     Spacer()
-                    Button("Annuler") {
+                    Button(String(localized: "vault.action.cancel")) {
                         if let id = lastDeletedTrashID { vaultStore.restoreFromTrash(id) }
                         showUndoDeleteToast = false
                         lastDeletedTrashID = nil
@@ -318,23 +318,23 @@ struct VaultListView: View {
         }
         .sheet(isPresented: $showAddSheet) { AddVaultEntryView(vaultStore: vaultStore) }
         .sheet(item: $editingEntry) { entry in EditVaultEntryView(vaultStore: vaultStore, entry: entry) }
-        .confirmationDialog("Supprimer ce compte ?", isPresented: Binding(get: { pendingDeleteEntry != nil }, set: { if !$0 { pendingDeleteEntry = nil } }), titleVisibility: .visible) {
-            Button("Supprimer", role: .destructive) { if let e = pendingDeleteEntry { delete(entry: e) }; pendingDeleteEntry = nil }
-            Button("Annuler", role: .cancel) { pendingDeleteEntry = nil }
-        } message: { Text("Le compte sera déplacé dans la corbeille pendant 30 jours.") }
-        .confirmationDialog("Supprimer la sélection ?", isPresented: $showBulkDeleteConfirm, titleVisibility: .visible) {
-            Button("Supprimer", role: .destructive) { vaultStore.bulkMoveToTrash(entryIDs: selectedEntryIDs); selectedEntryIDs.removeAll(); selectionMode = false }
-            Button("Annuler", role: .cancel) {}
-        } message: { Text("Les comptes sélectionnés iront dans la corbeille.") }
-        .alert("Ajouter un tag", isPresented: $showBulkTagPrompt) {
-            TextField("Tag", text: $bulkTagText)
-            Button("Appliquer") { vaultStore.bulkApplyTag(entryIDs: selectedEntryIDs, tag: bulkTagText); bulkTagText = "" }
-            Button("Annuler", role: .cancel) { bulkTagText = "" }
+        .confirmationDialog(String(localized: "vault.dialog.delete.title"), isPresented: Binding(get: { pendingDeleteEntry != nil }, set: { if !$0 { pendingDeleteEntry = nil } }), titleVisibility: .visible) {
+            Button(String(localized: "vault.action.delete"), role: .destructive) { if let e = pendingDeleteEntry { delete(entry: e) }; pendingDeleteEntry = nil }
+            Button(String(localized: "vault.action.cancel"), role: .cancel) { pendingDeleteEntry = nil }
+        } message: { Text(String(localized: "vault.dialog.delete.message")) }
+        .confirmationDialog(String(localized: "vault.dialog.bulk.delete.title"), isPresented: $showBulkDeleteConfirm, titleVisibility: .visible) {
+            Button(String(localized: "vault.action.delete"), role: .destructive) { vaultStore.bulkMoveToTrash(entryIDs: selectedEntryIDs); selectedEntryIDs.removeAll(); selectionMode = false }
+            Button(String(localized: "vault.action.cancel"), role: .cancel) {}
+        } message: { Text(String(localized: "vault.dialog.bulk.delete.message")) }
+        .alert(String(localized: "vault.dialog.tag.title"), isPresented: $showBulkTagPrompt) {
+            TextField(String(localized: "vault.dialog.tag.placeholder"), text: $bulkTagText)
+            Button(String(localized: "vault.action.apply")) { vaultStore.bulkApplyTag(entryIDs: selectedEntryIDs, tag: bulkTagText); bulkTagText = "" }
+            Button(String(localized: "vault.action.cancel"), role: .cancel) { bulkTagText = "" }
         }
-        .alert("Déplacer vers dossier", isPresented: $showBulkFolderPrompt) {
-            TextField("Nom du dossier", text: $bulkFolderText)
-            Button("Déplacer") { vaultStore.bulkMoveToFolder(entryIDs: selectedEntryIDs, folder: bulkFolderText); bulkFolderText = "" }
-            Button("Annuler", role: .cancel) { bulkFolderText = "" }
+        .alert(String(localized: "vault.dialog.folder.title"), isPresented: $showBulkFolderPrompt) {
+            TextField(String(localized: "vault.dialog.folder.placeholder"), text: $bulkFolderText)
+            Button(String(localized: "vault.list.move")) { vaultStore.bulkMoveToFolder(entryIDs: selectedEntryIDs, folder: bulkFolderText); bulkFolderText = "" }
+            Button(String(localized: "vault.action.cancel"), role: .cancel) { bulkFolderText = "" }
         }
         .onAppear {
             if let action = quickAction {

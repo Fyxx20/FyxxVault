@@ -480,11 +480,11 @@ struct FVSecurityGauge: View {
 
     private var label: String {
         switch score {
-        case 0..<40:   return "Critique"
-        case 40..<70:  return "Faible"
-        case 70..<85:  return "Moyen"
-        case 85..<95:  return "Bon"
-        default:       return "Excellent"
+        case 0..<40:   return String(localized: "gauge.critical")
+        case 40..<70:  return String(localized: "gauge.weak")
+        case 70..<85:  return String(localized: "gauge.medium")
+        case 85..<95:  return String(localized: "gauge.good")
+        default:       return String(localized: "gauge.excellent")
         }
     }
 

@@ -42,10 +42,10 @@ struct ContentView: View {
                             Image(systemName: "eye.slash.fill")
                                 .font(.system(size: 40))
                                 .foregroundStyle(FVColor.danger)
-                            Text("Capture d'écran détectée")
+                            Text(String(localized: "screenshot.detected"))
                                 .font(.system(size: 16, weight: .bold, design: .rounded))
                                 .foregroundStyle(.white)
-                            Text("Le coffre a été verrouillé.")
+                            Text(String(localized: "screenshot.vaultLocked"))
                                 .font(.system(size: 13, weight: .medium, design: .rounded))
                                 .foregroundStyle(.white.opacity(0.75))
                         }

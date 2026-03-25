@@ -17,20 +17,20 @@ struct LogoutConfirmSheet: View {
                             .foregroundStyle(.white)
                     )
 
-                Text("Confirmer la déconnexion")
+                Text(String(localized: "logout.title"))
                     .font(FVFont.heading(24))
                     .foregroundStyle(.white)
 
-                Text("Tu devras te reconnecter avec ton email et ton mot de passe maître.")
+                Text(String(localized: "logout.message"))
                     .font(FVFont.body(14))
                     .foregroundStyle(FVColor.mist)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 10)
 
                 HStack(spacing: 10) {
-                    Button("Annuler", action: onCancel)
+                    Button(String(localized: "logout.button.cancel"), action: onCancel)
                         .buttonStyle(FVSettingsButton(tint: FVColor.silver.opacity(0.45)))
-                    Button("Se déconnecter", action: onConfirm)
+                    Button(String(localized: "logout.button.confirm"), action: onConfirm)
                         .buttonStyle(FVSettingsButton(tint: FVColor.danger.opacity(0.92)))
                 }
             }

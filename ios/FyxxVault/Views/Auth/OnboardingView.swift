@@ -7,29 +7,29 @@ struct OnboardingView: View {
     var body: some View {
         VStack(spacing: 22) {
             Spacer(minLength: 0)
-            FVBrandHeader(subtitle: "Bienvenue dans ton coffre sécurisé")
+            FVBrandHeader(subtitle: String(localized: "onboarding.header.subtitle"))
             TabView(selection: $page) {
                 FVOnboardingFeature(
-                    icon: "lock.doc.fill", title: "Coffre Chiffré",
-                    description: "Tes identifiants sont stockés avec AES-GCM 256-bit et HMAC-SHA256.",
+                    icon: "lock.doc.fill", title: String(localized: "onboarding.feature.vault.title"),
+                    description: String(localized: "onboarding.feature.vault.description"),
                     color: FVColor.cyan
                 ).tag(0)
 
                 FVOnboardingFeature(
-                    icon: "checkmark.shield.fill", title: "MFA Par Compte",
-                    description: "Ajoute une clé MFA (TOTP) pour chaque service.",
+                    icon: "checkmark.shield.fill", title: String(localized: "onboarding.feature.mfa.title"),
+                    description: String(localized: "onboarding.feature.mfa.description"),
                     color: FVColor.violet
                 ).tag(1)
 
                 FVOnboardingFeature(
-                    icon: "wand.and.stars", title: "Génération Intelligente",
-                    description: "Crée des mots de passe robustes et vérifie leur sécurité.",
+                    icon: "wand.and.stars", title: String(localized: "onboarding.feature.generator.title"),
+                    description: String(localized: "onboarding.feature.generator.description"),
                     color: FVColor.gold
                 ).tag(2)
 
                 FVOnboardingFeature(
-                    icon: "key.fill", title: "Clé de récupération",
-                    description: "Tu as reçu une clé unique. Conserve-la précieusement.",
+                    icon: "key.fill", title: String(localized: "onboarding.feature.recovery.title"),
+                    description: String(localized: "onboarding.feature.recovery.description"),
                     color: FVColor.success
                 ).tag(3)
             }
@@ -46,7 +46,7 @@ struct OnboardingView: View {
                 }
             }
 
-            FVButton(title: page < 3 ? "Continuer" : "Entrer dans le coffre") {
+            FVButton(title: page < 3 ? String(localized: "onboarding.button.continue") : String(localized: "onboarding.button.enter")) {
                 if page < 3 {
                     withAnimation(.easeInOut(duration: 0.25)) { page += 1 }
                 } else {

@@ -11,7 +11,7 @@ struct TOTPCodePanel: View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
             let snapshot = TOTPService.snapshot(secretInput: secretInput, at: timeline.date)
             VStack(alignment: .leading, spacing: 8) {
-                Text("Code 2FA").font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(.white.opacity(0.68))
+                Text(String(localized: "totp.title")).font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(.white.opacity(0.68))
                 if let snapshot {
                     HStack {
                         Text(formatted(snapshot.code))
@@ -35,7 +35,7 @@ struct TOTPCodePanel: View {
                     }
                     .frame(height: 6)
                 } else {
-                    Text("Clé TOTP invalide").font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.danger.opacity(0.9))
+                    Text(String(localized: "totp.invalid.key")).font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.danger.opacity(0.9))
                 }
             }
             .padding(10).background(Color.white.opacity(0.04)).clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

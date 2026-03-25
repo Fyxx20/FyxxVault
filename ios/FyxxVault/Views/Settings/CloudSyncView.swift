@@ -17,6 +17,12 @@ struct CloudSyncView: View {
         case signIn = "Connexion"
         case signUp = "Inscription"
         var id: String { rawValue }
+        var localizedName: String {
+            switch self {
+            case .signIn: return String(localized: "cloud.mode.signin")
+            case .signUp: return String(localized: "cloud.mode.signup")
+            }
+        }
     }
 
     var body: some View {
@@ -36,19 +42,19 @@ struct CloudSyncView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 30)
             }
-            .navigationTitle("Sync Cloud")
+            .navigationTitle(String(localized: "cloud.nav.title"))
             .fvInlineNavTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Fermer") { dismiss() }.foregroundStyle(FVColor.cyan)
+                    Button(String(localized: "common.close")) { dismiss() }.foregroundStyle(FVColor.cyan)
                 }
             }
             .background(FVAnimatedBackground())
-            .confirmationDialog("Se déconnecter du cloud ?", isPresented: $showSignOutConfirm, titleVisibility: .visible) {
-                Button("Déconnecter", role: .destructive) { syncService.signOut() }
-                Button("Annuler", role: .cancel) {}
+            .confirmationDialog(String(localized: "cloud.dialog.signout.title"), isPresented: $showSignOutConfirm, titleVisibility: .visible) {
+                Button(String(localized: "cloud.dialog.signout.confirm"), role: .destructive) { syncService.signOut() }
+                Button(String(localized: "settings.dialog.cancel"), role: .cancel) {}
             } message: {
-                Text("Les données locales seront conservées. La synchronisation sera désactivée.")
+                Text(String(localized: "cloud.dialog.signout.message"))
             }
         }
     }
@@ -61,7 +67,7 @@ struct CloudSyncView: View {
                 .font(.system(size: 42))
                 .foregroundStyle(FVColor.success)
 
-            Text("Cloud connecté")
+            Text(String(localized: "cloud.authenticated.title"))
                 .font(FVFont.heading(22))
                 .foregroundStyle(.white)
 
@@ -76,31 +82,31 @@ struct CloudSyncView: View {
 
             // Sync status
             VStack(alignment: .leading, spacing: 8) {
-                FVSectionHeader(icon: "arrow.triangle.2.circlepath", title: "SYNCHRONISATION")
+                FVSectionHeader(icon: "arrow.triangle.2.circlepath", title: String(localized: "cloud.section.sync"))
 
                 HStack {
-                    Text("Statut")
+                    Text(String(localized: "settings.cloud.status"))
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundStyle(FVColor.mist)
                     Spacer()
                     switch syncService.state {
                     case .idle:
-                        FVTag(text: "Prêt", color: FVColor.success)
+                        FVTag(text: String(localized: "cloud.status.ready"), color: FVColor.success)
                     case .syncing:
                         HStack(spacing: 6) {
                             ProgressView().scaleEffect(0.7)
-                            Text("Synchronisation...").font(.system(size: 12)).foregroundStyle(FVColor.cyan)
+                            Text(String(localized: "cloud.status.syncing")).font(.system(size: 12)).foregroundStyle(FVColor.cyan)
                         }
                     case .error(let msg):
                         FVTag(text: msg, color: FVColor.danger)
                     case .disabled:
-                        FVTag(text: "Désactivé", color: FVColor.mist)
+                        FVTag(text: String(localized: "cloud.status.disabled"), color: FVColor.mist)
                     }
                 }
 
                 if let lastSync = syncService.lastSyncDate {
                     HStack {
-                        Text("Dernière sync")
+                        Text(String(localized: "cloud.last_sync"))
                             .font(.system(size: 14, weight: .medium, design: .rounded))
                             .foregroundStyle(FVColor.mist)
                         Spacer()
@@ -110,7 +116,7 @@ struct CloudSyncView: View {
                     }
                 }
 
-                FVButton(title: "Synchroniser maintenant") {
+                FVButton(title: String(localized: "cloud.button.sync_now")) {
                     Task {
                         do {
                             let merged = try await syncService.sync(localEntries: vaultStore.entries)
@@ -123,7 +129,7 @@ struct CloudSyncView: View {
             }
             .fvGlass()
 
-            Button("Se déconnecter du cloud") { showSignOutConfirm = true }
+            Button(String(localized: "cloud.button.signout")) { showSignOutConfirm = true }
                 .buttonStyle(FVSettingsButton(tint: .red.opacity(0.9)))
         }
         .fvGlass()
@@ -137,7 +143,7 @@ struct CloudSyncView: View {
                 .font(.system(size: 42))
                 .foregroundStyle(FVColor.violet)
 
-            Text("Déverrouiller le cloud")
+            Text(String(localized: "cloud.unlock.title"))
                 .font(FVFont.heading(20))
                 .foregroundStyle(.white)
 
@@ -147,12 +153,12 @@ struct CloudSyncView: View {
                     .foregroundStyle(FVColor.mist)
             }
 
-            Text("Entre ton mot de passe maître pour déchiffrer tes données cloud.")
+            Text(String(localized: "cloud.unlock.description"))
                 .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(FVColor.mist.opacity(0.8))
                 .multilineTextAlignment(.center)
 
-            FVTextField(title: "Mot de passe maître", text: $masterPassword, secure: true)
+            FVTextField(title: String(localized: "auth.field.master_password"), text: $masterPassword, secure: true)
 
             if !error.isEmpty {
                 Text(error)
@@ -160,7 +166,7 @@ struct CloudSyncView: View {
                     .foregroundStyle(FVColor.danger)
             }
 
-            FVButton(title: isLoading ? "Déverrouillage..." : "Déverrouiller") {
+            FVButton(title: isLoading ? String(localized: "cloud.unlock.unlocking") : String(localized: "cloud.unlock.button")) {
                 guard !masterPassword.isEmpty else { return }
                 isLoading = true
                 error = ""
@@ -175,7 +181,7 @@ struct CloudSyncView: View {
                 }
             }
 
-            Button("Se déconnecter") { syncService.signOut() }
+            Button(String(localized: "cloud.unlock.signout")) { syncService.signOut() }
                 .font(.system(size: 13, design: .rounded))
                 .foregroundStyle(FVColor.danger.opacity(0.8))
         }
@@ -190,31 +196,31 @@ struct CloudSyncView: View {
                 .font(.system(size: 42))
                 .foregroundStyle(FVColor.cyan)
 
-            Text("Synchronisation Cloud")
+            Text(String(localized: "cloud.auth.title"))
                 .font(FVFont.heading(22))
                 .foregroundStyle(.white)
 
-            Text("Tes données sont chiffrées localement avant d'être envoyées. Le serveur ne voit que des blobs chiffrés.")
+            Text(String(localized: "cloud.auth.description"))
                 .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(FVColor.mist.opacity(0.8))
                 .multilineTextAlignment(.center)
 
             HStack(spacing: 8) {
                 FVTag(text: "Zero-knowledge", color: FVColor.success)
-                FVTag(text: "E2E chiffré", color: FVColor.violet)
+                FVTag(text: String(localized: "cloud.auth.e2e_encrypted"), color: FVColor.violet)
             }
 
             Picker("Mode", selection: $mode) {
-                ForEach(CloudAuthMode.allCases) { m in Text(m.rawValue).tag(m) }
+                ForEach(CloudAuthMode.allCases) { m in Text(m.localizedName).tag(m) }
             }
             .pickerStyle(.segmented)
 
-            FVTextField(title: "Email", text: $email, keyboard: .email, contentType: .email)
-            FVTextField(title: "Mot de passe cloud", text: $cloudPassword, secure: true)
-            FVTextField(title: "Mot de passe maître (pour le chiffrement)", text: $masterPassword, secure: true)
+            FVTextField(title: String(localized: "auth.field.email"), text: $email, keyboard: .email, contentType: .email)
+            FVTextField(title: String(localized: "cloud.field.cloud_password"), text: $cloudPassword, secure: true)
+            FVTextField(title: String(localized: "cloud.field.master_for_encryption"), text: $masterPassword, secure: true)
 
             if mode == .signUp {
-                Text("Le mot de passe cloud sert à l'authentification Supabase. Le mot de passe maître sert au chiffrement de tes données. Ils peuvent être différents.")
+                Text(String(localized: "cloud.auth.password_note"))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(FVColor.warning.opacity(0.8))
             }
@@ -226,7 +232,7 @@ struct CloudSyncView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            FVButton(title: isLoading ? "Chargement..." : (mode == .signIn ? "Se connecter" : "Créer un compte")) {
+            FVButton(title: isLoading ? String(localized: "cloud.auth.loading") : (mode == .signIn ? String(localized: "auth.button.login") : String(localized: "cloud.auth.create_account"))) {
                 guard !email.isEmpty, !cloudPassword.isEmpty, !masterPassword.isEmpty else { return }
                 isLoading = true
                 error = ""

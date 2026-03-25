@@ -1,0 +1,1251 @@
+{
+  "sourceLanguage": "en",
+  "version": "1.0",
+  "strings": {
+
+    "auth.mode.login": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sign In" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Connexion" } }
+      }
+    },
+    "auth.mode.register": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sign Up" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Inscription" } }
+      }
+    },
+    "auth.password.requirements.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Master password requirements:" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Exigences du mot de passe maître :" } }
+      }
+    },
+    "auth.password.requirement.length": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "12 characters minimum" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "12 caractères minimum" } }
+      }
+    },
+    "auth.password.requirement.uppercase": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "1 uppercase letter" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "1 majuscule" } }
+      }
+    },
+    "auth.password.requirement.digit": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "1 digit" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "1 chiffre" } }
+      }
+    },
+    "auth.password.requirement.special": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "1 special character (!@#$...)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "1 caractère spécial (!@#$...)" } }
+      }
+    },
+    "auth.header.subtitle": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Secure access to your vault" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Accès sécurisé à ton coffre" } }
+      }
+    },
+    "auth.field.email": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Email" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Email" } }
+      }
+    },
+    "auth.field.master_password": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Master password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mot de passe maître" } }
+      }
+    },
+    "auth.field.confirm_password": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Confirm password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Confirmer le mot de passe" } }
+      }
+    },
+    "auth.field.panic_password": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Panic password (optional)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mot de passe panic (optionnel)" } }
+      }
+    },
+    "auth.panic.description": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The panic password immediately wipes the entire vault if used instead of the master password." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Le mot de passe panic efface immédiatement tout le coffre si utilisé à la place du mot de passe maître." } }
+      }
+    },
+    "auth.button.login": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sign In" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Se connecter" } }
+      }
+    },
+    "auth.button.register": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Create Account" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Créer le compte" } }
+      }
+    },
+    "auth.recovery.cancel": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cancel" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Annuler" } }
+      }
+    },
+    "auth.recovery.forgot_password": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Forgot password? Use recovery key" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mot de passe oublié? Utiliser la clé de récupération" } }
+      }
+    },
+    "auth.recovery.field.key": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recovery key (XXXX-XXXX-...)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Clé de récupération (XXXX-XXXX-...)" } }
+      }
+    },
+    "auth.recovery.button.unlock": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unlock with recovery key" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Accéder avec la clé de récupération" } }
+      }
+    },
+    "auth.recovery.error.invalid": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Invalid recovery key." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Clé de récupération invalide." } }
+      }
+    },
+    "auth.footer.tagline": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Local, encrypted connection — no compromises." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Connexion locale, chiffrée, sans compromis." } }
+      }
+    },
+
+    "recovery.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recovery Key" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Clé de récupération" } }
+      }
+    },
+    "recovery.warning": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "If you forget your master password, this key is the ONLY way to recover your account. It will not be displayed again." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Si vous oubliez votre mot de passe maître, cette clé est le SEUL moyen de récupérer votre compte. Elle ne sera plus affichée." } }
+      }
+    },
+    "recovery.button.copy": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Copy key" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Copier la clé" } }
+      }
+    },
+    "recovery.tip.write_down": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Write it down on paper in a safe place" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Notez-la sur papier dans un endroit sûr" } }
+      }
+    },
+    "recovery.tip.never_share": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Never share it" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ne la partagez jamais" } }
+      }
+    },
+    "recovery.tip.no_unencrypted": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Do not store it in an unencrypted file" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ne la stockez pas dans un fichier non chiffré" } }
+      }
+    },
+    "recovery.toggle.saved": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "I have saved my recovery key" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "J'ai sauvegardé ma clé de récupération" } }
+      }
+    },
+    "recovery.button.continue": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Continue" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Continuer" } }
+      }
+    },
+    "recovery.nav.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recovery Key" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Clé de récupération" } }
+      }
+    },
+
+    "onboarding.header.subtitle": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Welcome to your secure vault" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Bienvenue dans ton coffre sécurisé" } }
+      }
+    },
+    "onboarding.feature.vault.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Encrypted Vault" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Coffre Chiffré" } }
+      }
+    },
+    "onboarding.feature.vault.description": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Your credentials are stored with AES-GCM 256-bit and HMAC-SHA256." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tes identifiants sont stockés avec AES-GCM 256-bit et HMAC-SHA256." } }
+      }
+    },
+    "onboarding.feature.mfa.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Per-Account MFA" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "MFA Par Compte" } }
+      }
+    },
+    "onboarding.feature.mfa.description": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Add an MFA key (TOTP) for each service." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ajoute une clé MFA (TOTP) pour chaque service." } }
+      }
+    },
+    "onboarding.feature.generator.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Smart Generation" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Génération Intelligente" } }
+      }
+    },
+    "onboarding.feature.generator.description": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Create strong passwords and check their security." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Crée des mots de passe robustes et vérifie leur sécurité." } }
+      }
+    },
+    "onboarding.feature.recovery.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recovery Key" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Clé de récupération" } }
+      }
+    },
+    "onboarding.feature.recovery.description": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "You received a unique key. Keep it safe." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tu as reçu une clé unique. Conserve-la précieusement." } }
+      }
+    },
+    "onboarding.button.continue": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Continue" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Continuer" } }
+      }
+    },
+    "onboarding.button.enter": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enter the vault" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Entrer dans le coffre" } }
+      }
+    },
+
+    "lock.header.subtitle": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Vault locked" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Coffre verrouillé" } }
+      }
+    },
+    "lock.button.biometric": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unlock with Face ID / Touch ID" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déverrouiller avec Face ID / Touch ID" } }
+      }
+    },
+    "lock.field.master_password": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Master password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mot de passe maître" } }
+      }
+    },
+    "lock.button.password": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unlock with password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déverrouiller avec mot de passe" } }
+      }
+    },
+    "lock.error.wrong_password": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Incorrect master password." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mot de passe maître incorrect." } }
+      }
+    },
+    "lock.field.recovery_key": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recovery key (XXXX-XXXX-...)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Clé de récupération (XXXX-XXXX-...)" } }
+      }
+    },
+    "lock.button.recovery": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unlock with recovery key" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déverrouiller avec clé de récupération" } }
+      }
+    },
+    "lock.error.invalid_recovery": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Invalid recovery key." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Clé de récupération invalide." } }
+      }
+    },
+    "lock.button.cancel_recovery": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cancel recovery" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Annuler la récupération" } }
+      }
+    },
+    "lock.button.use_recovery": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Use recovery key" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Utiliser la clé de récupération" } }
+      }
+    },
+    "lock.button.back_to_login": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Back to sign in" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Retour à la connexion" } }
+      }
+    },
+
+    "settings.nav.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Settings" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Paramètres" } }
+      }
+    },
+    "settings.header.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "FyxxVault Preferences" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Préférences FyxxVault" } }
+      }
+    },
+    "settings.header.subtitle": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Vault control center" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Centre de contrôle du coffre" } }
+      }
+    },
+    "settings.header.accounts_count %lld": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%lld accounts" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%lld comptes" } }
+      }
+    },
+    "settings.score.critical": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Critical" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Critique" } }
+      }
+    },
+    "settings.score.fragile": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Fragile" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Fragile" } }
+      }
+    },
+    "settings.score.fair": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Fair" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Correct" } }
+      }
+    },
+    "settings.score.solid": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Solid" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Solide" } }
+      }
+    },
+    "settings.score.excellent": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Excellent" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Excellent" } }
+      }
+    },
+    "settings.section.account": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "ACCOUNT" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "COMPTE" } }
+      }
+    },
+    "settings.account.change_password": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Change master password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Changer le mot de passe maître" } }
+      }
+    },
+    "settings.account.local": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Local account" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Compte local" } }
+      }
+    },
+    "settings.account.encryption_active": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Encryption active" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Chiffrement actif" } }
+      }
+    },
+    "settings.section.cloud_sync": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "CLOUD SYNC" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "SYNCHRONISATION CLOUD" } }
+      }
+    },
+    "settings.cloud.status": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Status" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Statut" } }
+      }
+    },
+    "settings.cloud.connected": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Connected" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Connecté" } }
+      }
+    },
+    "settings.cloud.locked": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Locked" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Verrouillé" } }
+      }
+    },
+    "settings.cloud.not_configured": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Not configured" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Non configuré" } }
+      }
+    },
+    "settings.cloud.configure": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Configure cloud sync" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Configurer la synchronisation cloud" } }
+      }
+    },
+    "settings.cloud.zero_knowledge_note": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Zero-knowledge encryption: the server only sees encrypted data." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Chiffrement zero-knowledge : le serveur ne voit que des données chiffrées." } }
+      }
+    },
+    "settings.section.masked_emails": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "MASKED EMAILS" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "EMAILS MASQUÉS" } }
+      }
+    },
+    "settings.masked.alias_count %lld": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%lld aliases" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%lld alias" } }
+      }
+    },
+    "settings.masked.button %lld": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Masked emails (%lld)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Emails masqués (%lld)" } }
+      }
+    },
+    "settings.masked.description": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Protect your real email with unique aliases via addy.io." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Protège ton vrai email avec des alias uniques via addy.io." } }
+      }
+    },
+    "settings.section.security": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "SECURITY" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "SÉCURITÉ" } }
+      }
+    },
+    "settings.security.auto_lock": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Auto-lock" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Verrouillage automatique" } }
+      }
+    },
+    "settings.security.auto_lock_delay %lld": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Auto-lock delay: %lld min" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Délai auto-lock : %lld min" } }
+      }
+    },
+    "settings.security.biometric_unlock": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Biometric unlock" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déverrouillage biométrique" } }
+      }
+    },
+    "settings.security.screenshot_lock": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Lock on screenshot" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Verrouiller en cas de capture d'écran" } }
+      }
+    },
+    "settings.security.clipboard_clear": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Clear clipboard after copy" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Effacer le presse-papier après copie" } }
+      }
+    },
+    "settings.security.clear_delay": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Clear delay" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Délai effacement" } }
+      }
+    },
+    "settings.security.panic_note": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "5 biometric failures trigger panic mode." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "5 échecs biométriques déclenchent le mode panic." } }
+      }
+    },
+    "settings.section.privacy": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "PRIVACY" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "CONFIDENTIALITÉ" } }
+      }
+    },
+    "settings.privacy.hide_passwords": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Hide passwords by default" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Masquer les mots de passe par défaut" } }
+      }
+    },
+    "settings.privacy.hide_mfa": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Hide MFA codes by default" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Masquer les codes MFA par défaut" } }
+      }
+    },
+    "settings.privacy.haptic_feedback": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Haptic feedback" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Retour haptique" } }
+      }
+    },
+    "settings.privacy.reset_visual": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reset visual preferences" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Réinitialiser les préférences visuelles" } }
+      }
+    },
+    "settings.section.data": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "DATA" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "DONNÉES" } }
+      }
+    },
+    "settings.data.trash %lld": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Open trash (%lld)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir la corbeille (%lld)" } }
+      }
+    },
+    "settings.data.activity_log %lld": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Activity log (%lld)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Journal d'activité (%lld)" } }
+      }
+    },
+    "settings.data.reorder": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reorder entries" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Réorganiser les entrées" } }
+      }
+    },
+    "settings.data.purge_log": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Purge local activity log" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Purger le journal d'activité local" } }
+      }
+    },
+    "settings.data.empty_trash": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Empty trash" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Vider la corbeille" } }
+      }
+    },
+    "settings.section.backups": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "BACKUPS" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "SAUVEGARDES" } }
+      }
+    },
+    "settings.backup.export_encrypted": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Export encrypted backup (recommended)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Exporter une sauvegarde chiffrée (recommandé)" } }
+      }
+    },
+    "settings.backup.import": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import a backup" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Importer une sauvegarde" } }
+      }
+    },
+    "settings.backup.import_csv": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import from CSV (Bitwarden / 1Password)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Importer depuis CSV (Bitwarden / 1Password)" } }
+      }
+    },
+    "settings.backup.format_note": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The .fyxx.backup format is encrypted and integrity-verified." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Le format .fyxx.backup est chiffré et vérifié en intégrité." } }
+      }
+    },
+    "settings.section.advanced": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "ADVANCED" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "AVANCÉ" } }
+      }
+    },
+    "settings.advanced.rotate_key": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Manual vault key rotation" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Rotation manuelle de la clé du coffre" } }
+      }
+    },
+    "settings.advanced.export_csv": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Export CSV (unencrypted sensitive data)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Exporter CSV (données sensibles non chiffrées)" } }
+      }
+    },
+    "settings.advanced.export_csv_bitwarden": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Export CSV Bitwarden (sensitive data)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Exporter CSV Bitwarden (données sensibles)" } }
+      }
+    },
+    "settings.advanced.export_csv_1password": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Export CSV 1Password (sensitive data)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Exporter CSV 1Password (données sensibles)" } }
+      }
+    },
+    "settings.advanced.csv_warning": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "CSV exports must be deleted immediately after import." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Les exports CSV doivent être supprimés juste après import." } }
+      }
+    },
+    "settings.button.logout": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sign out" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Se déconnecter" } }
+      }
+    },
+    "settings.dialog.empty_trash.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Empty trash?" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Vider la corbeille ?" } }
+      }
+    },
+    "settings.dialog.empty_trash.confirm": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Empty" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Vider" } }
+      }
+    },
+    "settings.dialog.empty_trash.message": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "All deleted items will be permanently erased." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tous les éléments supprimés seront effacés définitivement." } }
+      }
+    },
+    "settings.dialog.cancel": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cancel" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Annuler" } }
+      }
+    },
+    "settings.dialog.clear_log.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Purge activity log?" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Purger le journal d'activité ?" } }
+      }
+    },
+    "settings.dialog.clear_log.confirm": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Purge" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Purger" } }
+      }
+    },
+    "settings.dialog.clear_log.message": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This action is irreversible." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Cette action est irréversible." } }
+      }
+    },
+    "settings.dialog.rotate_key.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Force key rotation?" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Forcer une rotation de clé ?" } }
+      }
+    },
+    "settings.dialog.rotate_key.confirm": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Rotate" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Lancer" } }
+      }
+    },
+    "settings.dialog.rotate_key.message": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "A new AES-256 key will be generated for the local vault." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Une nouvelle clé AES-256 sera générée pour le coffre local." } }
+      }
+    },
+    "settings.dialog.reset_prefs.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reset preferences?" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Réinitialiser les préférences ?" } }
+      }
+    },
+    "settings.dialog.reset_prefs.confirm": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reset" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Réinitialiser" } }
+      }
+    },
+    "settings.dialog.reset_prefs.message": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Only UI and privacy preferences will be reset." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Seules les préférences d'interface et confidentialité seront réinitialisées." } }
+      }
+    },
+    "settings.dialog.csv_export.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Warning — Plaintext export" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Attention — Export en clair" } }
+      }
+    },
+    "settings.dialog.csv_export.confirm": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Export anyway" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Exporter quand même" } }
+      }
+    },
+    "settings.dialog.csv_export.message": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The CSV export contains all your passwords in plaintext. Do not send it via email or unencrypted messaging. Delete it after use." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "L'export CSV contient tous tes mots de passe en texte clair. Ne l'envoie pas par email ou messagerie non chiffrée. Supprime-le après usage." } }
+      }
+    },
+    "settings.alert.info": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Info" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Info" } }
+      }
+    },
+    "settings.alert.key_rotated": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Vault key renewed." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Clé du coffre renouvelée." } }
+      }
+    },
+    "settings.alert.backup_passphrase.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Backup passphrase" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Phrase secrète backup" } }
+      }
+    },
+    "settings.alert.backup_passphrase.placeholder": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "At least 10 characters" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Au moins 10 caractères" } }
+      }
+    },
+    "settings.alert.backup_passphrase.export": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Export" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Exporter" } }
+      }
+    },
+    "settings.alert.backup_passphrase.message": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This passphrase will be needed to restore the backup." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Cette phrase sera nécessaire pour restaurer le backup." } }
+      }
+    },
+    "settings.alert.export_failed": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Export failed. Check the passphrase." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Échec export. Vérifie la phrase secrète." } }
+      }
+    },
+    "settings.alert.import_passphrase.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import passphrase" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Phrase secrète import" } }
+      }
+    },
+    "settings.alert.import_passphrase.placeholder": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Passphrase" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Phrase secrète" } }
+      }
+    },
+    "settings.alert.import_passphrase.import": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Importer" } }
+      }
+    },
+    "settings.alert.import_passphrase.message": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enter the passphrase used during export." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Entre la phrase utilisée pendant l'export." } }
+      }
+    },
+    "settings.alert.import_failed": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import rejected (invalid passphrase or altered file)." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Import refusé (phrase invalide ou fichier altéré)." } }
+      }
+    },
+    "settings.alert.file_read_failed": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unable to read the file." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Impossible de lire le fichier." } }
+      }
+    },
+    "settings.alert.export_cancelled": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Export cancelled or failed." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Export annulé ou échoué." } }
+      }
+    },
+    "settings.alert.csv_copied": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "CSV copied to clipboard. Delete the file after use." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "CSV copié dans le presse-papier. Supprimez le fichier après usage." } }
+      }
+    },
+    "settings.alert.prefs_reset": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Preferences reset." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Préférences réinitialisées." } }
+      }
+    },
+
+    "changepassword.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Change master password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Changer le mot de passe maître" } }
+      }
+    },
+    "changepassword.success": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Password changed successfully." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mot de passe changé avec succès." } }
+      }
+    },
+    "changepassword.field.current": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Current password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mot de passe actuel" } }
+      }
+    },
+    "changepassword.field.new": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "New password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Nouveau mot de passe" } }
+      }
+    },
+    "changepassword.field.confirm": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Confirm new password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Confirmer le nouveau mot de passe" } }
+      }
+    },
+    "changepassword.button.change": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Change password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Changer le mot de passe" } }
+      }
+    },
+    "changepassword.nav.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Change Password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Changer le mot de passe" } }
+      }
+    },
+    "common.close": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Close" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Fermer" } }
+      }
+    },
+
+    "logout.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Confirm sign out" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Confirmer la déconnexion" } }
+      }
+    },
+    "logout.message": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "You will need to sign in again with your email and master password." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tu devras te reconnecter avec ton email et ton mot de passe maître." } }
+      }
+    },
+    "logout.button.cancel": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cancel" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Annuler" } }
+      }
+    },
+    "logout.button.confirm": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sign out" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Se déconnecter" } }
+      }
+    },
+
+    "cloud.nav.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cloud Sync" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Sync Cloud" } }
+      }
+    },
+    "cloud.mode.signin": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sign In" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Connexion" } }
+      }
+    },
+    "cloud.mode.signup": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sign Up" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Inscription" } }
+      }
+    },
+    "cloud.dialog.signout.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sign out from cloud?" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Se déconnecter du cloud ?" } }
+      }
+    },
+    "cloud.dialog.signout.confirm": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sign out" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déconnecter" } }
+      }
+    },
+    "cloud.dialog.signout.message": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Local data will be kept. Sync will be disabled." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Les données locales seront conservées. La synchronisation sera désactivée." } }
+      }
+    },
+    "cloud.authenticated.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cloud connected" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Cloud connecté" } }
+      }
+    },
+    "cloud.section.sync": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "SYNC" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "SYNCHRONISATION" } }
+      }
+    },
+    "cloud.status.ready": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Ready" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Prêt" } }
+      }
+    },
+    "cloud.status.syncing": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Syncing..." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Synchronisation..." } }
+      }
+    },
+    "cloud.status.disabled": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Disabled" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Désactivé" } }
+      }
+    },
+    "cloud.last_sync": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Last sync" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Dernière sync" } }
+      }
+    },
+    "cloud.button.sync_now": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sync now" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Synchroniser maintenant" } }
+      }
+    },
+    "cloud.button.signout": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sign out from cloud" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Se déconnecter du cloud" } }
+      }
+    },
+    "cloud.unlock.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unlock cloud" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déverrouiller le cloud" } }
+      }
+    },
+    "cloud.unlock.description": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enter your master password to decrypt your cloud data." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Entre ton mot de passe maître pour déchiffrer tes données cloud." } }
+      }
+    },
+    "cloud.unlock.unlocking": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unlocking..." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déverrouillage..." } }
+      }
+    },
+    "cloud.unlock.button": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unlock" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Déverrouiller" } }
+      }
+    },
+    "cloud.unlock.signout": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sign out" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Se déconnecter" } }
+      }
+    },
+    "cloud.auth.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cloud Sync" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Synchronisation Cloud" } }
+      }
+    },
+    "cloud.auth.description": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Your data is encrypted locally before being sent. The server only sees encrypted blobs." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Tes données sont chiffrées localement avant d'être envoyées. Le serveur ne voit que des blobs chiffrés." } }
+      }
+    },
+    "cloud.auth.e2e_encrypted": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "E2E encrypted" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "E2E chiffré" } }
+      }
+    },
+    "cloud.field.cloud_password": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cloud password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mot de passe cloud" } }
+      }
+    },
+    "cloud.field.master_for_encryption": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Master password (for encryption)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mot de passe maître (pour le chiffrement)" } }
+      }
+    },
+    "cloud.auth.password_note": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The cloud password is for Supabase authentication. The master password is for encrypting your data. They can be different." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Le mot de passe cloud sert à l'authentification Supabase. Le mot de passe maître sert au chiffrement de tes données. Ils peuvent être différents." } }
+      }
+    },
+    "cloud.auth.loading": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Loading..." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Chargement..." } }
+      }
+    },
+    "cloud.auth.create_account": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Create an account" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Créer un compte" } }
+      }
+    },
+
+    "import.nav.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Importer" } }
+      }
+    },
+    "import.error.file_read": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unable to read the file." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Impossible de lire le fichier." } }
+      }
+    },
+    "import.section.format": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "IMPORT FORMAT" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "FORMAT D'IMPORT" } }
+      }
+    },
+    "import.format.description": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Choose the format of the file to import." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Choisis le format du fichier à importer." } }
+      }
+    },
+    "import.button.choose_file": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Choose a CSV file" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Choisir un fichier CSV" } }
+      }
+    },
+    "import.format.hint": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Export your passwords from Bitwarden, 1Password or any other manager in CSV format." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Exporte tes mots de passe depuis Bitwarden, 1Password ou tout autre gestionnaire au format CSV." } }
+      }
+    },
+    "import.section.column_mapping": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "COLUMN MAPPING" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "CORRESPONDANCE DES COLONNES" } }
+      }
+    },
+    "import.mapping.description": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Map each CSV column to the correct field." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Associe chaque colonne du fichier CSV au bon champ." } }
+      }
+    },
+    "import.mapping.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Title" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Titre" } }
+      }
+    },
+    "import.mapping.username": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Username" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Identifiant" } }
+      }
+    },
+    "import.mapping.password": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Password" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mot de passe" } }
+      }
+    },
+    "import.mapping.website": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Website" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Site web" } }
+      }
+    },
+    "import.mapping.notes": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Notes" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Notes" } }
+      }
+    },
+    "import.mapping.folder": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Folder" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Dossier" } }
+      }
+    },
+    "import.button.continue": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Continue" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Continuer" } }
+      }
+    },
+    "import.section.preview": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "PREVIEW" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "APERÇU" } }
+      }
+    },
+    "import.preview.entries_detected %lld": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%lld entry(ies) detected" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "%lld entrée(s) détectée(s)" } }
+      }
+    },
+    "import.preview.more %lld": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "... and %lld more" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "... et %lld autre(s)" } }
+      }
+    },
+    "import.preview.duplicates": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Duplicate handling" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Gestion des doublons" } }
+      }
+    },
+    "import.preview.strategy": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Strategy" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Stratégie" } }
+      }
+    },
+    "import.button.import %lld": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import %lld entry(ies)" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Importer %lld entrée(s)" } }
+      }
+    },
+    "import.result.title": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Import complete" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Import terminé" } }
+      }
+    },
+    "import.result.imported": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Entries imported" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Entrées importées" } }
+      }
+    },
+    "import.result.duplicates": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Duplicates detected" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Doublons détectés" } }
+      }
+    },
+    "import.result.skipped": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Skipped" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ignorés" } }
+      }
+    },
+    "import.button.finish": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Finish" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Terminer" } }
+      }
+    },
+    "import.error.no_entries": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No entries detected. Check the file format." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Aucune entrée détectée. Vérifie le format du fichier." } }
+      }
+    },
+    "import.error.empty_file": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The file appears empty or malformed." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Le fichier semble vide ou mal formaté." } }
+      }
+    }
+  }
+}

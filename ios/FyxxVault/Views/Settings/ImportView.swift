@@ -42,11 +42,11 @@ struct ImportView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 30)
             }
-            .navigationTitle("Importer")
+            .navigationTitle(String(localized: "import.nav.title"))
             .fvInlineNavTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Fermer") { dismiss() }.foregroundStyle(FVColor.cyan)
+                    Button(String(localized: "common.close")) { dismiss() }.foregroundStyle(FVColor.cyan)
                 }
             }
             .background(FVAnimatedBackground())
@@ -61,7 +61,7 @@ struct ImportView: View {
                         processCSV()
                     }
                 case .failure:
-                    parseError = "Impossible de lire le fichier."
+                    parseError = String(localized: "import.error.file_read")
                 }
             }
         }
@@ -71,9 +71,9 @@ struct ImportView: View {
 
     private var formatSelectionStep: some View {
         VStack(spacing: 16) {
-            FVSectionHeader(icon: "square.and.arrow.down", title: "FORMAT D'IMPORT")
+            FVSectionHeader(icon: "square.and.arrow.down", title: String(localized: "import.section.format"))
 
-            Text("Choisis le format du fichier à importer.")
+            Text(String(localized: "import.format.description"))
                 .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(FVColor.mist)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -101,11 +101,11 @@ struct ImportView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            FVButton(title: "Choisir un fichier CSV") {
+            FVButton(title: String(localized: "import.button.choose_file")) {
                 showFileImporter = true
             }
 
-            Text("Exporte tes mots de passe depuis Bitwarden, 1Password ou tout autre gestionnaire au format CSV.")
+            Text(String(localized: "import.format.hint"))
                 .font(.system(size: 11, weight: .medium, design: .rounded))
                 .foregroundStyle(FVColor.mist.opacity(0.7))
         }
@@ -116,22 +116,22 @@ struct ImportView: View {
 
     private var columnMappingStep: some View {
         VStack(spacing: 16) {
-            FVSectionHeader(icon: "tablecells", title: "CORRESPONDANCE DES COLONNES")
+            FVSectionHeader(icon: "tablecells", title: String(localized: "import.section.column_mapping"))
 
-            Text("Associe chaque colonne du fichier CSV au bon champ.")
+            Text(String(localized: "import.mapping.description"))
                 .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(FVColor.mist)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            mappingPicker("Titre", selection: $columnMapping.titleColumn)
-            mappingPicker("Identifiant", selection: $columnMapping.usernameColumn)
-            mappingPicker("Mot de passe", selection: $columnMapping.passwordColumn)
-            mappingPicker("Site web", selection: $columnMapping.websiteColumn)
-            mappingPicker("Notes", selection: $columnMapping.notesColumn)
-            mappingPicker("Dossier", selection: $columnMapping.folderColumn)
+            mappingPicker(String(localized: "import.mapping.title"), selection: $columnMapping.titleColumn)
+            mappingPicker(String(localized: "import.mapping.username"), selection: $columnMapping.usernameColumn)
+            mappingPicker(String(localized: "import.mapping.password"), selection: $columnMapping.passwordColumn)
+            mappingPicker(String(localized: "import.mapping.website"), selection: $columnMapping.websiteColumn)
+            mappingPicker(String(localized: "import.mapping.notes"), selection: $columnMapping.notesColumn)
+            mappingPicker(String(localized: "import.mapping.folder"), selection: $columnMapping.folderColumn)
             mappingPicker("TOTP", selection: $columnMapping.totpColumn)
 
-            FVButton(title: "Continuer") {
+            FVButton(title: String(localized: "import.button.continue")) {
                 previewEntries = ImportService.parseGenericCSV(csvText, mapping: columnMapping)
                 step = .preview
             }
@@ -163,9 +163,9 @@ struct ImportView: View {
 
     private var previewStep: some View {
         VStack(spacing: 16) {
-            FVSectionHeader(icon: "eye", title: "APERÇU")
+            FVSectionHeader(icon: "eye", title: String(localized: "import.section.preview"))
 
-            Text("\(previewEntries.count) entrée(s) détectée(s)")
+            Text(String(localized: "import.preview.entries_detected \(previewEntries.count)"))
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -197,17 +197,17 @@ struct ImportView: View {
             }
 
             if previewEntries.count > 10 {
-                Text("... et \(previewEntries.count - 10) autre(s)")
+                Text(String(localized: "import.preview.more \(previewEntries.count - 10)"))
                     .font(.system(size: 12, design: .rounded))
                     .foregroundStyle(FVColor.mist.opacity(0.6))
             }
 
             // Duplicate strategy
             VStack(alignment: .leading, spacing: 8) {
-                Text("Gestion des doublons")
+                Text(String(localized: "import.preview.duplicates"))
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
-                Picker("Stratégie", selection: $duplicateStrategy) {
+                Picker(String(localized: "import.preview.strategy"), selection: $duplicateStrategy) {
                     ForEach(ImportDuplicateStrategy.allCases) { s in
                         Text(s.rawValue).tag(s)
                     }
@@ -216,7 +216,7 @@ struct ImportView: View {
                 .foregroundStyle(FVColor.cyan)
             }
 
-            FVButton(title: "Importer \(previewEntries.count) entrée(s)") {
+            FVButton(title: String(localized: "import.button.import \(previewEntries.count)")) {
                 let result = ImportService.deduplicate(
                     imported: previewEntries,
                     existing: vaultStore.entries,
@@ -240,23 +240,23 @@ struct ImportView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(FVColor.success)
 
-            Text("Import terminé")
+            Text(String(localized: "import.result.title"))
                 .font(.system(size: 20, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
 
             if let result = importResult {
                 VStack(spacing: 8) {
-                    resultRow("Entrées importées", value: "\(result.entries.count)", color: FVColor.success)
+                    resultRow(String(localized: "import.result.imported"), value: "\(result.entries.count)", color: FVColor.success)
                     if result.duplicateCount > 0 {
-                        resultRow("Doublons détectés", value: "\(result.duplicateCount)", color: FVColor.warning)
+                        resultRow(String(localized: "import.result.duplicates"), value: "\(result.duplicateCount)", color: FVColor.warning)
                     }
                     if result.skippedCount > 0 {
-                        resultRow("Ignorés", value: "\(result.skippedCount)", color: FVColor.mist)
+                        resultRow(String(localized: "import.result.skipped"), value: "\(result.skippedCount)", color: FVColor.mist)
                     }
                 }
             }
 
-            FVButton(title: "Terminer") {
+            FVButton(title: String(localized: "import.button.finish")) {
                 dismiss()
             }
         }
@@ -289,21 +289,21 @@ struct ImportView: View {
         case .bitwardenCSV:
             previewEntries = ImportService.parseBitwardenCSV(csvText)
             if previewEntries.isEmpty {
-                parseError = "Aucune entrée détectée. Vérifie le format du fichier."
+                parseError = String(localized: "import.error.no_entries")
             } else {
                 step = .preview
             }
         case .onePasswordCSV:
             previewEntries = ImportService.parseOnePasswordCSV(csvText)
             if previewEntries.isEmpty {
-                parseError = "Aucune entrée détectée. Vérifie le format du fichier."
+                parseError = String(localized: "import.error.no_entries")
             } else {
                 step = .preview
             }
         case .genericCSV:
             headers = ImportService.extractHeaders(from: csvText)
             if headers.isEmpty {
-                parseError = "Le fichier semble vide ou mal formaté."
+                parseError = String(localized: "import.error.empty_file")
             } else {
                 // Auto-map common column names
                 for (idx, h) in headers.enumerated() {

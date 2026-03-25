@@ -12,7 +12,7 @@ struct ActivityLogView: View {
             ScrollView {
                 VStack(spacing: 10) {
                     if vaultStore.activityLog.isEmpty {
-                        Text("Aucune activité").foregroundStyle(.white.opacity(0.7)).frame(maxWidth: .infinity).padding(.vertical, 40).fvGlass()
+                        Text(String(localized: "activity.empty")).foregroundStyle(.white.opacity(0.7)).frame(maxWidth: .infinity).padding(.vertical, 40).fvGlass()
                     } else {
                         ForEach(vaultStore.activityLog.prefix(500)) { item in
                             HStack(alignment: .top) {
@@ -28,11 +28,11 @@ struct ActivityLogView: View {
                 }
                 .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 22)
             }
-            .navigationTitle("Journal (\(vaultStore.activityLog.count))").fvInlineNavTitle()
+            .navigationTitle(String(localized: "activity.title \(vaultStore.activityLog.count)")).fvInlineNavTitle()
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() }.foregroundStyle(FVColor.cyan) }
+                ToolbarItem(placement: .cancellationAction) { Button(String(localized: "common.close")) { dismiss() }.foregroundStyle(FVColor.cyan) }
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Exporter") {
+                    Button(String(localized: "activity.export")) {
                         logDocument = TextFileDocument(text: vaultStore.exportActivityLogText())
                         showExporter = true
                     }

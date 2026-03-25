@@ -23,28 +23,28 @@ struct MaskedEmailView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 30)
             }
-            .navigationTitle("Emails Masqués")
+            .navigationTitle(String(localized: "masked.email.nav.title"))
             .fvInlineNavTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Fermer") { dismiss() }.foregroundStyle(FVColor.cyan)
+                    Button(String(localized: "vault.action.close")) { dismiss() }.foregroundStyle(FVColor.cyan)
                 }
             }
             .background(FVAnimatedBackground())
             .sheet(isPresented: $showCreateSheet) { createAliasSheet }
-            .confirmationDialog("Supprimer cet alias ?", isPresented: Binding(
+            .confirmationDialog(String(localized: "masked.email.delete.alias.title"), isPresented: Binding(
                 get: { showDeleteConfirm != nil },
                 set: { if !$0 { showDeleteConfirm = nil } }
             ), titleVisibility: .visible) {
-                Button("Supprimer", role: .destructive) {
+                Button(String(localized: "vault.action.delete"), role: .destructive) {
                     if let alias = showDeleteConfirm {
                         Task { await maskedEmailService.deleteAlias(id: alias.id) }
                     }
                     showDeleteConfirm = nil
                 }
-                Button("Annuler", role: .cancel) { showDeleteConfirm = nil }
+                Button(String(localized: "vault.action.cancel"), role: .cancel) { showDeleteConfirm = nil }
             } message: {
-                Text("L'alias ne recevra plus d'emails.")
+                Text(String(localized: "masked.email.delete.alias.message"))
             }
         }
     }
@@ -57,29 +57,29 @@ struct MaskedEmailView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(FVColor.cyan)
 
-            Text("Emails Masqués")
+            Text(String(localized: "masked.email.title"))
                 .font(FVFont.heading(22))
                 .foregroundStyle(.white)
 
-            Text("Génère des adresses email uniques pour chaque service. Si une fuite survient, seul l'alias est compromis — pas ton vrai email.")
+            Text(String(localized: "masked.email.description"))
                 .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(FVColor.mist.opacity(0.8))
                 .multilineTextAlignment(.center)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("Configuration").font(FVFont.title(16)).foregroundStyle(.white)
-                Text("1. Crée un compte gratuit sur addy.io")
+                Text(String(localized: "masked.email.setup.title")).font(FVFont.title(16)).foregroundStyle(.white)
+                Text(String(localized: "masked.email.setup.step1"))
                     .font(.system(size: 13, design: .rounded)).foregroundStyle(FVColor.mist)
-                Text("2. Va dans Settings → API Keys → Generate")
+                Text(String(localized: "masked.email.setup.step2"))
                     .font(.system(size: 13, design: .rounded)).foregroundStyle(FVColor.mist)
-                Text("3. Colle ta clé API ci-dessous")
+                Text(String(localized: "masked.email.setup.step3"))
                     .font(.system(size: 13, design: .rounded)).foregroundStyle(FVColor.mist)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            FVTextField(title: "Clé API addy.io", text: $apiToken, secure: true)
+            FVTextField(title: String(localized: "masked.email.api.key"), text: $apiToken, secure: true)
 
-            FVButton(title: "Connecter") {
+            FVButton(title: String(localized: "masked.email.connect")) {
                 guard !apiToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
                 maskedEmailService.configure(apiToken: apiToken.trimmingCharacters(in: .whitespacesAndNewlines))
                 apiToken = ""
@@ -87,8 +87,8 @@ struct MaskedEmailView: View {
             }
 
             HStack(spacing: 8) {
-                FVTag(text: "Gratuit", color: FVColor.success)
-                FVTag(text: "20 alias inclus", color: FVColor.cyan)
+                FVTag(text: String(localized: "masked.email.tag.free"), color: FVColor.success)
+                FVTag(text: String(localized: "masked.email.tag.included"), color: FVColor.cyan)
             }
         }
         .fvGlass()
@@ -100,10 +100,10 @@ struct MaskedEmailView: View {
         VStack(spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Emails Masqués")
+                    Text(String(localized: "masked.email.title"))
                         .font(FVFont.heading(22))
                         .foregroundStyle(.white)
-                    Text("\(maskedEmailService.aliases.count) alias actif(s)")
+                    Text(String(localized: "masked.email.active.count \(maskedEmailService.aliases.count)"))
                         .font(.system(size: 13, design: .rounded))
                         .foregroundStyle(FVColor.mist)
                 }
@@ -132,14 +132,14 @@ struct MaskedEmailView: View {
             }
 
             if maskedEmailService.aliases.isEmpty && !maskedEmailService.isLoading {
-                FVEmptyState(icon: "envelope.badge.shield.half.filled", title: "Aucun alias", subtitle: "Crée ton premier email masqué")
+                FVEmptyState(icon: "envelope.badge.shield.half.filled", title: String(localized: "masked.email.empty.title"), subtitle: String(localized: "masked.email.empty.subtitle"))
             }
 
             ForEach(maskedEmailService.aliases) { alias in
                 aliasCard(alias)
             }
 
-            Button("Déconnecter addy.io") {
+            Button(String(localized: "masked.email.disconnect")) {
                 maskedEmailService.disconnect()
             }
             .buttonStyle(FVSettingsButton(tint: .red.opacity(0.8)))
@@ -181,7 +181,7 @@ struct MaskedEmailView: View {
                 .labelsHidden()
                 .scaleEffect(0.8)
 
-                Text(alias.isActive ? "Actif" : "Désactivé")
+                Text(alias.isActive ? String(localized: "masked.email.status.active") : String(localized: "masked.email.status.disabled"))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(alias.isActive ? FVColor.success : FVColor.mist.opacity(0.5))
 
@@ -204,13 +204,13 @@ struct MaskedEmailView: View {
     private var createAliasSheet: some View {
         NavigationStack {
             VStack(spacing: 16) {
-                Text("Nouvel alias")
+                Text(String(localized: "masked.email.new.alias"))
                     .font(FVFont.heading(20))
                     .foregroundStyle(.white)
 
-                FVTextField(title: "Description (ex: Netflix, Amazon...)", text: $newAliasDescription)
+                FVTextField(title: String(localized: "masked.email.alias.description"), text: $newAliasDescription)
 
-                FVButton(title: maskedEmailService.isLoading ? "Création..." : "Créer l'alias") {
+                FVButton(title: maskedEmailService.isLoading ? String(localized: "masked.email.creating") : String(localized: "masked.email.create.alias")) {
                     let desc = newAliasDescription.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !desc.isEmpty else { return }
                     Task {
@@ -225,7 +225,7 @@ struct MaskedEmailView: View {
             .background(FVAnimatedBackground())
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Annuler") { showCreateSheet = false }.foregroundStyle(FVColor.cyan)
+                    Button(String(localized: "vault.action.cancel")) { showCreateSheet = false }.foregroundStyle(FVColor.cyan)
                 }
             }
         }

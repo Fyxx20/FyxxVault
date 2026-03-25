@@ -19,27 +19,27 @@ struct ChangePasswordView: View {
                         .foregroundStyle(FVColor.cyan)
                         .padding(.top, 10)
 
-                    Text("Changer le mot de passe maître")
+                    Text(String(localized: "changepassword.title"))
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
 
                     if success {
-                        Label("Mot de passe changé avec succès.", systemImage: "checkmark.circle.fill")
+                        Label(String(localized: "changepassword.success"), systemImage: "checkmark.circle.fill")
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
                             .foregroundStyle(FVColor.cyan)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .fvGlass()
                     } else {
                         VStack(spacing: 12) {
-                            FVTextField(title: "Mot de passe actuel", text: $currentPassword, secure: true)
-                            FVTextField(title: "Nouveau mot de passe", text: $newPassword, secure: true)
+                            FVTextField(title: String(localized: "changepassword.field.current"), text: $currentPassword, secure: true)
+                            FVTextField(title: String(localized: "changepassword.field.new"), text: $newPassword, secure: true)
 
                             if !newPassword.isEmpty {
                                 passwordRequirements
                             }
 
-                            FVTextField(title: "Confirmer le nouveau mot de passe", text: $confirmPassword, secure: true)
+                            FVTextField(title: String(localized: "changepassword.field.confirm"), text: $confirmPassword, secure: true)
 
                             if !errorMessage.isEmpty {
                                 Text(errorMessage)
@@ -48,7 +48,7 @@ struct ChangePasswordView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
 
-                            FVButton(title: "Changer le mot de passe") {
+                            FVButton(title: String(localized: "changepassword.button.change")) {
                                 if let error = authManager.changeMasterPassword(
                                     currentPassword: currentPassword,
                                     newPassword: newPassword,
@@ -68,11 +68,11 @@ struct ChangePasswordView: View {
                 }
                 .padding(.horizontal, 24).padding(.bottom, 24)
             }
-            .navigationTitle("Changer le mot de passe")
+            .navigationTitle(String(localized: "changepassword.nav.title"))
             .fvInlineNavTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Fermer") { dismiss() }.foregroundStyle(FVColor.cyan)
+                    Button(String(localized: "common.close")) { dismiss() }.foregroundStyle(FVColor.cyan)
                 }
             }
             .background(FVAnimatedBackground())
@@ -81,10 +81,10 @@ struct ChangePasswordView: View {
 
     var passwordRequirements: some View {
         VStack(alignment: .leading, spacing: 4) {
-            FVRequirementRow(label: "12 caractères minimum", met: newPassword.count >= 12)
-            FVRequirementRow(label: "1 majuscule", met: newPassword.rangeOfCharacter(from: .uppercaseLetters) != nil)
-            FVRequirementRow(label: "1 chiffre", met: newPassword.rangeOfCharacter(from: .decimalDigits) != nil)
-            FVRequirementRow(label: "1 caractère spécial", met: newPassword.rangeOfCharacter(from: CharacterSet(charactersIn: "!@#$%^&*()-_=+[]{}|;:,.<>?/\\\"'`~")) != nil)
+            FVRequirementRow(label: String(localized: "auth.password.requirement.length"), met: newPassword.count >= 12)
+            FVRequirementRow(label: String(localized: "auth.password.requirement.uppercase"), met: newPassword.rangeOfCharacter(from: .uppercaseLetters) != nil)
+            FVRequirementRow(label: String(localized: "auth.password.requirement.digit"), met: newPassword.rangeOfCharacter(from: .decimalDigits) != nil)
+            FVRequirementRow(label: String(localized: "auth.password.requirement.special"), met: newPassword.rangeOfCharacter(from: CharacterSet(charactersIn: "!@#$%^&*()-_=+[]{}|;:,.<>?/\\\"'`~")) != nil)
         }
         .padding(10)
         .background(FVColor.abyss.opacity(0.4))

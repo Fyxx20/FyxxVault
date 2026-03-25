@@ -19,10 +19,10 @@ struct SecurityDashboardView: View {
 
             VStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Sécurité")
+                    Text(String(localized: "security.title"))
                         .font(FVFont.display(28))
                         .foregroundStyle(.white)
-                    Text("ANALYSE EN TEMPS RÉEL")
+                    Text(String(localized: "security.subtitle"))
                         .font(FVFont.caption(11))
                         .kerning(1.5)
                         .foregroundStyle(FVColor.smoke)
@@ -31,7 +31,7 @@ struct SecurityDashboardView: View {
 
                 VStack(spacing: 8) {
                     FVSecurityGauge(score: audit.score, size: 160)
-                    Text("Score de sécurité global")
+                    Text(String(localized: "security.score.label"))
                         .font(FVFont.caption(12))
                         .foregroundStyle(FVColor.mist.opacity(0.9))
                 }
@@ -39,14 +39,14 @@ struct SecurityDashboardView: View {
                 .fvGlass()
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    FVStatPill(icon: "exclamationmark.triangle", title: "À renforcer", value: "\(audit.weakCount)", color: FVColor.danger)
-                    FVStatPill(icon: "arrow.triangle.2.circlepath", title: "Réutilisés", value: "\(audit.reusedCount)", color: FVColor.warning)
-                    FVStatPill(icon: "shield.slash", title: "Sans MFA", value: "\(audit.withoutMFACount)", color: FVColor.violet)
-                    FVStatPill(icon: "clock.badge.exclamationmark", title: "Expirés", value: "\(audit.expiredCount)", color: FVColor.rose)
+                    FVStatPill(icon: "exclamationmark.triangle", title: String(localized: "security.stat.weak"), value: "\(audit.weakCount)", color: FVColor.danger)
+                    FVStatPill(icon: "arrow.triangle.2.circlepath", title: String(localized: "security.stat.reused"), value: "\(audit.reusedCount)", color: FVColor.warning)
+                    FVStatPill(icon: "shield.slash", title: String(localized: "security.stat.no.mfa"), value: "\(audit.withoutMFACount)", color: FVColor.violet)
+                    FVStatPill(icon: "clock.badge.exclamationmark", title: String(localized: "security.stat.expired"), value: "\(audit.expiredCount)", color: FVColor.rose)
                 }
 
                 VStack(alignment: .leading, spacing: 10) {
-                    FVSectionHeader(icon: "lightbulb", title: "RECOMMANDATIONS")
+                    FVSectionHeader(icon: "lightbulb", title: String(localized: "security.section.recommendations"))
                     ForEach(Array(recommendations.enumerated()), id: \.offset) { _, item in
                         Button {
                             guard let action = item.action else { return }
@@ -79,9 +79,9 @@ struct SecurityDashboardView: View {
                 .fvGlass()
 
                 VStack(alignment: .leading, spacing: 10) {
-                    FVSectionHeader(icon: "clock.arrow.circlepath", title: "EXPIRATIONS")
+                    FVSectionHeader(icon: "clock.arrow.circlepath", title: String(localized: "security.section.expirations"))
                     if expiringEntries.isEmpty {
-                        Text("Aucun mot de passe expiré actuellement.")
+                        Text(String(localized: "security.expirations.none"))
                             .font(FVFont.body(13))
                             .foregroundStyle(FVColor.mist.opacity(0.85))
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -93,13 +93,13 @@ struct SecurityDashboardView: View {
                                         .font(FVFont.title(15))
                                         .foregroundStyle(.white)
                                     if let days = entry.daysUntilExpiration {
-                                        Text(days < 0 ? "Expiré depuis \(abs(days)) jour(s)" : "Expire dans \(days) jour(s)")
+                                        Text(days < 0 ? String(localized: "security.expired.since \(abs(days))") : String(localized: "security.expires.in \(days)"))
                                             .font(FVFont.caption(11))
                                             .foregroundStyle(days < 0 ? FVColor.danger : FVColor.warning)
                                     }
                                 }
                                 Spacer(minLength: 10)
-                                Button("Changer") { editingEntry = entry }
+                                Button(String(localized: "security.action.change")) { editingEntry = entry }
                                     .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
                             }
                         }
@@ -109,14 +109,14 @@ struct SecurityDashboardView: View {
 
                 // MARK: Dark Web Monitoring
                 VStack(alignment: .leading, spacing: 10) {
-                    FVSectionHeader(icon: "network.badge.shield.half.filled", title: "DARK WEB MONITORING")
+                    FVSectionHeader(icon: "network.badge.shield.half.filled", title: String(localized: "security.section.darkweb"))
 
                     if breachMonitor.isScanning {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack(spacing: 8) {
                                 ProgressView()
                                     .tint(FVColor.cyan)
-                                Text("Analyse en cours... \(Int(breachMonitor.scanProgress * 100))%")
+                                Text(String(localized: "security.darkweb.scanning \(Int(breachMonitor.scanProgress * 100))"))
                                     .font(FVFont.body(13))
                                     .foregroundStyle(FVColor.mist)
                             }
@@ -125,17 +125,17 @@ struct SecurityDashboardView: View {
                         }
                     } else {
                         if let lastDate = breachMonitor.lastScanDate {
-                            Text("Dernier scan : \(lastDate, style: .relative)")
+                            Text(String(localized: "security.darkweb.last.scan \(lastDate.formatted(.relative(presentation: .named)))"))
                                 .font(FVFont.caption(11))
                                 .foregroundStyle(FVColor.smoke)
                         }
 
                         if breachMonitor.totalBreached > 0 {
-                            Label("\(breachMonitor.totalBreached) mot(s) de passe compromis", systemImage: "exclamationmark.triangle.fill")
+                            Label(String(localized: "security.darkweb.breached \(breachMonitor.totalBreached)"), systemImage: "exclamationmark.triangle.fill")
                                 .font(FVFont.body(13))
                                 .foregroundStyle(FVColor.danger)
                         } else if breachMonitor.lastScanDate != nil {
-                            Label("Aucune fuite détectée", systemImage: "checkmark.circle.fill")
+                            Label(String(localized: "security.darkweb.no.breach"), systemImage: "checkmark.circle.fill")
                                 .font(FVFont.body(13))
                                 .foregroundStyle(FVColor.success)
                         }
@@ -148,7 +148,7 @@ struct SecurityDashboardView: View {
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "magnifyingglass")
-                                Text("Scanner maintenant")
+                                Text(String(localized: "security.darkweb.scan.now"))
                             }
                             .font(FVFont.body(13))
                             .foregroundStyle(FVColor.cyan)
@@ -171,13 +171,13 @@ struct SecurityDashboardView: View {
                                         .font(FVFont.title(15))
                                         .foregroundStyle(.white)
                                     if let count = breachMonitor.breachCount(for: entry.id) {
-                                        Text("Apparu dans \(count) fuite(s)")
+                                        Text(String(localized: "security.darkweb.appeared.in \(count)"))
                                             .font(FVFont.caption(11))
                                             .foregroundStyle(FVColor.danger)
                                     }
                                 }
                                 Spacer(minLength: 10)
-                                Button("Changer") { editingEntry = entry }
+                                Button(String(localized: "security.action.change")) { editingEntry = entry }
                                     .buttonStyle(FVSettingsButton(tint: FVColor.danger))
                             }
                         }
@@ -207,19 +207,19 @@ struct SecurityDashboardView: View {
     private func actionableRecommendations(_ audit: SecurityAudit) -> [SecurityRecommendation] {
         var items: [SecurityRecommendation] = []
         if audit.weakCount > 0 {
-            items.append(.init(text: "Renforce \(audit.weakCount) mot(s) de passe à améliorer.", action: .weakPasswords))
+            items.append(.init(text: String(localized: "security.rec.weak \(audit.weakCount)"), action: .weakPasswords))
         }
         if audit.reusedCount > 0 {
-            items.append(.init(text: "Évite la réutilisation (\(audit.reusedCount) entrée(s)).", action: .reusedPasswords))
+            items.append(.init(text: String(localized: "security.rec.reused \(audit.reusedCount)"), action: .reusedPasswords))
         }
         if audit.withoutMFACount > 0 {
-            items.append(.init(text: "Active le MFA sur \(audit.withoutMFACount) compte(s).", action: .missingMFA))
+            items.append(.init(text: String(localized: "security.rec.mfa \(audit.withoutMFACount)"), action: .missingMFA))
         }
         if audit.expiredCount > 0 {
-            items.append(.init(text: "\(audit.expiredCount) mot(s) de passe expiré(s) à renouveler.", action: .expiredPasswords))
+            items.append(.init(text: String(localized: "security.rec.expired \(audit.expiredCount)"), action: .expiredPasswords))
         }
         if items.isEmpty {
-            items.append(.init(text: "Excellent niveau de sécurité.", action: nil))
+            items.append(.init(text: String(localized: "security.rec.excellent"), action: nil))
         }
         return items
     }
