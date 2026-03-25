@@ -40,10 +40,13 @@ final class AppLockManager: ObservableObject {
     }
 
     func activateForVaultEntry() {
-        isLocked = true
         let biometric = UserDefaults.standard.bool(forKey: SettingsKey.biometricUnlock)
         if biometric {
+            isLocked = true
             Task { _ = await unlockWithBiometrics() }
+        } else {
+            // No biometric configured — don't lock on entry
+            isLocked = false
         }
     }
 
