@@ -96,8 +96,14 @@ final class SecureBytes {
     func wipe() {
         guard !bytes.isEmpty else { return }
         bytes.withUnsafeMutableBufferPointer { buffer in
+            guard let baseAddress = buffer.baseAddress else { return }
             // Use volatile-equivalent zeroing to prevent compiler optimization
-            memset_s(buffer.baseAddress, buffer.count, 0, buffer.count)
+            let rawPtr = UnsafeMutableRawPointer(baseAddress)
+            for i in 0..<buffer.count {
+                rawPtr.storeBytes(of: UInt8(0), toByteOffset: i, as: UInt8.self)
+            }
+            // Compiler barrier to prevent dead-store elimination
+            _fixLifetime(rawPtr)
         }
         bytes = []
     }
@@ -159,14 +165,3 @@ enum PinnedSession {
     }()
 }
 
-// MARK: - memset_s polyfill
-
-/// Volatile memset that the compiler cannot optimize away.
-/// This ensures sensitive data is actually zeroed in memory.
-@_silgen_name("memset_s")
-private func memset_s(
-    _ dest: UnsafeMutableRawPointer?,
-    _ destsz: Int,
-    _ ch: Int32,
-    _ count: Int
-) -> Int32
