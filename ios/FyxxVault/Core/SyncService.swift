@@ -1,5 +1,9 @@
 import Foundation
 import SwiftUI
+import Combine
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - Sync Types
 
@@ -406,7 +410,7 @@ final class SyncService: ObservableObject {
         let now = ISO8601DateFormatter().string(from: Date())
         let body: [String: Any] = [
             "device_id": deviceID,
-            "device_name": UIDevice.current.name,
+            "device_name": Self.deviceName(),
             "last_sync_at": now
         ]
         _ = try await postJSON(
@@ -455,5 +459,13 @@ final class SyncService: ObservableObject {
         let id = UUID().uuidString
         UserDefaults.standard.set(id, forKey: key)
         return id
+    }
+
+    private static func deviceName() -> String {
+        #if canImport(UIKit)
+        return UIDevice.current.name
+        #else
+        return Host.current().localizedName ?? "Mac"
+        #endif
     }
 }
