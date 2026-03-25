@@ -1047,3 +1047,41 @@ struct FVEmptyState: View {
         .fvGlass()
     }
 }
+
+// MARK: - Section Border Modifier
+
+struct FVSectionBorder: ViewModifier {
+    let color: Color
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(color.opacity(0.6))
+                    .frame(width: 2.5)
+                    .padding(.vertical, 12)
+            }
+    }
+}
+
+extension View {
+    func fvSectionBorder(_ color: Color) -> some View {
+        modifier(FVSectionBorder(color: color))
+    }
+}
+
+// MARK: - Pro Badge
+
+struct FVProBadge: View {
+    var body: some View {
+        Text("PRO")
+            .font(.system(size: 8, weight: .black, design: .rounded))
+            .kerning(1)
+            .foregroundStyle(FVColor.abyss)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(FVGradient.goldShimmer)
+            .clipShape(Capsule())
+            .shadow(color: FVColor.gold.opacity(0.3), radius: 4, y: 1)
+    }
+}

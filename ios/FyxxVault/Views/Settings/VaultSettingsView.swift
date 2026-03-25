@@ -200,11 +200,15 @@ struct VaultSettingsView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+        .fvSectionBorder(FVColor.cyan)
     }
 
     private var cloudSyncSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "cloud.fill", title: String(localized: "settings.section.cloud_sync"))
+            HStack(spacing: 8) {
+                FVSectionHeader(icon: "cloud.fill", title: String(localized: "settings.section.cloud_sync"))
+                FVProBadge()
+            }
             HStack {
                 Text(String(localized: "settings.cloud.status"))
                     .font(.system(size: 14, weight: .medium, design: .rounded))
@@ -230,11 +234,15 @@ struct VaultSettingsView: View {
                 .foregroundStyle(FVColor.mist.opacity(0.75))
         }
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+        .fvSectionBorder(FVColor.success)
     }
 
     private var maskedEmailSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "envelope.badge.shield.half.filled", title: String(localized: "settings.section.masked_emails"))
+            HStack(spacing: 8) {
+                FVSectionHeader(icon: "envelope.badge.shield.half.filled", title: String(localized: "settings.section.masked_emails"))
+                FVProBadge()
+            }
             HStack {
                 Text(String(localized: "settings.cloud.status"))
                     .font(.system(size: 14, weight: .medium, design: .rounded))
@@ -253,6 +261,7 @@ struct VaultSettingsView: View {
                 .foregroundStyle(FVColor.mist.opacity(0.75))
         }
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+        .fvSectionBorder(FVColor.violet)
     }
 
     private var securitySection: some View {
@@ -276,6 +285,7 @@ struct VaultSettingsView: View {
                 .foregroundStyle(FVColor.mist.opacity(0.75))
         }
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+        .fvSectionBorder(FVColor.warning)
     }
 
     private var privacySection: some View {
@@ -288,6 +298,7 @@ struct VaultSettingsView: View {
                 .buttonStyle(FVSettingsButton(tint: FVColor.silver))
         }
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+        .fvSectionBorder(FVColor.rose)
     }
 
     private var dataSection: some View {
@@ -305,6 +316,7 @@ struct VaultSettingsView: View {
                 .buttonStyle(FVSettingsButton(tint: .red.opacity(0.9)))
         }
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+        .fvSectionBorder(FVColor.smoke)
     }
 
     private var backupSection: some View {
@@ -321,6 +333,7 @@ struct VaultSettingsView: View {
                 .foregroundStyle(FVColor.mist.opacity(0.75))
         }
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+        .fvSectionBorder(FVColor.gold)
     }
 
     private var advancedSecuritySection: some View {
@@ -339,6 +352,7 @@ struct VaultSettingsView: View {
                 .foregroundStyle(FVColor.warning.opacity(0.85))
         }
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+        .fvSectionBorder(FVColor.violet)
     }
 
     private var logoutButton: some View {
