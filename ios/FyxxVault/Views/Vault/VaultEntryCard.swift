@@ -11,6 +11,7 @@ struct VaultEntryCard: View {
     var onTapCard: (() -> Void)? = nil
     var compact: Bool = false
     var accentMode: Int = 0
+    var breachCount: Int? = nil
     @State private var revealPassword = false
     @State private var didCopyPassword = false
     @State private var showMFACode = true
@@ -53,6 +54,12 @@ struct VaultEntryCard: View {
                                 .font(.system(size: 10, weight: .bold)).foregroundStyle(.orange)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
                                 .background(.orange.opacity(0.15)).clipShape(Capsule())
+                        }
+                        if let breachCount, breachCount > 0 {
+                            Label("Compromis (\(breachCount) fuite(s))", systemImage: "exclamationmark.triangle.fill")
+                                .font(.system(size: 10, weight: .bold)).foregroundStyle(FVColor.danger)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(FVColor.danger.opacity(0.15)).clipShape(Capsule())
                         }
                     }
                     if !entry.website.isEmpty {

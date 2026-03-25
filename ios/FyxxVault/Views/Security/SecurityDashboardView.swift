@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SecurityDashboardView: View {
     @ObservedObject var vaultStore: VaultStore
+    @ObservedObject var breachMonitor: BreachMonitorService
     var onRecommendationTap: (VaultQuickAction) -> Void
     @State private var editingEntry: VaultEntry?
 
@@ -106,16 +107,80 @@ struct SecurityDashboardView: View {
                 }
                 .fvGlass()
 
+                // MARK: Dark Web Monitoring
                 VStack(alignment: .leading, spacing: 10) {
-                    FVSectionHeader(icon: "checkmark.shield", title: "ALERTES BREACH")
-                    if audit.reusedCount > 0 {
-                        Text("Des réutilisations sont détectées. Vérifie les mots de passe compromis dans l'édition de compte.")
-                            .font(FVFont.body(13))
-                            .foregroundStyle(FVColor.warning)
+                    FVSectionHeader(icon: "network.badge.shield.half.filled", title: "DARK WEB MONITORING")
+
+                    if breachMonitor.isScanning {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                    .tint(FVColor.cyan)
+                                Text("Analyse en cours... \(Int(breachMonitor.scanProgress * 100))%")
+                                    .font(FVFont.body(13))
+                                    .foregroundStyle(FVColor.mist)
+                            }
+                            ProgressView(value: breachMonitor.scanProgress, total: 1.0)
+                                .tint(FVColor.cyan)
+                        }
                     } else {
-                        Label("Aucune fuite détectée", systemImage: "checkmark.circle.fill")
+                        if let lastDate = breachMonitor.lastScanDate {
+                            Text("Dernier scan : \(lastDate, style: .relative)")
+                                .font(FVFont.caption(11))
+                                .foregroundStyle(FVColor.smoke)
+                        }
+
+                        if breachMonitor.totalBreached > 0 {
+                            Label("\(breachMonitor.totalBreached) mot(s) de passe compromis", systemImage: "exclamationmark.triangle.fill")
+                                .font(FVFont.body(13))
+                                .foregroundStyle(FVColor.danger)
+                        } else if breachMonitor.lastScanDate != nil {
+                            Label("Aucune fuite détectée", systemImage: "checkmark.circle.fill")
+                                .font(FVFont.body(13))
+                                .foregroundStyle(FVColor.success)
+                        }
+
+                        Button {
+                            fvHaptic(.light)
+                            Task {
+                                await breachMonitor.scanAll(entries: vaultStore.entries)
+                            }
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "magnifyingglass")
+                                Text("Scanner maintenant")
+                            }
                             .font(FVFont.body(13))
-                            .foregroundStyle(FVColor.success)
+                            .foregroundStyle(FVColor.cyan)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(FVColor.cyan.opacity(0.12))
+                            .clipShape(Capsule())
+                            .overlay(Capsule().strokeBorder(FVColor.cyan.opacity(0.3), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // List of breached entries
+                    if !breachMonitor.isScanning && breachMonitor.totalBreached > 0 {
+                        let breached = vaultStore.entries.filter { (breachMonitor.breachCount(for: $0.id) ?? 0) > 0 }
+                        ForEach(breached.prefix(10), id: \.id) { entry in
+                            HStack(spacing: 10) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(entry.title)
+                                        .font(FVFont.title(15))
+                                        .foregroundStyle(.white)
+                                    if let count = breachMonitor.breachCount(for: entry.id) {
+                                        Text("Apparu dans \(count) fuite(s)")
+                                            .font(FVFont.caption(11))
+                                            .foregroundStyle(FVColor.danger)
+                                    }
+                                }
+                                Spacer(minLength: 10)
+                                Button("Changer") { editingEntry = entry }
+                                    .buttonStyle(FVSettingsButton(tint: FVColor.danger))
+                            }
+                        }
                     }
                 }
                 .fvGlass()

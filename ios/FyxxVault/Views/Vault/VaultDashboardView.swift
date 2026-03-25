@@ -11,6 +11,8 @@ struct VaultDashboardView: View {
     @ObservedObject var authManager: AuthManager
     @ObservedObject var vaultStore: VaultStore
     @ObservedObject var syncService: SyncService
+    @ObservedObject var breachMonitor: BreachMonitorService
+    @ObservedObject var maskedEmailService: MaskedEmailService
 
     @State private var selectedTab: Int = 1
     @State private var pendingQuickAction: VaultQuickAction?
@@ -20,7 +22,7 @@ struct VaultDashboardView: View {
             Group {
                 switch selectedTab {
                 case 0:
-                    SecurityDashboardView(vaultStore: vaultStore) { action in
+                    SecurityDashboardView(vaultStore: vaultStore, breachMonitor: breachMonitor) { action in
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                             selectedTab = 1
                         }
@@ -31,7 +33,7 @@ struct VaultDashboardView: View {
                     VaultListView(vaultStore: vaultStore, quickAction: $pendingQuickAction)
                         .transition(.opacity)
                 case 2:
-                    VaultSettingsView(authManager: authManager, vaultStore: vaultStore, syncService: syncService)
+                    VaultSettingsView(authManager: authManager, vaultStore: vaultStore, syncService: syncService, maskedEmailService: maskedEmailService)
                         .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .opacity))
                 default:
                     EmptyView()

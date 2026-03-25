@@ -28,3 +28,5 @@ web/build/
 *.p12
 *.mobileprovision
 *.pem
+.claude/worktrees/
+supabase/.temp/

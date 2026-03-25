@@ -8,6 +8,8 @@ struct ContentView: View {
     @StateObject private var vaultStore = VaultStore()
     @StateObject private var appLock = AppLockManager()
     @StateObject private var syncService = SyncService()
+    @StateObject private var breachMonitor = BreachMonitorService()
+    @StateObject private var maskedEmailService = MaskedEmailService()
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -24,7 +26,7 @@ struct ContentView: View {
                     if appLock.isLocked {
                         VaultLockView(appLock: appLock, authManager: authManager)
                     } else {
-                        VaultDashboardView(authManager: authManager, vaultStore: vaultStore, syncService: syncService)
+                        VaultDashboardView(authManager: authManager, vaultStore: vaultStore, syncService: syncService, breachMonitor: breachMonitor, maskedEmailService: maskedEmailService)
                     }
                 }
             }
@@ -55,6 +57,11 @@ struct ContentView: View {
             appLock.configureFromSettings()
             if authManager.phase == .vault {
                 appLock.activateForVaultEntry()
+            }
+        }
+        .task(id: authManager.phase) {
+            if authManager.phase == .vault && breachMonitor.shouldAutoScan() {
+                await breachMonitor.scanAll(entries: vaultStore.entries)
             }
         }
         .onChange(of: scenePhase) { _, newValue in

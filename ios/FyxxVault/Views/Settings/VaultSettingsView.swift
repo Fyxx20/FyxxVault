@@ -5,7 +5,9 @@ struct VaultSettingsView: View {
     @ObservedObject var authManager: AuthManager
     @ObservedObject var vaultStore: VaultStore
     @ObservedObject var syncService: SyncService
+    @ObservedObject var maskedEmailService: MaskedEmailService
 
+    @State private var showMaskedEmails = false
     @State private var showCloudSync = false
     @State private var showTrash = false
     @State private var showActivityLog = false
@@ -46,6 +48,7 @@ struct VaultSettingsView: View {
                     headerCard
                     accountSection
                     cloudSyncSection
+                    maskedEmailSection
                     securitySection
                     privacySection
                     dataSection
@@ -66,6 +69,7 @@ struct VaultSettingsView: View {
             .sheet(isPresented: $showReorder) { VaultReorderView(vaultStore: vaultStore) }
             .sheet(isPresented: $showChangePassword) { ChangePasswordView(authManager: authManager) }
             .sheet(isPresented: $showImportCSV) { ImportView(vaultStore: vaultStore) }
+            .sheet(isPresented: $showMaskedEmails) { MaskedEmailView(maskedEmailService: maskedEmailService) }
             .sheet(isPresented: $showCloudSync) { CloudSyncView(syncService: syncService, vaultStore: vaultStore) }
             .sheet(isPresented: $showLogoutSheet) {
                 LogoutConfirmSheet(
@@ -207,6 +211,29 @@ struct VaultSettingsView: View {
             Button("Configurer la synchronisation cloud") { showCloudSync = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
             Text("Chiffrement zero-knowledge : le serveur ne voit que des données chiffrées.")
+                .font(FVFont.caption(11))
+                .foregroundStyle(FVColor.mist.opacity(0.75))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+    }
+
+    private var maskedEmailSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            FVSectionHeader(icon: "envelope.badge.shield.half.filled", title: "EMAILS MASQUÉS")
+            HStack {
+                Text("Statut")
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(FVColor.mist)
+                Spacer()
+                if maskedEmailService.isConfigured {
+                    FVTag(text: "\(maskedEmailService.aliases.count) alias", color: FVColor.success)
+                } else {
+                    FVTag(text: "Non configuré", color: FVColor.mist)
+                }
+            }
+            Button("Emails masqués (\(maskedEmailService.aliases.count))") { showMaskedEmails = true }
+                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+            Text("Protège ton vrai email avec des alias uniques via addy.io.")
                 .font(FVFont.caption(11))
                 .foregroundStyle(FVColor.mist.opacity(0.75))
         }
