@@ -49,16 +49,26 @@ enum CryptoService {
 
     static func symmetricKeyData() throws -> Data {
         if let existing = KeychainService.loadOptionalData(for: SecureStoreKey.vaultSymmetricKey) {
+            // Ensure the key is also in the shared Keychain for the AutoFill extension
+            syncKeyToSharedKeychain(existing)
             return existing
         }
         let key = SymmetricKey(size: .bits256)
         let keyData = key.withUnsafeBytes { Data($0) }
         try KeychainService.save(data: keyData, key: SecureStoreKey.vaultSymmetricKey)
+        syncKeyToSharedKeychain(keyData)
         return keyData
     }
 
     static func replaceSymmetricKeyData(with data: Data) throws {
         try KeychainService.save(data: data, key: SecureStoreKey.vaultSymmetricKey)
+        syncKeyToSharedKeychain(data)
+    }
+
+    /// Copies the vault symmetric key to the shared Keychain access group
+    /// so the AutoFill extension can decrypt the vault.
+    private static func syncKeyToSharedKeychain(_ keyData: Data) {
+        try? SharedKeychainService.save(data: keyData, for: SharedConfig.vaultSymmetricKeyAccount)
     }
 
     // MARK: Encryption / Decryption

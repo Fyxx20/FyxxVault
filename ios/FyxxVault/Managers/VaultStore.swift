@@ -20,14 +20,33 @@ final class VaultStore: ObservableObject {
     private let snapshotRetentionCount = 30
 
     init() {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-            ?? FileManager.default.temporaryDirectory
-        let folder = appSupport.appendingPathComponent("FyxxVaultData", isDirectory: true)
-        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        self.fileURL = folder.appendingPathComponent("vault.enc")
-        self.snapshotsDirectoryURL = folder.appendingPathComponent("Snapshots", isDirectory: true)
-        try? FileManager.default.createDirectory(at: snapshotsDirectoryURL, withIntermediateDirectories: true)
+        // Use shared App Group container so the AutoFill extension can access the vault
+        if let sharedURL = SharedConfig.sharedVaultFileURL {
+            self.fileURL = sharedURL
+        } else {
+            // Fallback to app-private storage if App Group is unavailable
+            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+                ?? FileManager.default.temporaryDirectory
+            let folder = appSupport.appendingPathComponent("FyxxVaultData", isDirectory: true)
+            try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            self.fileURL = folder.appendingPathComponent("vault.enc")
+        }
+
+        if let sharedSnapshots = SharedConfig.sharedSnapshotsURL {
+            self.snapshotsDirectoryURL = sharedSnapshots
+        } else {
+            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+                ?? FileManager.default.temporaryDirectory
+            self.snapshotsDirectoryURL = appSupport
+                .appendingPathComponent("FyxxVaultData", isDirectory: true)
+                .appendingPathComponent("Snapshots", isDirectory: true)
+            try? FileManager.default.createDirectory(at: snapshotsDirectoryURL, withIntermediateDirectories: true)
+        }
+
         self.keyData = try? CryptoService.symmetricKeyData()
+
+        // Migrate from old app-private storage to shared container if needed
+        migrateToSharedContainerIfNeeded()
 
         loadEntries()
         purgeExpiredTrash()
@@ -495,6 +514,41 @@ final class VaultStore: ObservableObject {
             for url in sorted.dropFirst(snapshotRetentionCount) {
                 try? FileManager.default.removeItem(at: url)
             }
+        }
+    }
+
+    // MARK: Private — Migration from app-private to shared container
+
+    /// One-time migration: if the vault file exists in the old app-private location
+    /// but not in the shared container, copy it over.
+    private func migrateToSharedContainerIfNeeded() {
+        let migrationKey = "fyxxvault.migrated.to.shared.container"
+        guard !UserDefaults.standard.bool(forKey: migrationKey) else { return }
+
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        guard let appSupport else { return }
+
+        let oldFile = appSupport
+            .appendingPathComponent("FyxxVaultData", isDirectory: true)
+            .appendingPathComponent("vault.enc")
+
+        guard FileManager.default.fileExists(atPath: oldFile.path) else {
+            UserDefaults.standard.set(true, forKey: migrationKey)
+            return
+        }
+
+        // Only migrate if the shared container file doesn't exist yet
+        guard !FileManager.default.fileExists(atPath: fileURL.path) else {
+            UserDefaults.standard.set(true, forKey: migrationKey)
+            return
+        }
+
+        do {
+            try FileManager.default.copyItem(at: oldFile, to: fileURL)
+            UserDefaults.standard.set(true, forKey: migrationKey)
+            log("Migration", target: "Vault migré vers le conteneur partagé")
+        } catch {
+            // Migration failed — will retry next launch
         }
     }
 }
