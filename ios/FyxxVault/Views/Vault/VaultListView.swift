@@ -22,6 +22,12 @@ struct VaultListView: View {
     @State private var selectedCategory: VaultCategory? = nil
     @AppStorage("fyxxvault.compact.cards") private var compactCards = false
     @AppStorage("fyxxvault.accent.mode") private var accentMode = 0
+    @FocusState private var isSearchFocused: Bool
+
+    private var timeGreeting: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        return hour < 18 ? "Bonjour" : "Bonsoir"
+    }
 
     private var filteredEntries: [VaultEntry] {
         let cleanQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -58,7 +64,7 @@ struct VaultListView: View {
                     // Header
                     HStack(alignment: .top, spacing: 12) {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(String(localized: "vault.title"))
+                            Text("\(timeGreeting), Coffre")
                                 .font(FVFont.display(32))
                                 .foregroundStyle(.white)
                                 .lineLimit(1)
@@ -119,20 +125,40 @@ struct VaultListView: View {
                     }
 
                     HStack(spacing: 8) {
-                        Image(systemName: "magnifyingglass").foregroundStyle(FVColor.mist.opacity(0.75))
-                        TextField(String(localized: "vault.list.search"), text: $query).fvPlatformTextEntry().foregroundStyle(.white)
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(isSearchFocused ? FVColor.cyan : FVColor.mist.opacity(0.75))
+                            .animation(.easeOut(duration: 0.2), value: isSearchFocused)
+                        TextField(String(localized: "vault.list.search"), text: $query)
+                            .fvPlatformTextEntry()
+                            .foregroundStyle(.white)
+                            .focused($isSearchFocused)
+                        if isSearchFocused || !query.isEmpty {
+                            Button {
+                                query = ""
+                                isSearchFocused = false
+                            } label: {
+                                Text("Annuler")
+                                    .font(FVFont.caption(12))
+                                    .foregroundStyle(FVColor.cyan)
+                            }
+                            .transition(.move(edge: .trailing).combined(with: .opacity))
+                        }
                     }
+                    .animation(.easeOut(duration: 0.2), value: isSearchFocused)
                     .padding(.horizontal, 16).padding(.vertical, 14)
                     .background(Color.white.opacity(0.05))
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(
                             LinearGradient(
-                                colors: [Color.white.opacity(0.14), FVColor.violet.opacity(0.28)],
+                                colors: [
+                                    isSearchFocused ? FVColor.cyan.opacity(0.4) : Color.white.opacity(0.14),
+                                    FVColor.violet.opacity(0.28)
+                                ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
-                            lineWidth: 1
+                            lineWidth: isSearchFocused ? 1.5 : 1
                         )
                     )
                     .fvGlass(cornerRadius: 18, padding: 0)

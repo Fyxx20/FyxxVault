@@ -3,57 +3,223 @@ import SwiftUI
 struct OnboardingView: View {
     @ObservedObject var authManager: AuthManager
     @State private var page = 0
+    @State private var appeared = false
+
+    private let features: [(icon: String, title: String, description: String, color: Color, badge: String)] = [
+        (
+            icon: "shield.lefthalf.filled",
+            title: "Chiffrement AES-256",
+            description: "Tes données sont chiffrées localement avec un standard militaire",
+            color: FVColor.cyan,
+            badge: "MILITARY GRADE"
+        ),
+        (
+            icon: "key.horizontal.fill",
+            title: "Authentification MFA",
+            description: "Double protection avec codes TOTP pour chaque compte",
+            color: FVColor.violet,
+            badge: "TOTP / 2FA"
+        ),
+        (
+            icon: "cloud.fill",
+            title: "Sync Zero-Knowledge",
+            description: "Synchronisation chiffrée de bout en bout via le cloud",
+            color: FVColor.success,
+            badge: "E2E ENCRYPTED"
+        ),
+        (
+            icon: "eye.slash.fill",
+            title: "Mode Panic",
+            description: "Un mot de passe d'urgence efface tout instantanément",
+            color: FVColor.danger,
+            badge: "EMERGENCY"
+        )
+    ]
 
     var body: some View {
-        VStack(spacing: 22) {
-            Spacer(minLength: 0)
-            FVBrandHeader(subtitle: String(localized: "onboarding.header.subtitle"))
-            TabView(selection: $page) {
-                FVOnboardingFeature(
-                    icon: "lock.doc.fill", title: String(localized: "onboarding.feature.vault.title"),
-                    description: String(localized: "onboarding.feature.vault.description"),
-                    color: FVColor.cyan
-                ).tag(0)
+        ZStack(alignment: .topTrailing) {
+            VStack(spacing: 0) {
+                Spacer(minLength: 20)
 
-                FVOnboardingFeature(
-                    icon: "checkmark.shield.fill", title: String(localized: "onboarding.feature.mfa.title"),
-                    description: String(localized: "onboarding.feature.mfa.description"),
-                    color: FVColor.violet
-                ).tag(1)
+                // Brand header - compact
+                FVBrandHeader(subtitle: "", compact: true)
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : -20)
+                    .animation(.spring(response: 0.7, dampingFraction: 0.8).delay(0.1), value: appeared)
 
-                FVOnboardingFeature(
-                    icon: "wand.and.stars", title: String(localized: "onboarding.feature.generator.title"),
-                    description: String(localized: "onboarding.feature.generator.description"),
-                    color: FVColor.gold
-                ).tag(2)
+                Spacer(minLength: 16)
 
-                FVOnboardingFeature(
-                    icon: "key.fill", title: String(localized: "onboarding.feature.recovery.title"),
-                    description: String(localized: "onboarding.feature.recovery.description"),
-                    color: FVColor.success
-                ).tag(3)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 290)
-            .fvGlass()
-
-            HStack(spacing: 8) {
-                ForEach(0..<4) { i in
-                    Capsule()
-                        .fill(i == page ? FVColor.cyan : Color.white.opacity(0.2))
-                        .frame(width: i == page ? 24 : 8, height: 8)
-                        .animation(.spring(response: 0.3), value: page)
+                // Feature pages
+                TabView(selection: $page) {
+                    ForEach(Array(features.enumerated()), id: \.offset) { index, feature in
+                        OnboardingFeaturePage(
+                            icon: feature.icon,
+                            title: feature.title,
+                            description: feature.description,
+                            color: feature.color,
+                            badge: feature.badge
+                        )
+                        .tag(index)
+                    }
                 }
-            }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .frame(height: 380)
 
-            FVButton(title: page < 3 ? String(localized: "onboarding.button.continue") : String(localized: "onboarding.button.enter")) {
-                if page < 3 {
-                    withAnimation(.easeInOut(duration: 0.25)) { page += 1 }
+                Spacer(minLength: 20)
+
+                // Progress dots
+                HStack(spacing: 10) {
+                    ForEach(0..<features.count, id: \.self) { i in
+                        Capsule()
+                            .fill(i == page ? features[page].color : Color.white.opacity(0.18))
+                            .frame(width: i == page ? 28 : 8, height: 8)
+                            .shadow(color: i == page ? features[page].color.opacity(0.5) : .clear, radius: 6, y: 0)
+                            .animation(.spring(response: 0.35, dampingFraction: 0.7), value: page)
+                    }
+                }
+                .padding(.bottom, 24)
+
+                // CTA button
+                if page < features.count - 1 {
+                    FVButton(title: "Continuer", icon: "arrow.right") {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            page += 1
+                        }
+                    }
+                    .padding(.horizontal, 32)
+                    .transition(.asymmetric(insertion: .opacity, removal: .opacity))
                 } else {
-                    authManager.completeOnboarding()
+                    FVButton(title: "Commencer", icon: "lock.shield.fill", style: .gold) {
+                        fvHaptic(.success)
+                        authManager.completeOnboarding()
+                    }
+                    .padding(.horizontal, 32)
+                    .transition(.asymmetric(insertion: .scale.combined(with: .opacity), removal: .opacity))
                 }
+
+                Spacer(minLength: 30)
             }
-            Spacer(minLength: 0)
+            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: page)
+
+            // Skip button top right
+            if page < features.count - 1 {
+                Button {
+                    fvHaptic(.light)
+                    authManager.completeOnboarding()
+                } label: {
+                    Text("Passer")
+                        .font(FVFont.body(13))
+                        .foregroundStyle(FVColor.smoke)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.white.opacity(0.06))
+                        .clipShape(Capsule())
+                        .overlay(Capsule().strokeBorder(Color.white.opacity(0.1), lineWidth: 1))
+                }
+                .padding(.top, 16)
+                .padding(.trailing, 24)
+                .transition(.opacity)
+            }
+        }
+        .onAppear { appeared = true }
+    }
+}
+
+// MARK: - Feature Page (premium)
+
+private struct OnboardingFeaturePage: View {
+    let icon: String
+    let title: String
+    let description: String
+    let color: Color
+    let badge: String
+
+    @State private var iconAppeared = false
+    @State private var contentAppeared = false
+    @State private var pulseGlow = false
+
+    var body: some View {
+        VStack(spacing: 24) {
+            // Icon area with layered circles
+            ZStack {
+                // Outer pulse ring
+                Circle()
+                    .fill(color.opacity(0.04))
+                    .frame(width: 160, height: 160)
+                    .scaleEffect(pulseGlow ? 1.12 : 0.95)
+
+                // Mid ring
+                Circle()
+                    .fill(color.opacity(0.08))
+                    .frame(width: 120, height: 120)
+                    .scaleEffect(iconAppeared ? 1 : 0.3)
+
+                // Inner ring
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 90, height: 90)
+                    .scaleEffect(iconAppeared ? 1 : 0.5)
+
+                // Icon
+                Image(systemName: icon)
+                    .font(.system(size: 40, weight: .semibold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [color, color.opacity(0.7)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .scaleEffect(iconAppeared ? 1 : 0.4)
+                    .rotationEffect(.degrees(iconAppeared ? 0 : -15))
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .animation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.15), value: iconAppeared)
+
+            // Badge
+            Text(badge)
+                .font(FVFont.caption(10))
+                .kerning(1.8)
+                .foregroundStyle(color)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .background(color.opacity(0.1))
+                .clipShape(Capsule())
+                .overlay(Capsule().strokeBorder(color.opacity(0.25), lineWidth: 1))
+                .opacity(contentAppeared ? 1 : 0)
+                .offset(y: contentAppeared ? 0 : 10)
+                .animation(.spring(response: 0.6).delay(0.3), value: contentAppeared)
+
+            // Title
+            Text(title)
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .opacity(contentAppeared ? 1 : 0)
+                .offset(y: contentAppeared ? 0 : 12)
+                .animation(.spring(response: 0.6).delay(0.4), value: contentAppeared)
+
+            // Description
+            Text(description)
+                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .foregroundStyle(FVColor.mist.opacity(0.75))
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+                .padding(.horizontal, 32)
+                .opacity(contentAppeared ? 1 : 0)
+                .offset(y: contentAppeared ? 0 : 8)
+                .animation(.spring(response: 0.6).delay(0.5), value: contentAppeared)
+        }
+        .onAppear {
+            iconAppeared = true
+            contentAppeared = true
+            withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) {
+                pulseGlow = true
+            }
+        }
+        .onDisappear {
+            iconAppeared = false
+            contentAppeared = false
+            pulseGlow = false
         }
     }
 }

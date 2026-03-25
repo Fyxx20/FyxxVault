@@ -15,6 +15,10 @@ struct VaultEntryCard: View {
     @State private var revealPassword = false
     @State private var didCopyPassword = false
     @State private var showMFACode = true
+    @State private var isPressed = false
+    @State private var showCopyOverlay = false
+    @State private var swipeOffset: CGFloat = 0
+    @State private var favBounce = false
     @AppStorage("fyxxvault.hide.passwords.default") private var hidePasswordsByDefault = true
     @AppStorage("fyxxvault.hide.mfa.default") private var hideMFACodeByDefault = false
     @AppStorage("fyxxvault.haptics.enabled") private var hapticsEnabled = true
@@ -43,7 +47,17 @@ struct VaultEntryCard: View {
                     VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(entry.title).font(FVFont.title(compact ? 16 : 18)).foregroundStyle(.white)
-                        if entry.isFavorite { Image(systemName: "star.fill").font(.system(size: 12)).foregroundStyle(.yellow.opacity(0.9)) }
+                        if entry.isFavorite {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.yellow.opacity(0.9))
+                                .scaleEffect(favBounce ? 1.35 : 1.0)
+                                .animation(.spring(response: 0.3, dampingFraction: 0.4), value: favBounce)
+                                .onAppear {
+                                    favBounce = true
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { favBounce = false }
+                                }
+                        }
                         if entry.isExpired {
                             Label(String(localized: "vault.card.expired"), systemImage: "clock.badge.exclamationmark.fill")
                                 .font(.system(size: 10, weight: .bold)).foregroundStyle(FVColor.danger)
@@ -143,12 +157,92 @@ struct VaultEntryCard: View {
             }
         }
         .fvGlass()
+        // Copy success overlay
+        .overlay {
+            if showCopyOverlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(FVColor.success.opacity(0.12))
+                    .overlay(
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 36, weight: .medium))
+                            .foregroundStyle(FVColor.success)
+                    )
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: showCopyOverlay)
         .overlay(RoundedRectangle(cornerRadius: 24).stroke(isSelected ? FVColor.cyan : .clear, lineWidth: 2))
         .overlay(alignment: .topTrailing) {
             if selectionMode { Image(systemName: isSelected ? "checkmark.circle.fill" : "circle").foregroundStyle(isSelected ? FVColor.cyan : .white.opacity(0.5)).padding(10) }
+        }
+        // Swipe actions
+        .background(
+            HStack(spacing: 0) {
+                // Swipe right background (copy password)
+                HStack {
+                    Image(systemName: "doc.on.doc.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                    Spacer()
+                }
+                .padding(.leading, 24)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(FVColor.cyan.opacity(0.85))
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+
+                Spacer(minLength: 0)
+
+                // Swipe left background (delete)
+                HStack {
+                    Spacer()
+                    Image(systemName: "trash.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+                .padding(.trailing, 24)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(FVColor.danger.opacity(0.85))
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            }
+        )
+        .offset(x: swipeOffset)
+        .gesture(
+            DragGesture(minimumDistance: 20)
+                .onChanged { value in
+                    let translation = value.translation.width
+                    // Rubber band effect
+                    swipeOffset = translation > 0 ? min(translation, 100) : max(translation, -100)
+                }
+                .onEnded { value in
+                    let threshold: CGFloat = 60
+                    if value.translation.width > threshold {
+                        // Swipe right -> copy password
+                        fvHaptic(.success)
+                        ClipboardService.copy(entry.password)
+                        onCopyPassword?()
+                        showCopyOverlay = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { showCopyOverlay = false }
+                    } else if value.translation.width < -threshold {
+                        // Swipe left -> delete
+                        fvHaptic(.medium)
+                        onDelete?()
+                    }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        swipeOffset = 0
+                    }
+                }
+        )
+        // Press scale animation
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.easeOut(duration: 0.1), value: isPressed)
+        .pressEvents {
+            isPressed = true
+        } onRelease: {
+            withAnimation(.spring(response: 0.3)) { isPressed = false }
         }
         .contentShape(Rectangle())
         .onTapGesture { onTapCard?() }
         .onAppear { revealPassword = !hidePasswordsByDefault; showMFACode = !hideMFACodeByDefault }
     }
 }
+

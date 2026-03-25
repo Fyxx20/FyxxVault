@@ -5,6 +5,7 @@ struct SecurityDashboardView: View {
     @ObservedObject var breachMonitor: BreachMonitorService
     var onRecommendationTap: (VaultQuickAction) -> Void
     @State private var editingEntry: VaultEntry?
+    @State private var statsAppeared = false
 
     private var expiringEntries: [VaultEntry] {
         vaultStore.entries
@@ -29,21 +30,45 @@ struct SecurityDashboardView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                VStack(spacing: 8) {
-                    FVSecurityGauge(score: audit.score, size: 160)
+                // Security Score Card
+                VStack(spacing: 12) {
+                    Text("SCORE DE SECURITE")
+                        .font(FVFont.caption(10))
+                        .kerning(2)
+                        .foregroundStyle(FVColor.smoke)
+
+                    FVSecurityGauge(score: audit.score, size: 180)
+
                     Text(String(localized: "security.score.label"))
                         .font(FVFont.caption(12))
                         .foregroundStyle(FVColor.mist.opacity(0.9))
                 }
                 .frame(maxWidth: .infinity)
-                .fvGlass()
+                .fvGlow(scoreColor(audit.score))
 
+                // Stat pills with stagger animation
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     FVStatPill(icon: "exclamationmark.triangle", title: String(localized: "security.stat.weak"), value: "\(audit.weakCount)", color: FVColor.danger)
+                        .opacity(statsAppeared ? 1 : 0)
+                        .offset(y: statsAppeared ? 0 : 20)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: statsAppeared)
+
                     FVStatPill(icon: "arrow.triangle.2.circlepath", title: String(localized: "security.stat.reused"), value: "\(audit.reusedCount)", color: FVColor.warning)
+                        .opacity(statsAppeared ? 1 : 0)
+                        .offset(y: statsAppeared ? 0 : 20)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2), value: statsAppeared)
+
                     FVStatPill(icon: "shield.slash", title: String(localized: "security.stat.no.mfa"), value: "\(audit.withoutMFACount)", color: FVColor.violet)
+                        .opacity(statsAppeared ? 1 : 0)
+                        .offset(y: statsAppeared ? 0 : 20)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: statsAppeared)
+
                     FVStatPill(icon: "clock.badge.exclamationmark", title: String(localized: "security.stat.expired"), value: "\(audit.expiredCount)", color: FVColor.rose)
+                        .opacity(statsAppeared ? 1 : 0)
+                        .offset(y: statsAppeared ? 0 : 20)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: statsAppeared)
                 }
+                .onAppear { statsAppeared = true }
 
                 VStack(alignment: .leading, spacing: 10) {
                     FVSectionHeader(icon: "lightbulb", title: String(localized: "security.section.recommendations"))
@@ -54,6 +79,12 @@ struct SecurityDashboardView: View {
                             onRecommendationTap(action)
                         } label: {
                             HStack(spacing: 10) {
+                                // Severity icon
+                                Image(systemName: item.severityIcon)
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundStyle(item.severityColor)
+                                    .frame(width: 24, height: 24)
+
                                 Text(item.text)
                                     .font(FVFont.body(13))
                                     .foregroundStyle(.white.opacity(0.86))
@@ -202,24 +233,52 @@ struct SecurityDashboardView: View {
     private struct SecurityRecommendation {
         let text: String
         let action: VaultQuickAction?
+        let severity: Severity
+
+        enum Severity { case critical, warning, ok }
+
+        var severityIcon: String {
+            switch severity {
+            case .critical: return "exclamationmark.circle.fill"
+            case .warning:  return "exclamationmark.triangle.fill"
+            case .ok:       return "checkmark.circle.fill"
+            }
+        }
+
+        var severityColor: Color {
+            switch severity {
+            case .critical: return FVColor.danger
+            case .warning:  return FVColor.warning
+            case .ok:       return FVColor.success
+            }
+        }
+    }
+
+    private func scoreColor(_ score: Int) -> Color {
+        switch score {
+        case 0..<40:  return FVColor.danger
+        case 40..<70: return FVColor.warning
+        case 70..<85: return FVColor.warning
+        default:      return FVColor.success
+        }
     }
 
     private func actionableRecommendations(_ audit: SecurityAudit) -> [SecurityRecommendation] {
         var items: [SecurityRecommendation] = []
         if audit.weakCount > 0 {
-            items.append(.init(text: String(localized: "security.rec.weak \(audit.weakCount)"), action: .weakPasswords))
+            items.append(.init(text: String(localized: "security.rec.weak \(audit.weakCount)"), action: .weakPasswords, severity: .critical))
         }
         if audit.reusedCount > 0 {
-            items.append(.init(text: String(localized: "security.rec.reused \(audit.reusedCount)"), action: .reusedPasswords))
+            items.append(.init(text: String(localized: "security.rec.reused \(audit.reusedCount)"), action: .reusedPasswords, severity: .critical))
         }
         if audit.withoutMFACount > 0 {
-            items.append(.init(text: String(localized: "security.rec.mfa \(audit.withoutMFACount)"), action: .missingMFA))
+            items.append(.init(text: String(localized: "security.rec.mfa \(audit.withoutMFACount)"), action: .missingMFA, severity: .warning))
         }
         if audit.expiredCount > 0 {
-            items.append(.init(text: String(localized: "security.rec.expired \(audit.expiredCount)"), action: .expiredPasswords))
+            items.append(.init(text: String(localized: "security.rec.expired \(audit.expiredCount)"), action: .expiredPasswords, severity: .warning))
         }
         if items.isEmpty {
-            items.append(.init(text: String(localized: "security.rec.excellent"), action: nil))
+            items.append(.init(text: String(localized: "security.rec.excellent"), action: nil, severity: .ok))
         }
         return items
     }

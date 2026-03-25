@@ -154,19 +154,26 @@ struct VaultSettingsView: View {
             return String(localized: "settings.score.excellent")
         }()
 
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .center) {
+        let scoreColor: Color = score >= 85 ? FVColor.success : (score >= 70 ? FVColor.warning : FVColor.danger)
+
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center, spacing: 16) {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(String(localized: "settings.header.title"))
-                        .font(FVFont.heading(30))
+                        .font(FVFont.heading(28))
                         .foregroundStyle(.white)
                     Text(String(localized: "settings.header.subtitle"))
                         .font(FVFont.caption(12))
                         .foregroundStyle(FVColor.mist.opacity(0.9))
                 }
                 Spacer()
-                FVTag(text: "\(score)/100 \u{2022} \(level)", color: score >= 85 ? FVColor.success : (score >= 70 ? FVColor.warning : FVColor.danger))
+
+                // Prominent security score
+                FVSecurityGauge(score: score, size: 72)
             }
+
+            // Divider
+            Rectangle().fill(Color.white.opacity(0.05)).frame(height: 1)
 
             HStack(spacing: 8) {
                 FVTag(text: authManager.currentEmail, color: FVColor.cyan)
@@ -175,6 +182,8 @@ struct VaultSettingsView: View {
                 }
                 FVTag(text: String(localized: "settings.header.accounts_count \(vaultStore.entries.count)"), color: FVColor.silver)
             }
+
+            FVTag(text: "\(score)/100 \u{2022} \(level)", color: scoreColor)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .fvGlass()

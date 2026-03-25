@@ -437,6 +437,17 @@ final class VaultStore: ObservableObject {
             persistenceError = "Erreur critique: impossible de sauvegarder le coffre. \(error.localizedDescription)"
             log("ERREUR PERSISTENCE", target: error.localizedDescription)
         }
+
+        // Update widget data
+        let audit = securityAudit
+        WidgetDataProvider.updateWidgetData(
+            totalAccounts: entries.count,
+            securityScore: audit.score,
+            weakCount: audit.weakCount,
+            breachedCount: audit.reusedCount,
+            reusedCount: audit.reusedCount,
+            lastSyncDate: nil
+        )
     }
 
     // MARK: Private — Activity Log

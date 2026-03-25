@@ -15,6 +15,8 @@ struct EditVaultEntryView: View {
     @State private var isFavorite = false
     @State private var expirationPolicy: PasswordExpirationPolicy = .none
     @State private var category: VaultCategory = .login
+    @State private var showShareSheet = false
+    @State private var showHistorySheet = false
 
     private var isDuplicateEntry: Bool {
         let t = title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -72,6 +74,41 @@ struct EditVaultEntryView: View {
                         Text(String(localized: "vault.warning.duplicate.short")).foregroundStyle(.orange).frame(maxWidth: .infinity, alignment: .leading).fvGlass()
                     }
 
+                    // Share & History
+                    HStack(spacing: 12) {
+                        Button {
+                            showShareSheet = true
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "lock.shield")
+                                Text(String(localized: "vault.action.share"))
+                            }
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(FVColor.cyan)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(FVColor.cyan.opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(FVColor.cyan.opacity(0.15)))
+                        }
+
+                        Button {
+                            showHistorySheet = true
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "clock.arrow.circlepath")
+                                Text(String(localized: "vault.action.history"))
+                            }
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(FVColor.violet)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(FVColor.violet.opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(FVColor.violet.opacity(0.15)))
+                        }
+                    }.fvGlass()
+
                     FVButton(title: String(localized: "vault.action.save.changes")) {
                         guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !password.isEmpty, !isDuplicateEntry else { return }
                         let updated = VaultEntry(
@@ -103,6 +140,8 @@ struct EditVaultEntryView: View {
             .fvInlineNavTitle()
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(String(localized: "vault.action.close")) { dismiss() }.foregroundStyle(FVColor.cyan) } }
             .background(FVAnimatedBackground())
+            .sheet(isPresented: $showShareSheet) { ShareEntryView(entry: entry) }
+            .sheet(isPresented: $showHistorySheet) { PasswordHistoryView(history: entry.passwordHistory, currentPassword: entry.password) }
             .onAppear {
                 title = entry.title; username = entry.username; password = entry.password
                 website = entry.website; notes = entry.notes; mfaEnabled = entry.mfaEnabled
