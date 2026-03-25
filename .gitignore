@@ -1,0 +1,30 @@
+# FyxxVault
+# Xcode
+ios/FyxxVault.xcodeproj/project.xcworkspace/xcuserdata/
+ios/FyxxVault.xcodeproj/xcuserdata/
+ios/*.xcuserstate
+DerivedData/
+*.xcscmblueprint
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Dependencies
+.build/
+Packages/
+
+# Environment
+.env
+.env.local
+
+# Node (web)
+web/node_modules/
+web/.svelte-kit/
+web/build/
+
+# Secrets
+*.p12
+*.mobileprovision
+*.pem
