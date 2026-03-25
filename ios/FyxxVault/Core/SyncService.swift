@@ -259,7 +259,7 @@ final class SyncService: ObservableObject {
 
             // 3. Merge: last-write-wins
             var merged = localEntries
-            let localIDs = Set(localEntries.map { $0.id.uuidString })
+            _ = Set(localEntries.map { $0.id.uuidString })
 
             for remote in remoteEntries {
                 if remote.deleted {

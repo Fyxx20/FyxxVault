@@ -118,15 +118,17 @@ struct FVAnimatedBackground: View {
             // Base gradient
             FVGradient.darkFade.ignoresSafeArea()
 
-            // Mesh gradient layer
-            MeshGradient(
-                width: 3, height: 3,
-                points: meshPoints,
-                colors: meshColors
-            )
-            .opacity(0.7)
-            .blendMode(.screen)
-            .ignoresSafeArea()
+            // Mesh gradient layer (iOS 18+)
+            if #available(iOS 18.0, *) {
+                MeshGradient(
+                    width: 3, height: 3,
+                    points: meshPoints,
+                    colors: meshColors
+                )
+                .opacity(0.7)
+                .blendMode(.screen)
+                .ignoresSafeArea()
+            }
 
             // Floating orbs
             Circle()
