@@ -4,7 +4,9 @@ import UniformTypeIdentifiers
 struct VaultSettingsView: View {
     @ObservedObject var authManager: AuthManager
     @ObservedObject var vaultStore: VaultStore
+    @ObservedObject var syncService: SyncService
 
+    @State private var showCloudSync = false
     @State private var showTrash = false
     @State private var showActivityLog = false
     @State private var showReorder = false
@@ -25,6 +27,7 @@ struct VaultSettingsView: View {
     @State private var showFileExporter = false
     @State private var showCSVExportWarning = false
     @State private var pendingCSVType = 0
+    @State private var showImportCSV = false
 
     @AppStorage("fyxxvault.autolock.enabled") private var autoLockEnabled = true
     @AppStorage("fyxxvault.autolock.minutes") private var autoLockMinutes = 2
@@ -42,6 +45,7 @@ struct VaultSettingsView: View {
                 VStack(spacing: 16) {
                     headerCard
                     accountSection
+                    cloudSyncSection
                     securitySection
                     privacySection
                     dataSection
@@ -61,6 +65,8 @@ struct VaultSettingsView: View {
             .sheet(isPresented: $showActivityLog) { ActivityLogView(vaultStore: vaultStore) }
             .sheet(isPresented: $showReorder) { VaultReorderView(vaultStore: vaultStore) }
             .sheet(isPresented: $showChangePassword) { ChangePasswordView(authManager: authManager) }
+            .sheet(isPresented: $showImportCSV) { ImportView(vaultStore: vaultStore) }
+            .sheet(isPresented: $showCloudSync) { CloudSyncView(syncService: syncService, vaultStore: vaultStore) }
             .sheet(isPresented: $showLogoutSheet) {
                 LogoutConfirmSheet(
                     onCancel: { showLogoutSheet = false },
@@ -177,6 +183,36 @@ struct VaultSettingsView: View {
         .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
     }
 
+    private var cloudSyncSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            FVSectionHeader(icon: "cloud.fill", title: "SYNCHRONISATION CLOUD")
+            HStack {
+                Text("Statut")
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(FVColor.mist)
+                Spacer()
+                if syncService.isCloudAuthenticated {
+                    FVTag(text: "Connecté", color: FVColor.success)
+                } else if syncService.cloudEmail != nil {
+                    FVTag(text: "Verrouillé", color: FVColor.warning)
+                } else {
+                    FVTag(text: "Non configuré", color: FVColor.mist)
+                }
+            }
+            if let email = syncService.cloudEmail {
+                Text(email)
+                    .font(.system(size: 12, design: .rounded))
+                    .foregroundStyle(FVColor.cyan.opacity(0.8))
+            }
+            Button("Configurer la synchronisation cloud") { showCloudSync = true }
+                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+            Text("Chiffrement zero-knowledge : le serveur ne voit que des données chiffrées.")
+                .font(FVFont.caption(11))
+                .foregroundStyle(FVColor.mist.opacity(0.75))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+    }
+
     private var securitySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             FVSectionHeader(icon: "lock.shield", title: "SÉCURITÉ")
@@ -235,6 +271,8 @@ struct VaultSettingsView: View {
             Button("Exporter une sauvegarde chiffrée (recommandé)") { showExportPrompt = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
             Button("Importer une sauvegarde") { showFileImporter = true }
+                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+            Button("Importer depuis CSV (Bitwarden / 1Password)") { showImportCSV = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
             Text("Le format .fyxx.backup est chiffré et vérifié en intégrité.")
                 .font(FVFont.caption(11))

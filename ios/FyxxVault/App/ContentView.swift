@@ -7,6 +7,7 @@ struct ContentView: View {
     @StateObject private var authManager = AuthManager()
     @StateObject private var vaultStore = VaultStore()
     @StateObject private var appLock = AppLockManager()
+    @StateObject private var syncService = SyncService()
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -23,7 +24,7 @@ struct ContentView: View {
                     if appLock.isLocked {
                         VaultLockView(appLock: appLock, authManager: authManager)
                     } else {
-                        VaultDashboardView(authManager: authManager, vaultStore: vaultStore)
+                        VaultDashboardView(authManager: authManager, vaultStore: vaultStore, syncService: syncService)
                     }
                 }
             }

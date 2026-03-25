@@ -14,6 +14,7 @@ struct EditVaultEntryView: View {
     @State private var mfaSecret = ""
     @State private var isFavorite = false
     @State private var expirationPolicy: PasswordExpirationPolicy = .none
+    @State private var category: VaultCategory = .login
 
     private var isDuplicateEntry: Bool {
         let t = title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -25,6 +26,28 @@ struct EditVaultEntryView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    // Category picker
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(VaultCategory.allCases) { cat in
+                                Button {
+                                    category = cat
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: cat.iconName).font(.system(size: 11))
+                                        Text(cat.label).font(.system(size: 12, weight: .medium, design: .rounded))
+                                    }
+                                    .foregroundStyle(category == cat ? .white : FVColor.mist)
+                                    .padding(.horizontal, 12).padding(.vertical, 8)
+                                    .background(category == cat ? cat.iconColor.opacity(0.3) : Color.white.opacity(0.05))
+                                    .clipShape(Capsule())
+                                    .overlay(Capsule().strokeBorder(category == cat ? cat.iconColor.opacity(0.5) : Color.white.opacity(0.1)))
+                                }
+                            }
+                        }
+                    }
+                    .fvGlass()
+
                     FVTextField(title: "Nom du compte", text: $title)
                     FVTextField(title: "Site web", text: $website)
                     FVTextField(title: "Identifiant / Email", text: $username)
@@ -67,7 +90,8 @@ struct EditVaultEntryView: View {
                             passwordHistory: entry.passwordHistory,
                             createdAt: entry.createdAt,
                             expirationPolicy: expirationPolicy,
-                            passwordLastChangedAt: password == entry.password ? entry.passwordLastChangedAt : Date()
+                            passwordLastChangedAt: password == entry.password ? entry.passwordLastChangedAt : Date(),
+                            category: category
                         )
                         vaultStore.updateEntry(updated)
                         dismiss()
@@ -84,6 +108,7 @@ struct EditVaultEntryView: View {
                 website = entry.website; notes = entry.notes; mfaEnabled = entry.mfaEnabled
                 mfaSecret = entry.mfaSecret; isFavorite = entry.isFavorite
                 expirationPolicy = entry.expirationPolicy
+                category = entry.category
             }
         }
     }

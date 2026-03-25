@@ -20,6 +20,7 @@ struct AddVaultEntryView: View {
     @State private var pwnedLookupFailed = false
     @State private var expirationPolicy: PasswordExpirationPolicy = .none
     @State private var policy = PasswordPolicy()
+    @State private var category: VaultCategory = .login
 
     private var isReusedPassword: Bool { vaultStore.isPasswordReused(password) }
     private var hasInsecureHTTPURL: Bool { website.lowercased().hasPrefix("http://") }
@@ -33,12 +34,59 @@ struct AddVaultEntryView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
+                    // Category picker
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Catégorie").font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(VaultCategory.allCases) { cat in
+                                    Button {
+                                        category = cat
+                                        if cat != .login && customFields.isEmpty {
+                                            customFields = cat.suggestedFieldKeys.map { VaultCustomField(key: $0, value: "") }
+                                        }
+                                    } label: {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: cat.iconName).font(.system(size: 11))
+                                            Text(cat.label).font(.system(size: 12, weight: .medium, design: .rounded))
+                                        }
+                                        .foregroundStyle(category == cat ? .white : FVColor.mist)
+                                        .padding(.horizontal, 12).padding(.vertical, 8)
+                                        .background(category == cat ? cat.iconColor.opacity(0.3) : Color.white.opacity(0.05))
+                                        .clipShape(Capsule())
+                                        .overlay(Capsule().strokeBorder(category == cat ? cat.iconColor.opacity(0.5) : Color.white.opacity(0.1)))
+                                    }
+                                }
+                            }
+                        }
+                    }.fvGlass()
+
                     FVTextField(title: "Nom du compte", text: $title)
                     FVTextField(title: "Site web", text: $website)
                     FVTextField(title: "Identifiant / Email", text: $username)
-                    FVTextField(title: "Mot de passe", text: $password)
-                    PasswordStrengthView(password: password)
-                    PasswordGeneratorView(policy: $policy) { password = PasswordToolkit.generate(policy: policy) }
+
+                    if category == .creditCard {
+                        FVTextField(title: "Numéro de carte", text: Binding(
+                            get: { customFields.first(where: { $0.key == "Numéro de carte" })?.value ?? "" },
+                            set: { val in if let idx = customFields.firstIndex(where: { $0.key == "Numéro de carte" }) { customFields[idx].value = val } }
+                        ))
+                        HStack(spacing: 12) {
+                            FVTextField(title: "Expiration", text: Binding(
+                                get: { customFields.first(where: { $0.key == "Date d'expiration" })?.value ?? "" },
+                                set: { val in if let idx = customFields.firstIndex(where: { $0.key == "Date d'expiration" }) { customFields[idx].value = val } }
+                            ))
+                            FVTextField(title: "CVV", text: Binding(
+                                get: { customFields.first(where: { $0.key == "CVV" })?.value ?? "" },
+                                set: { val in if let idx = customFields.firstIndex(where: { $0.key == "CVV" }) { customFields[idx].value = val } }
+                            ), secure: true)
+                        }
+                    }
+
+                    if category != .secureNote {
+                        FVTextField(title: "Mot de passe", text: $password)
+                        PasswordStrengthView(password: password)
+                        PasswordGeneratorView(policy: $policy) { password = PasswordToolkit.generate(policy: policy) }
+                    }
                     FVTextField(title: "Notes", text: $notes)
 
                     // Expiration policy
@@ -103,12 +151,13 @@ struct AddVaultEntryView: View {
 
                     FVButton(title: "Sauvegarder") {
                         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-                        guard !cleanTitle.isEmpty, !password.isEmpty, !isDuplicateEntry else { return }
+                        let effectivePassword = category == .secureNote ? " " : password
+                        guard !cleanTitle.isEmpty, !effectivePassword.trimmingCharacters(in: .whitespaces).isEmpty || category == .secureNote, !isDuplicateEntry else { return }
                         guard !mfaEnabled || !mfaSecret.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
                         vaultStore.addEntry(VaultEntry(
                             title: cleanTitle,
                             username: username.trimmingCharacters(in: .whitespacesAndNewlines),
-                            password: password,
+                            password: category == .secureNote ? "" : password,
                             website: website.trimmingCharacters(in: .whitespacesAndNewlines),
                             notes: notes.trimmingCharacters(in: .whitespacesAndNewlines),
                             mfaEnabled: mfaEnabled,
@@ -116,7 +165,8 @@ struct AddVaultEntryView: View {
                             mfaSecret: mfaEnabled ? mfaSecret.trimmingCharacters(in: .whitespacesAndNewlines) : "",
                             isFavorite: isFavorite,
                             customFields: customFields,
-                            expirationPolicy: expirationPolicy
+                            expirationPolicy: expirationPolicy,
+                            category: category
                         ))
                         dismiss()
                     }

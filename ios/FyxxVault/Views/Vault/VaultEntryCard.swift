@@ -24,13 +24,19 @@ struct VaultEntryCard: View {
                 HStack(spacing: 10) {
                     Circle()
                         .fill(
-                            LinearGradient(colors: [FVColor.cyan.opacity(0.9), FVColor.violet.opacity(0.9)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            LinearGradient(colors: [entry.category.iconColor.opacity(0.9), FVColor.violet.opacity(0.9)], startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
                         .frame(width: 34, height: 34)
                         .overlay {
-                            Text(String(entry.title.prefix(1)).uppercased())
-                                .font(FVFont.label(14))
-                                .foregroundStyle(.white)
+                            if entry.category == .login {
+                                Text(String(entry.title.prefix(1)).uppercased())
+                                    .font(FVFont.label(14))
+                                    .foregroundStyle(.white)
+                            } else {
+                                Image(systemName: entry.category.iconName)
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.white)
+                            }
                         }
 
                     VStack(alignment: .leading, spacing: 3) {

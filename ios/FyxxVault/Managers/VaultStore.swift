@@ -62,6 +62,12 @@ final class VaultStore: ObservableObject {
         persistEntries()
     }
 
+    func importEntries(_ newEntries: [VaultEntry]) {
+        entries.insert(contentsOf: newEntries, at: 0)
+        log("Import CSV", target: "\(newEntries.count) entrée(s)")
+        persistEntries()
+    }
+
     func updateEntry(_ entry: VaultEntry) {
         guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
         var updated = entry
@@ -139,6 +145,13 @@ final class VaultStore: ObservableObject {
             }
         }
         if changed { log("Bulk déplacement", target: clean); persistEntries() }
+    }
+
+    /// Replace all entries (used by cloud sync merge)
+    func replaceEntries(_ newEntries: [VaultEntry]) {
+        entries = newEntries
+        log("Sync cloud", target: "\(newEntries.count) entrée(s) synchronisée(s)")
+        persistEntries()
     }
 
     func reorderEntries(from source: IndexSet, to destination: Int) {
@@ -241,7 +254,7 @@ final class VaultStore: ObservableObject {
     // MARK: Export / Import
 
     func exportCSV() -> String {
-        var rows: [String] = ["title,username,password,website,notes,mfa,folder,tags,favorite,expiration_policy"]
+        var rows: [String] = ["title,username,password,website,notes,mfa,folder,tags,favorite,expiration_policy,category"]
         for e in entries {
             let row = [
                 e.title, e.username, e.password, e.website, e.notes,
@@ -249,7 +262,8 @@ final class VaultStore: ObservableObject {
                 e.folder,
                 e.tags.joined(separator: "|"),
                 e.isFavorite ? "yes" : "no",
-                e.expirationPolicy.label
+                e.expirationPolicy.label,
+                e.category.rawValue
             ].map(csvEscape).joined(separator: ",")
             rows.append(row)
         }
@@ -263,7 +277,16 @@ final class VaultStore: ObservableObject {
         var rows: [String] = [header]
         for e in entries {
             let fields = e.customFields.map { "\($0.key):\($0.value)" }.joined(separator: ";")
-            let row = [e.folder, e.isFavorite ? "1" : "0", "login", e.title, e.notes, fields, "0",
+            let bitwardenType: String = {
+                switch e.category {
+                case .login: return "login"
+                case .creditCard: return "card"
+                case .identity: return "identity"
+                case .secureNote: return "securenote"
+                default: return "login"
+                }
+            }()
+            let row = [e.folder, e.isFavorite ? "1" : "0", bitwardenType, e.title, e.notes, fields, "0",
                        e.website, e.username, e.password, e.mfaType == .totp ? e.mfaSecret : ""]
                 .map(csvEscape).joined(separator: ",")
             rows.append(row)

@@ -10,6 +10,7 @@ enum VaultQuickAction {
 struct VaultDashboardView: View {
     @ObservedObject var authManager: AuthManager
     @ObservedObject var vaultStore: VaultStore
+    @ObservedObject var syncService: SyncService
 
     @State private var selectedTab: Int = 1
     @State private var pendingQuickAction: VaultQuickAction?
@@ -30,7 +31,7 @@ struct VaultDashboardView: View {
                     VaultListView(vaultStore: vaultStore, quickAction: $pendingQuickAction)
                         .transition(.opacity)
                 case 2:
-                    VaultSettingsView(authManager: authManager, vaultStore: vaultStore)
+                    VaultSettingsView(authManager: authManager, vaultStore: vaultStore, syncService: syncService)
                         .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .opacity))
                 default:
                     EmptyView()

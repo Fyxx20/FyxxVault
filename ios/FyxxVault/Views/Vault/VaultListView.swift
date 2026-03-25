@@ -19,6 +19,7 @@ struct VaultListView: View {
     @State private var bulkFolderText = ""
     @State private var sortMode: VaultSortMode = .recent
     @State private var filterMode: VaultFilterMode = .all
+    @State private var selectedCategory: VaultCategory? = nil
     @AppStorage("fyxxvault.compact.cards") private var compactCards = false
     @AppStorage("fyxxvault.accent.mode") private var accentMode = 0
 
@@ -31,6 +32,10 @@ struct VaultListView: View {
         case .weak: source = source.filter { [.faible, .moyen].contains(PasswordToolkit.strength(for: $0.password)) }
         case .mfa: source = source.filter { $0.mfaEnabled }
         case .expired: source = source.filter { $0.isExpired || $0.isExpiringSoon }
+        case .byCategory:
+            if let cat = selectedCategory {
+                source = source.filter { $0.category == cat }
+            }
         }
         let queried = cleanQuery.isEmpty ? source : source.filter {
             $0.title.localizedCaseInsensitiveContains(cleanQuery)
@@ -182,6 +187,29 @@ struct VaultListView: View {
                         .overlay(Capsule().strokeBorder(FVColor.cyan.opacity(0.15)))
                     }
                     .fvGlass(cornerRadius: 14, padding: 12)
+
+                    if filterMode == .byCategory {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(VaultCategory.allCases) { cat in
+                                    Button {
+                                        selectedCategory = (selectedCategory == cat) ? nil : cat
+                                    } label: {
+                                        HStack(spacing: 5) {
+                                            Image(systemName: cat.iconName).font(.system(size: 10))
+                                            Text(cat.label).font(FVFont.caption(11))
+                                        }
+                                        .foregroundStyle(selectedCategory == cat ? .white : FVColor.mist)
+                                        .padding(.horizontal, 10).padding(.vertical, 7)
+                                        .background(selectedCategory == cat ? cat.iconColor.opacity(0.25) : Color.white.opacity(0.05))
+                                        .clipShape(Capsule())
+                                        .overlay(Capsule().strokeBorder(selectedCategory == cat ? cat.iconColor.opacity(0.4) : Color.white.opacity(0.08)))
+                                    }
+                                }
+                            }
+                        }
+                        .fvGlass(cornerRadius: 14, padding: 10)
+                    }
 
                     if selectionMode {
                         ScrollView(.horizontal, showsIndicators: false) {

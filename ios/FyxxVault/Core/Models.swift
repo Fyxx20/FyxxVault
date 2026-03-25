@@ -46,6 +46,7 @@ enum VaultFilterMode: String, CaseIterable, Identifiable {
     case weak = "À renforcer"
     case mfa = "MFA"
     case expired = "Expirés"
+    case byCategory = "Catégorie"
     var id: String { rawValue }
 }
 
@@ -72,6 +73,71 @@ enum PasswordExpirationPolicy: Int, CaseIterable, Identifiable, Codable {
         case .days90: return "90 jours"
         case .days180: return "6 mois"
         case .days365: return "1 an"
+        }
+    }
+}
+
+enum VaultCategory: String, Codable, CaseIterable, Identifiable {
+    case login = "login"
+    case creditCard = "creditCard"
+    case identity = "identity"
+    case secureNote = "secureNote"
+    case wifiPassword = "wifiPassword"
+    case softwareLicense = "softwareLicense"
+    case passport = "passport"
+    case bankAccount = "bankAccount"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .login: "Identifiant"
+        case .creditCard: "Carte bancaire"
+        case .identity: "Identité"
+        case .secureNote: "Note sécurisée"
+        case .wifiPassword: "Wi-Fi"
+        case .softwareLicense: "Licence logicielle"
+        case .passport: "Passeport"
+        case .bankAccount: "Compte bancaire"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .login: "person.crop.circle"
+        case .creditCard: "creditcard"
+        case .identity: "person.text.rectangle"
+        case .secureNote: "note.text"
+        case .wifiPassword: "wifi"
+        case .softwareLicense: "app.badge"
+        case .passport: "airplane"
+        case .bankAccount: "banknote"
+        }
+    }
+
+    var iconColor: Color {
+        switch self {
+        case .login: FVColor.cyan
+        case .creditCard: FVColor.gold
+        case .identity: FVColor.violet
+        case .secureNote: FVColor.mist
+        case .wifiPassword: FVColor.success
+        case .softwareLicense: FVColor.rose
+        case .passport: FVColor.cyan
+        case .bankAccount: FVColor.gold
+        }
+    }
+
+    var suggestedFieldKeys: [String] {
+        switch self {
+        case .login: []
+        case .creditCard: ["Numéro de carte", "Date d'expiration", "CVV", "Titulaire"]
+        case .identity: ["Prénom", "Nom", "Date de naissance", "Adresse", "Téléphone"]
+        case .secureNote: []
+        case .wifiPassword: ["SSID", "Type de sécurité"]
+        case .softwareLicense: ["Clé de licence", "Version", "Date d'achat"]
+        case .passport: ["Numéro", "Pays", "Date d'expiration", "Date de naissance"]
+        case .bankAccount: ["IBAN", "BIC", "Numéro de compte", "Banque"]
         }
     }
 }
@@ -214,11 +280,12 @@ struct VaultEntry: Identifiable, Codable, Hashable {
     var lastModifiedAt: Date
     var expirationPolicy: PasswordExpirationPolicy
     var passwordLastChangedAt: Date
+    var category: VaultCategory
 
     private enum CodingKeys: String, CodingKey {
         case id, title, username, password, website, notes, mfaEnabled, mfaType, mfaSecret
         case folder, tags, isFavorite, customFields, attachments, passwordHistory, createdAt
-        case lastModifiedAt, expirationPolicy, passwordLastChangedAt
+        case lastModifiedAt, expirationPolicy, passwordLastChangedAt, category
     }
 
     init(
@@ -240,7 +307,8 @@ struct VaultEntry: Identifiable, Codable, Hashable {
         createdAt: Date = Date(),
         lastModifiedAt: Date = Date(),
         expirationPolicy: PasswordExpirationPolicy = .none,
-        passwordLastChangedAt: Date = Date()
+        passwordLastChangedAt: Date = Date(),
+        category: VaultCategory = .login
     ) {
         self.id = id
         self.title = title
@@ -263,6 +331,7 @@ struct VaultEntry: Identifiable, Codable, Hashable {
         self.lastModifiedAt = lastModifiedAt
         self.expirationPolicy = expirationPolicy
         self.passwordLastChangedAt = passwordLastChangedAt
+        self.category = category
     }
 
     init(from decoder: Decoder) throws {
@@ -286,6 +355,7 @@ struct VaultEntry: Identifiable, Codable, Hashable {
         lastModifiedAt = try container.decodeIfPresent(Date.self, forKey: .lastModifiedAt) ?? createdAt
         expirationPolicy = try container.decodeIfPresent(PasswordExpirationPolicy.self, forKey: .expirationPolicy) ?? .none
         passwordLastChangedAt = try container.decodeIfPresent(Date.self, forKey: .passwordLastChangedAt) ?? createdAt
+        category = try container.decodeIfPresent(VaultCategory.self, forKey: .category) ?? .login
     }
 
     /// True if expiration policy is set and the password is past its deadline
@@ -354,7 +424,7 @@ struct VaultDatabase: Codable {
         case schemaVersion, entries, trash, activityLog, databaseHMAC
     }
 
-    init(entries: [VaultEntry], trash: [VaultTrashItem], activityLog: [ActivityLogItem], schemaVersion: Int = 3) {
+    init(entries: [VaultEntry], trash: [VaultTrashItem], activityLog: [ActivityLogItem], schemaVersion: Int = 4) {
         self.schemaVersion = schemaVersion
         self.entries = entries
         self.trash = trash
