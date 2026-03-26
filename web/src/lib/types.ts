@@ -13,6 +13,39 @@ export interface VaultEntry {
 	mfaSecret: string;
 	createdAt: string;
 	lastModifiedAt: string;
+	// Credit Card fields
+	cardholderName?: string;
+	cardNumber?: string;
+	cardExpiry?: string;
+	cardCVV?: string;
+	// Identity fields
+	firstName?: string;
+	lastName?: string;
+	dateOfBirth?: string;
+	address?: string;
+	phone?: string;
+	email?: string;
+	// Wi-Fi fields
+	networkName?: string;
+	securityType?: string;
+	// Software License fields
+	softwareName?: string;
+	licenseKey?: string;
+	licenseEmail?: string;
+	softwareVersion?: string;
+	// Passport fields
+	passportFullName?: string;
+	passportNumber?: string;
+	passportCountry?: string;
+	passportExpiry?: string;
+	passportDOB?: string;
+	// Bank Account fields
+	bankName?: string;
+	iban?: string;
+	bic?: string;
+	accountNumber?: string;
+	// Password history
+	passwordHistory?: { password: string; changedAt: string }[];
 }
 
 export type VaultCategory =
@@ -22,6 +55,8 @@ export type VaultCategory =
 	| 'secureNote'
 	| 'bankAccount'
 	| 'wifi'
+	| 'softwareLicense'
+	| 'passport'
 	| 'server'
 	| 'other';
 
@@ -47,6 +82,8 @@ export const CATEGORY_META: Record<VaultCategory, { label: string; icon: string;
 	secureNote: { label: 'Note sécurisée', icon: '📝', color: 'var(--fv-success)' },
 	bankAccount: { label: 'Compte bancaire', icon: '🏦', color: 'var(--fv-cyan)' },
 	wifi: { label: 'Wi-Fi', icon: '📶', color: 'var(--fv-violet)' },
+	softwareLicense: { label: 'Licence', icon: '🔧', color: 'var(--fv-gold)' },
+	passport: { label: 'Passeport', icon: '🛂', color: 'var(--fv-danger)' },
 	server: { label: 'Serveur', icon: '🖥️', color: 'var(--fv-danger)' },
 	other: { label: 'Autre', icon: '📦', color: 'var(--fv-smoke)' }
 };
@@ -67,6 +104,7 @@ export function newVaultEntry(overrides: Partial<VaultEntry> = {}): VaultEntry {
 		mfaSecret: '',
 		createdAt: new Date().toISOString(),
 		lastModifiedAt: new Date().toISOString(),
+		passwordHistory: [],
 		...overrides
 	};
 }

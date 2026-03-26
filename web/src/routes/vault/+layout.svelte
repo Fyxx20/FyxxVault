@@ -8,6 +8,7 @@
 
 	const auth = getAuthState();
 	let sidebarOpen = $state(false);
+	let lastActivity = $state(Date.now());
 
 	// Initialize auth listener
 	initAuth();
@@ -31,6 +32,44 @@
 		}
 	});
 
+	// Auto-lock: track user activity and lock vault on inactivity
+	$effect(() => {
+		if (!auth.isUnlocked) return;
+
+		const storedTimeout = localStorage.getItem('fv_auto_lock_timeout');
+		const timeout = storedTimeout ? parseInt(storedTimeout) : 5;
+		if (timeout === 0) return; // Disabled
+
+		const timeoutMs = timeout * 60 * 1000;
+
+		function resetTimer() {
+			lastActivity = Date.now();
+		}
+
+		const events = ['mousedown', 'keydown', 'touchstart', 'scroll', 'mousemove'];
+		events.forEach(e => document.addEventListener(e, resetTimer, { passive: true }));
+
+		const checker = setInterval(() => {
+			if (Date.now() - lastActivity > timeoutMs) {
+				handleLock();
+			}
+		}, 10000);
+
+		return () => {
+			events.forEach(e => document.removeEventListener(e, resetTimer));
+			clearInterval(checker);
+		};
+	});
+
+	function handleLock() {
+		// Clear VEK and redirect to unlock
+		// We can't directly clear VEK from here, so we redirect
+		resetVault();
+		goto('/vault/unlock');
+		// Force page reload to clear VEK from memory
+		window.location.href = '/vault/unlock';
+	}
+
 	async function handleSidebarCheckout() {
 		try {
 			const res = await fetch('/api/checkout', {
@@ -52,13 +91,14 @@
 	}
 
 	const navItems = [
-		{ path: '/vault', label: 'Coffre', icon: 'vault' },
-		{ path: '/vault/security', label: 'Sécurité', icon: 'shield' },
-		{ path: '/vault/settings', label: 'Paramètres', icon: 'settings' }
+		{ path: '/vault', label: 'Coffre', icon: 'vault', mobileIcon: true },
+		{ path: '/vault/security', label: 'Sécurité', icon: 'shield', mobileIcon: true },
+		{ path: '/vault/emails', label: 'Emails masqués', icon: 'mail', mobileIcon: true },
+		{ path: '/vault/settings', label: 'Paramètres', icon: 'settings', mobileIcon: true }
 	];
 
 	function isActive(path: string): boolean {
-		if (path === '/vault') return currentPath === '/vault' || currentPath === '/vault/add';
+		if (path === '/vault') return currentPath === '/vault' || currentPath === '/vault/add' || currentPath === '/vault/import';
 		return currentPath.startsWith(path);
 	}
 </script>
@@ -80,7 +120,7 @@
 			></button>
 		{/if}
 
-		<!-- Sidebar -->
+		<!-- Sidebar (desktop + mobile drawer) -->
 		<aside class="
 			fixed lg:sticky top-0 left-0 z-50 h-screen w-[260px]
 			bg-[var(--fv-obsidian)] border-r border-white/5
@@ -117,6 +157,11 @@
 						{:else if item.icon === 'shield'}
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 								<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+							</svg>
+						{:else if item.icon === 'mail'}
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+								<polyline points="22,6 12,13 2,6"/>
 							</svg>
 						{:else if item.icon === 'settings'}
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -174,7 +219,7 @@
 		</aside>
 
 		<!-- Main content -->
-		<div class="flex-1 min-h-screen lg:ml-0">
+		<div class="flex-1 min-h-screen lg:ml-0 pb-16 lg:pb-0">
 			<!-- Mobile header -->
 			<header class="lg:hidden sticky top-0 z-30 bg-[var(--fv-abyss)]/90 backdrop-blur-xl border-b border-white/5 px-4 py-3 flex items-center gap-3">
 				<button onclick={() => sidebarOpen = true} class="p-2 rounded-lg hover:bg-white/5 text-white">
@@ -191,5 +236,31 @@
 				{@render children()}
 			</main>
 		</div>
+
+		<!-- Mobile bottom navigation -->
+		<nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--fv-obsidian)]/95 backdrop-blur-xl border-t border-white/5 px-2 py-2">
+			<div class="flex items-center justify-around">
+				{#each navItems as item}
+					<a
+						href={item.path}
+						class="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all
+							{isActive(item.path)
+								? 'text-[var(--fv-cyan)]'
+								: 'text-[var(--fv-ash)] hover:text-[var(--fv-smoke)]'}"
+					>
+						{#if item.icon === 'vault'}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+						{:else if item.icon === 'shield'}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+						{:else if item.icon === 'mail'}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+						{:else if item.icon === 'settings'}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9"/></svg>
+						{/if}
+						<span class="text-[9px] font-semibold">{item.label.split(' ')[0]}</span>
+					</a>
+				{/each}
+			</div>
+		</nav>
 	</div>
 {/if}
