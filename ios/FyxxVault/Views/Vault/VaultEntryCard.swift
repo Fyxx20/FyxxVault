@@ -175,34 +175,34 @@ struct VaultEntryCard: View {
         .overlay(alignment: .topTrailing) {
             if selectionMode { Image(systemName: isSelected ? "checkmark.circle.fill" : "circle").foregroundStyle(isSelected ? FVColor.cyan : .white.opacity(0.5)).padding(10) }
         }
-        // Swipe actions
+        // Swipe actions (only visible during swipe)
         .background(
-            HStack(spacing: 0) {
-                // Swipe right background (copy password)
-                HStack {
-                    Image(systemName: "doc.on.doc.fill")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(.white)
-                    Spacer()
+            Group {
+                if swipeOffset > 0 {
+                    // Swipe right background (copy password)
+                    HStack {
+                        Image(systemName: "doc.on.doc.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                        Spacer()
+                    }
+                    .padding(.leading, 24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(FVColor.cyan.opacity(0.85))
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                } else if swipeOffset < 0 {
+                    // Swipe left background (delete)
+                    HStack {
+                        Spacer()
+                        Image(systemName: "trash.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                    .padding(.trailing, 24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(FVColor.danger.opacity(0.85))
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 }
-                .padding(.leading, 24)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(FVColor.cyan.opacity(0.85))
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-
-                Spacer(minLength: 0)
-
-                // Swipe left background (delete)
-                HStack {
-                    Spacer()
-                    Image(systemName: "trash.fill")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
-                .padding(.trailing, 24)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(FVColor.danger.opacity(0.85))
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             }
         )
         .offset(x: swipeOffset)
