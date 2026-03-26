@@ -87,6 +87,14 @@ struct ContentView: View {
         }
         .onChange(of: authManager.phase) { _, phase in
             if phase == .vault {
+                // Check if this is a different account than last time
+                let lastEmail = UserDefaults.standard.string(forKey: "fyxxvault.last.account.email")
+                let currentEmail = authManager.currentEmail
+                if let lastEmail, lastEmail != currentEmail, currentEmail != "Compte local" {
+                    // Different account — clear local vault to prevent data leak
+                    vaultStore.clearLocalVault()
+                }
+                UserDefaults.standard.set(currentEmail, forKey: "fyxxvault.last.account.email")
                 appLock.activateForVaultEntry()
             } else {
                 appLock.forceUnlock()

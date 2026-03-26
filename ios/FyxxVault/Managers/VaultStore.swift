@@ -360,12 +360,19 @@ final class VaultStore: ObservableObject {
     // MARK: Panic
 
     func wipeVaultForPanicMode() {
+        clearLocalVault()
+        log("PANIC", target: "Coffre effacé")
+        persistEntries()
+    }
+
+    /// Clears all local vault data. Used on new account creation and panic mode.
+    func clearLocalVault() {
         entries = []
         trashEntries = []
         activityLog = []
+        integrityWarning = ""
+        persistenceError = ""
         try? FileManager.default.removeItem(at: fileURL)
-        log("PANIC", target: "Coffre effacé")
-        persistEntries()
     }
 
     // MARK: Private — Persistence (HMAC-wrapped vault file)
