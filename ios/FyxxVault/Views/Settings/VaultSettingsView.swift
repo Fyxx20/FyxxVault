@@ -1,12 +1,91 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+// MARK: - FVProBadge
+
+struct FVProBadge: View {
+    var body: some View {
+        Text("PRO")
+            .font(.system(size: 10, weight: .black, design: .rounded))
+            .foregroundStyle(FVColor.abyss)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(FVGradient.goldShimmer)
+            .clipShape(Capsule())
+    }
+}
+
+// MARK: - FVCollapsibleSection
+
+struct FVCollapsibleSection<Content: View>: View {
+    let title: String
+    let icon: String
+    let color: Color
+    var showProBadge: Bool = false
+    @Binding var isExpanded: Bool
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header (tappable)
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: icon)
+                        .foregroundStyle(color)
+                        .font(.system(size: 18))
+                        .frame(width: 32)
+
+                    Text(title)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+
+                    if showProBadge { FVProBadge() }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(FVColor.smoke)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+            }
+            .buttonStyle(.plain)
+
+            // Content (shown when expanded)
+            if isExpanded {
+                VStack(spacing: 12) {
+                    content()
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .background(FVColor.cardBg)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(isExpanded ? color.opacity(0.2) : Color.white.opacity(0.06), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - VaultSettingsView
+
 struct VaultSettingsView: View {
     @ObservedObject var authManager: AuthManager
     @ObservedObject var vaultStore: VaultStore
     @ObservedObject var syncService: SyncService
     @ObservedObject var maskedEmailService: MaskedEmailService
     @ObservedObject var subscriptionService: SubscriptionService
+
+    // MARK: - Sheet / Alert State
 
     @State private var showMaskedEmails = false
     @State private var showCloudSync = false
@@ -33,6 +112,8 @@ struct VaultSettingsView: View {
     @State private var pendingCSVType = 0
     @State private var showImportCSV = false
 
+    // MARK: - AppStorage Preferences
+
     @AppStorage("fyxxvault.autolock.enabled") private var autoLockEnabled = true
     @AppStorage("fyxxvault.autolock.minutes") private var autoLockMinutes = 2
     @AppStorage("fyxxvault.biometric.unlock") private var biometricUnlock = true
@@ -43,20 +124,86 @@ struct VaultSettingsView: View {
     @AppStorage("fyxxvault.haptics.enabled") private var hapticsEnabled = true
     @AppStorage("fyxxvault.screenshot.lock.enabled") private var screenshotLockEnabled = true
 
+    // MARK: - Collapsible Section States
+
+    @State private var subscriptionExpanded = false
+    @State private var securityExpanded = false
+    @State private var cloudSyncExpanded = false
+    @State private var maskedEmailExpanded = false
+    @State private var privacyExpanded = false
+    @State private var dataExpanded = false
+    @State private var backupExpanded = false
+    @State private var advancedExpanded = false
+
+    // MARK: - Body
+
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
-                    headerCard
-                    accountSection
-                    cloudSyncSection
-                    maskedEmailSection
-                    securitySection
-                    privacySection
-                    dataSection
-                    backupSection
-                    advancedSecuritySection
+                VStack(spacing: 14) {
+                    profileCard
+
+                    FVCollapsibleSection(
+                        title: String(localized: "settings.section.subscription"),
+                        icon: "crown.fill",
+                        color: FVColor.gold,
+                        isExpanded: $subscriptionExpanded
+                    ) { subscriptionContent }
+
+                    FVCollapsibleSection(
+                        title: String(localized: "settings.section.security"),
+                        icon: "lock.shield.fill",
+                        color: FVColor.cyan,
+                        isExpanded: $securityExpanded
+                    ) { securityContent }
+
+                    FVCollapsibleSection(
+                        title: String(localized: "settings.section.cloud_sync"),
+                        icon: "cloud.fill",
+                        color: FVColor.violet,
+                        showProBadge: true,
+                        isExpanded: $cloudSyncExpanded
+                    ) { cloudSyncContent }
+
+                    FVCollapsibleSection(
+                        title: String(localized: "settings.section.masked_emails"),
+                        icon: "envelope.badge.shield.half.filled.fill",
+                        color: FVColor.rose,
+                        showProBadge: true,
+                        isExpanded: $maskedEmailExpanded
+                    ) { maskedEmailContent }
+
+                    FVCollapsibleSection(
+                        title: String(localized: "settings.section.privacy"),
+                        icon: "eye.slash.fill",
+                        color: FVColor.success,
+                        isExpanded: $privacyExpanded
+                    ) { privacyContent }
+
+                    FVCollapsibleSection(
+                        title: String(localized: "settings.section.data"),
+                        icon: "externaldrive.fill",
+                        color: FVColor.warning,
+                        isExpanded: $dataExpanded
+                    ) { dataContent }
+
+                    FVCollapsibleSection(
+                        title: String(localized: "settings.section.backups"),
+                        icon: "arrow.clockwise.icloud.fill",
+                        color: FVColor.cyan,
+                        isExpanded: $backupExpanded
+                    ) { backupContent }
+
+                    FVCollapsibleSection(
+                        title: String(localized: "settings.section.advanced"),
+                        icon: "gearshape.2.fill",
+                        color: FVColor.smoke,
+                        isExpanded: $advancedExpanded
+                    ) { advancedContent }
+
+                    changePasswordButton
                     logoutButton
+
                     Color.clear.frame(height: 130)
                 }
                 .padding(.horizontal, 24)
@@ -146,7 +293,9 @@ struct VaultSettingsView: View {
         }
     }
 
-    private var headerCard: some View {
+    // MARK: - Profile Card (always visible)
+
+    private var profileCard: some View {
         let audit = vaultStore.securityAudit
         let score = audit.score
         let level: String = {
@@ -156,247 +305,309 @@ struct VaultSettingsView: View {
             if score < 95 { return String(localized: "settings.score.solid") }
             return String(localized: "settings.score.excellent")
         }()
-
         let scoreColor: Color = score >= 85 ? FVColor.success : (score >= 70 ? FVColor.warning : FVColor.danger)
 
-        return VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .center, spacing: 16) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(String(localized: "settings.header.title"))
-                        .font(FVFont.heading(28))
-                        .foregroundStyle(.white)
-                    Text(String(localized: "settings.header.subtitle"))
-                        .font(FVFont.caption(12))
-                        .foregroundStyle(FVColor.mist.opacity(0.9))
+        return VStack(spacing: 16) {
+            HStack(alignment: .center, spacing: 14) {
+                // Left side: email, tags, plan
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(authManager.currentEmail)
+                        .font(FVFont.body(14))
+                        .foregroundStyle(FVColor.cyan)
+                        .lineLimit(1)
+
+                    HStack(spacing: 6) {
+                        FVTag(text: "\(score)/100 \u{2022} \(level)", color: scoreColor)
+
+                        if subscriptionService.isProUser {
+                            FVProBadge()
+                        } else {
+                            FVTag(text: String(localized: "paywall.free"), color: FVColor.smoke)
+                        }
+                    }
+
+                    HStack(spacing: 6) {
+                        FVTag(text: String(localized: "settings.header.accounts_count \(vaultStore.entries.count)"), color: FVColor.silver)
+                        if authManager.hasRecoveryKey {
+                            FVTag(text: String(localized: "settings.profile.recovery_key"), color: FVColor.violet)
+                        }
+                    }
                 }
+
                 Spacer()
 
-                // Prominent security score
-                FVSecurityGauge(score: score, size: 72)
-            }
-
-            // Divider
-            Rectangle().fill(Color.white.opacity(0.05)).frame(height: 1)
-
-            HStack(spacing: 8) {
-                FVTag(text: authManager.currentEmail, color: FVColor.cyan)
-                if authManager.hasRecoveryKey {
-                    FVTag(text: "Recovery Key", color: FVColor.violet)
-                }
-                FVTag(text: String(localized: "settings.header.accounts_count \(vaultStore.entries.count)"), color: FVColor.silver)
-            }
-
-            FVTag(text: "\(score)/100 \u{2022} \(level)", color: scoreColor)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .fvGlass()
-    }
-
-    private var accountSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "person.crop.circle", title: String(localized: "settings.section.account"))
-            Button(String(localized: "settings.account.change_password")) { showChangePassword = true }
-                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-
-            // Subscription status
-            HStack {
-                Text(String(localized: "paywall.current.plan"))
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundStyle(FVColor.mist)
-                Spacer()
-                if subscriptionService.isProUser {
-                    FVProBadge()
-                } else {
-                    FVTag(text: String(localized: "paywall.free"), color: FVColor.mist)
-                }
+                // Right side: small security gauge
+                FVSecurityGauge(score: score, size: 50)
             }
 
             if !subscriptionService.isProUser {
-                Button(String(localized: "paywall.upgrade")) { showPaywall = true }
-                    .buttonStyle(FVSettingsButton(tint: FVColor.gold))
+                Button {
+                    showPaywall = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 13))
+                        Text(String(localized: "paywall.upgrade"))
+                            .font(FVFont.title(14))
+                    }
+                    .foregroundStyle(FVColor.abyss)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(FVGradient.goldShimmer)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .fvGlass()
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [FVColor.cyan.opacity(0.15), FVColor.violet.opacity(0.1), Color.white.opacity(0.05)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        )
+        .shadow(color: FVColor.cyan.opacity(0.06), radius: 20, y: 8)
+    }
 
+    // MARK: - Subscription Content
+
+    @ViewBuilder
+    private var subscriptionContent: some View {
+        HStack {
+            Text(String(localized: "paywall.current.plan"))
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(FVColor.mist)
+            Spacer()
+            if subscriptionService.isProUser {
+                FVProBadge()
+            } else {
+                FVTag(text: String(localized: "paywall.free"), color: FVColor.mist)
+            }
+        }
+
+        if !subscriptionService.isProUser {
+            Button(String(localized: "paywall.upgrade")) { showPaywall = true }
+                .buttonStyle(FVSettingsButton(tint: FVColor.gold))
+        }
+
+        HStack(spacing: 10) {
+            FVTag(text: String(localized: "settings.account.local"), color: FVColor.cyan)
+            FVTag(text: String(localized: "settings.account.encryption_active"), color: FVColor.success)
+        }
+    }
+
+    // MARK: - Security Content
+
+    @ViewBuilder
+    private var securityContent: some View {
+        Toggle(String(localized: "settings.security.auto_lock"), isOn: $autoLockEnabled)
+            .toggleStyle(.switch)
+        if autoLockEnabled {
+            Stepper(String(localized: "settings.security.auto_lock_delay \(autoLockMinutes)"), value: $autoLockMinutes, in: 1...15)
+                .foregroundStyle(.white.opacity(0.85))
+        }
+        Toggle(String(localized: "settings.security.biometric_unlock"), isOn: $biometricUnlock)
+            .toggleStyle(.switch)
+        Toggle(String(localized: "settings.security.screenshot_lock"), isOn: $screenshotLockEnabled)
+            .toggleStyle(.switch)
+        Toggle(String(localized: "settings.security.clipboard_clear"), isOn: $clipboardAutoClear)
+            .toggleStyle(.switch)
+        if clipboardAutoClear {
+            Picker(String(localized: "settings.security.clear_delay"), selection: $clipboardClearDelay) {
+                Text("15s").tag(15); Text("30s").tag(30); Text("60s").tag(60)
+            }.pickerStyle(.segmented)
+        }
+        Text(String(localized: "settings.security.panic_note"))
+            .font(FVFont.caption(11))
+            .foregroundStyle(FVColor.mist.opacity(0.75))
+    }
+
+    // MARK: - Cloud Sync Content
+
+    @ViewBuilder
+    private var cloudSyncContent: some View {
+        HStack {
+            Text(String(localized: "settings.cloud.status"))
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(FVColor.mist)
+            Spacer()
+            if syncService.isCloudAuthenticated {
+                FVTag(text: String(localized: "settings.cloud.connected"), color: FVColor.success)
+            } else if syncService.cloudEmail != nil {
+                FVTag(text: String(localized: "settings.cloud.locked"), color: FVColor.warning)
+            } else {
+                FVTag(text: String(localized: "settings.cloud.not_configured"), color: FVColor.mist)
+            }
+        }
+        if let email = syncService.cloudEmail {
+            Text(email)
+                .font(.system(size: 12, design: .rounded))
+                .foregroundStyle(FVColor.cyan.opacity(0.8))
+        }
+        Button(String(localized: "settings.cloud.configure")) {
+            if subscriptionService.isProUser {
+                showCloudSync = true
+            } else {
+                showPaywall = true
+            }
+        }
+        .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+
+        Text(String(localized: "settings.cloud.zero_knowledge_note"))
+            .font(FVFont.caption(11))
+            .foregroundStyle(FVColor.mist.opacity(0.75))
+    }
+
+    // MARK: - Masked Email Content
+
+    @ViewBuilder
+    private var maskedEmailContent: some View {
+        HStack {
+            Text(String(localized: "settings.cloud.status"))
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(FVColor.mist)
+            Spacer()
+            if maskedEmailService.isConfigured {
+                FVTag(text: String(localized: "settings.masked.alias_count \(maskedEmailService.aliases.count)"), color: FVColor.success)
+            } else {
+                FVTag(text: String(localized: "settings.cloud.not_configured"), color: FVColor.mist)
+            }
+        }
+        Button(String(localized: "settings.masked.button \(maskedEmailService.aliases.count)")) {
+            if subscriptionService.isProUser {
+                showMaskedEmails = true
+            } else {
+                showPaywall = true
+            }
+        }
+        .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+
+        Text(String(localized: "settings.masked.description"))
+            .font(FVFont.caption(11))
+            .foregroundStyle(FVColor.mist.opacity(0.75))
+    }
+
+    // MARK: - Privacy Content
+
+    @ViewBuilder
+    private var privacyContent: some View {
+        Toggle(String(localized: "settings.privacy.hide_passwords"), isOn: $hidePasswordsByDefault)
+            .toggleStyle(.switch)
+        Toggle(String(localized: "settings.privacy.hide_mfa"), isOn: $hideMFACodeByDefault)
+            .toggleStyle(.switch)
+        Toggle(String(localized: "settings.privacy.haptic_feedback"), isOn: $hapticsEnabled)
+            .toggleStyle(.switch)
+        Button(String(localized: "settings.privacy.reset_visual")) { showResetPrefsConfirm = true }
+            .buttonStyle(FVSettingsButton(tint: FVColor.silver))
+    }
+
+    // MARK: - Data Content
+
+    @ViewBuilder
+    private var dataContent: some View {
+        Button(String(localized: "settings.data.trash \(vaultStore.trashEntries.count)")) { showTrash = true }
+            .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+        Button(String(localized: "settings.data.activity_log \(vaultStore.activityLog.count)")) { showActivityLog = true }
+            .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+        Button(String(localized: "settings.data.reorder")) { showReorder = true }
+            .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+        Button(String(localized: "settings.data.purge_log")) { showClearLogConfirm = true }
+            .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.9)))
+        Button(String(localized: "settings.data.empty_trash")) { showEmptyTrashConfirm = true }
+            .buttonStyle(FVSettingsButton(tint: .red.opacity(0.9)))
+    }
+
+    // MARK: - Backup Content
+
+    @ViewBuilder
+    private var backupContent: some View {
+        Button(String(localized: "settings.backup.export_encrypted")) { showExportPrompt = true }
+            .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+        Button(String(localized: "settings.backup.import")) { showFileImporter = true }
+            .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+        Button(String(localized: "settings.backup.import_csv")) { showImportCSV = true }
+            .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+        Text(String(localized: "settings.backup.format_note"))
+            .font(FVFont.caption(11))
+            .foregroundStyle(FVColor.mist.opacity(0.75))
+    }
+
+    // MARK: - Advanced Content
+
+    @ViewBuilder
+    private var advancedContent: some View {
+        Button(String(localized: "settings.advanced.rotate_key")) { showRotateKeyConfirm = true }
+            .buttonStyle(FVSettingsButton(tint: FVColor.violet))
+        Button(String(localized: "settings.advanced.export_csv")) { pendingCSVType = 0; showCSVExportWarning = true }
+            .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.85)))
+        Button(String(localized: "settings.advanced.export_csv_bitwarden")) { pendingCSVType = 1; showCSVExportWarning = true }
+            .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.85)))
+        Button(String(localized: "settings.advanced.export_csv_1password")) { pendingCSVType = 2; showCSVExportWarning = true }
+            .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.85)))
+        Text(String(localized: "settings.advanced.csv_warning"))
+            .font(FVFont.caption(11))
+            .foregroundStyle(FVColor.warning.opacity(0.85))
+    }
+
+    // MARK: - Change Password Button
+
+    private var changePasswordButton: some View {
+        Button { showChangePassword = true } label: {
             HStack(spacing: 10) {
-                FVTag(text: String(localized: "settings.account.local"), color: FVColor.cyan)
-                FVTag(text: String(localized: "settings.account.encryption_active"), color: FVColor.success)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
-        .fvSectionBorder(FVColor.cyan)
-    }
-
-    private var cloudSyncSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                FVSectionHeader(icon: "cloud.fill", title: String(localized: "settings.section.cloud_sync"))
-                FVProBadge()
-            }
-            HStack {
-                Text(String(localized: "settings.cloud.status"))
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundStyle(FVColor.mist)
+                Image(systemName: "key.fill")
+                    .font(.system(size: 15))
+                    .foregroundStyle(FVColor.cyan)
+                Text(String(localized: "settings.account.change_password"))
+                    .font(FVFont.title(15))
+                    .foregroundStyle(.white)
                 Spacer()
-                if syncService.isCloudAuthenticated {
-                    FVTag(text: String(localized: "settings.cloud.connected"), color: FVColor.success)
-                } else if syncService.cloudEmail != nil {
-                    FVTag(text: String(localized: "settings.cloud.locked"), color: FVColor.warning)
-                } else {
-                    FVTag(text: String(localized: "settings.cloud.not_configured"), color: FVColor.mist)
-                }
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(FVColor.smoke)
             }
-            if let email = syncService.cloudEmail {
-                Text(email)
-                    .font(.system(size: 12, design: .rounded))
-                    .foregroundStyle(FVColor.cyan.opacity(0.8))
-            }
-            Button(String(localized: "settings.cloud.configure")) {
-                    if subscriptionService.isProUser {
-                        showCloudSync = true
-                    } else {
-                        showPaywall = true
-                    }
-                }
-                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Text(String(localized: "settings.cloud.zero_knowledge_note"))
-                .font(FVFont.caption(11))
-                .foregroundStyle(FVColor.mist.opacity(0.75))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(FVColor.cardBg)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(FVColor.cyan.opacity(0.15), lineWidth: 1)
+            )
         }
-        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
-        .fvSectionBorder(FVColor.success)
+        .buttonStyle(.plain)
     }
 
-    private var maskedEmailSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                FVSectionHeader(icon: "envelope.badge.shield.half.filled", title: String(localized: "settings.section.masked_emails"))
-                FVProBadge()
-            }
-            HStack {
-                Text(String(localized: "settings.cloud.status"))
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundStyle(FVColor.mist)
-                Spacer()
-                if maskedEmailService.isConfigured {
-                    FVTag(text: String(localized: "settings.masked.alias_count \(maskedEmailService.aliases.count)"), color: FVColor.success)
-                } else {
-                    FVTag(text: String(localized: "settings.cloud.not_configured"), color: FVColor.mist)
-                }
-            }
-            Button(String(localized: "settings.masked.button \(maskedEmailService.aliases.count)")) {
-                    if subscriptionService.isProUser {
-                        showMaskedEmails = true
-                    } else {
-                        showPaywall = true
-                    }
-                }
-                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Text(String(localized: "settings.masked.description"))
-                .font(FVFont.caption(11))
-                .foregroundStyle(FVColor.mist.opacity(0.75))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
-        .fvSectionBorder(FVColor.violet)
-    }
-
-    private var securitySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "lock.shield", title: String(localized: "settings.section.security"))
-            Toggle(String(localized: "settings.security.auto_lock"), isOn: $autoLockEnabled).toggleStyle(.switch)
-            if autoLockEnabled {
-                Stepper(String(localized: "settings.security.auto_lock_delay \(autoLockMinutes)"), value: $autoLockMinutes, in: 1...15)
-                    .foregroundStyle(.white.opacity(0.85))
-            }
-            Toggle(String(localized: "settings.security.biometric_unlock"), isOn: $biometricUnlock).toggleStyle(.switch)
-            Toggle(String(localized: "settings.security.screenshot_lock"), isOn: $screenshotLockEnabled).toggleStyle(.switch)
-            Toggle(String(localized: "settings.security.clipboard_clear"), isOn: $clipboardAutoClear).toggleStyle(.switch)
-            if clipboardAutoClear {
-                Picker(String(localized: "settings.security.clear_delay"), selection: $clipboardClearDelay) {
-                    Text("15s").tag(15); Text("30s").tag(30); Text("60s").tag(60)
-                }.pickerStyle(.segmented)
-            }
-            Text(String(localized: "settings.security.panic_note"))
-                .font(FVFont.caption(11))
-                .foregroundStyle(FVColor.mist.opacity(0.75))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
-        .fvSectionBorder(FVColor.warning)
-    }
-
-    private var privacySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "eye.slash", title: String(localized: "settings.section.privacy"))
-            Toggle(String(localized: "settings.privacy.hide_passwords"), isOn: $hidePasswordsByDefault).toggleStyle(.switch)
-            Toggle(String(localized: "settings.privacy.hide_mfa"), isOn: $hideMFACodeByDefault).toggleStyle(.switch)
-            Toggle(String(localized: "settings.privacy.haptic_feedback"), isOn: $hapticsEnabled).toggleStyle(.switch)
-            Button(String(localized: "settings.privacy.reset_visual")) { showResetPrefsConfirm = true }
-                .buttonStyle(FVSettingsButton(tint: FVColor.silver))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
-        .fvSectionBorder(FVColor.rose)
-    }
-
-    private var dataSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "externaldrive", title: String(localized: "settings.section.data"))
-            Button(String(localized: "settings.data.trash \(vaultStore.trashEntries.count)")) { showTrash = true }
-                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Button(String(localized: "settings.data.activity_log \(vaultStore.activityLog.count)")) { showActivityLog = true }
-                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Button(String(localized: "settings.data.reorder")) { showReorder = true }
-                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Button(String(localized: "settings.data.purge_log")) { showClearLogConfirm = true }
-                .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.9)))
-            Button(String(localized: "settings.data.empty_trash")) { showEmptyTrashConfirm = true }
-                .buttonStyle(FVSettingsButton(tint: .red.opacity(0.9)))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
-        .fvSectionBorder(FVColor.smoke)
-    }
-
-    private var backupSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "archivebox", title: String(localized: "settings.section.backups"))
-            Button(String(localized: "settings.backup.export_encrypted")) { showExportPrompt = true }
-                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Button(String(localized: "settings.backup.import")) { showFileImporter = true }
-                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Button(String(localized: "settings.backup.import_csv")) { showImportCSV = true }
-                .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-            Text(String(localized: "settings.backup.format_note"))
-                .font(FVFont.caption(11))
-                .foregroundStyle(FVColor.mist.opacity(0.75))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
-        .fvSectionBorder(FVColor.gold)
-    }
-
-    private var advancedSecuritySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            FVSectionHeader(icon: "gearshape.2", title: String(localized: "settings.section.advanced"))
-            Button(String(localized: "settings.advanced.rotate_key")) { showRotateKeyConfirm = true }
-                .buttonStyle(FVSettingsButton(tint: FVColor.violet))
-            Button(String(localized: "settings.advanced.export_csv")) { pendingCSVType = 0; showCSVExportWarning = true }
-                .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.85)))
-            Button(String(localized: "settings.advanced.export_csv_bitwarden")) { pendingCSVType = 1; showCSVExportWarning = true }
-                .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.85)))
-            Button(String(localized: "settings.advanced.export_csv_1password")) { pendingCSVType = 2; showCSVExportWarning = true }
-                .buttonStyle(FVSettingsButton(tint: .orange.opacity(0.85)))
-            Text(String(localized: "settings.advanced.csv_warning"))
-                .font(FVFont.caption(11))
-                .foregroundStyle(FVColor.warning.opacity(0.85))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
-        .fvSectionBorder(FVColor.violet)
-    }
+    // MARK: - Logout Button
 
     private var logoutButton: some View {
         Button { showLogoutSheet = true } label: {
-            Label(String(localized: "settings.button.logout"), systemImage: "rectangle.portrait.and.arrow.right")
-                .font(FVFont.title(17))
-                .frame(maxWidth: .infinity).padding(.vertical, 14)
+            HStack(spacing: 10) {
+                Image(systemName: "rectangle.portrait.and.arrow.right")
+                    .font(.system(size: 15))
+                    .foregroundStyle(FVColor.danger)
+                Text(String(localized: "settings.button.logout"))
+                    .font(FVFont.title(15))
+                    .foregroundStyle(FVColor.danger)
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(FVColor.danger.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(FVColor.danger.opacity(0.2), lineWidth: 1)
+            )
         }
-        .buttonStyle(FVSettingsButton(tint: .red.opacity(0.9)))
+        .buttonStyle(.plain)
     }
+
+    // MARK: - Actions
 
     private func performCSVExport() {
         let csv: String
