@@ -6,11 +6,46 @@
 	let heroVisible = $state(false);
 	let revealedSections = $state(new Set<string>());
 	let openFaq = $state<number | null>(null);
+	let scrollY = $state(0);
+	let scrollProgress = $state(0);
+	let demoPasswordVisible = $state(false);
+	let demoCopied = $state(false);
+	let totpSeconds = $state(22);
+	let activeTestimonial = $state(0);
+	let ctaTyped = $state('');
+	let faqSearch = $state('');
+
+	// Counter values
+	let counterAccounts = $state(0);
+	let counterBits = $state(0);
+	let counterUptime = $state(0);
+	let counterLeaks = $state(0);
+	let countersStarted = false;
+
+	const ctaFullText = 'Pret a securiser tes comptes ?';
 
 	onMount(() => {
 		mounted = true;
-		setTimeout(() => heroVisible = true, 150);
+		setTimeout(() => heroVisible = true, 200);
 
+		// Mouse-following gradient
+		const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+		if (!isTouchDevice) {
+			document.addEventListener('mousemove', (e: MouseEvent) => {
+				document.documentElement.style.setProperty('--mouse-x', e.clientX + 'px');
+				document.documentElement.style.setProperty('--mouse-y', e.clientY + 'px');
+			});
+		}
+
+		// Scroll tracking
+		const onScroll = () => {
+			scrollY = window.scrollY;
+			const docH = document.documentElement.scrollHeight - window.innerHeight;
+			scrollProgress = docH > 0 ? (window.scrollY / docH) * 100 : 0;
+		};
+		window.addEventListener('scroll', onScroll, { passive: true });
+
+		// IntersectionObserver for reveals
 		const observer = new IntersectionObserver(
 			(entries) => {
 				entries.forEach((entry) => {
@@ -22,12 +57,112 @@
 					}
 				});
 			},
-			{ threshold: 0.1, rootMargin: '0px 0px -60px 0px' }
+			{ threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
 		);
-
 		document.querySelectorAll('[data-reveal]').forEach((el) => observer.observe(el));
 
-		return () => observer.disconnect();
+		// Counter observer
+		const counterObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting && !countersStarted) {
+						countersStarted = true;
+						animateCounter('accounts', 0, 10000, 2000);
+						animateCounter('bits', 0, 256, 1500);
+						animateCounter('uptime', 0, 99.9, 1800);
+						// leaks stays at 0
+					}
+				});
+			},
+			{ threshold: 0.3 }
+		);
+		const statsEl = document.querySelector('[data-reveal="stats"]');
+		if (statsEl) counterObserver.observe(statsEl);
+
+		// CTA typewriter observer
+		const ctaObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting && ctaTyped === '') {
+						typeWriter();
+					}
+				});
+			},
+			{ threshold: 0.5 }
+		);
+		const ctaEl = document.querySelector('[data-reveal="finalcta"]');
+		if (ctaEl) ctaObserver.observe(ctaEl);
+
+		// Magnetic buttons
+		if (!isTouchDevice) {
+			setTimeout(() => {
+				document.querySelectorAll<HTMLElement>('.magnetic-btn').forEach((btn) => {
+					btn.addEventListener('mousemove', (e: MouseEvent) => {
+						const rect = btn.getBoundingClientRect();
+						const x = e.clientX - rect.left - rect.width / 2;
+						const y = e.clientY - rect.top - rect.height / 2;
+						btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px)`;
+					});
+					btn.addEventListener('mouseleave', () => {
+						btn.style.transform = 'translate(0, 0)';
+						btn.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+					});
+					btn.addEventListener('mouseenter', () => {
+						btn.style.transition = 'transform 0.1s ease-out';
+					});
+				});
+			}, 500);
+
+			// Bento card mouse glow
+			setTimeout(() => {
+				document.querySelectorAll<HTMLElement>('.bento-card').forEach((card) => {
+					card.addEventListener('mousemove', (e: MouseEvent) => {
+						const rect = card.getBoundingClientRect();
+						const x = e.clientX - rect.left;
+						const y = e.clientY - rect.top;
+						card.style.setProperty('--card-x', x + 'px');
+						card.style.setProperty('--card-y', y + 'px');
+					});
+				});
+			}, 500);
+
+			// Demo card tilt
+			setTimeout(() => {
+				const demoCard = document.querySelector<HTMLElement>('.demo-tilt');
+				if (demoCard) {
+					demoCard.addEventListener('mousemove', (e: MouseEvent) => {
+						const rect = demoCard.getBoundingClientRect();
+						const x = (e.clientX - rect.left) / rect.width - 0.5;
+						const y = (e.clientY - rect.top) / rect.height - 0.5;
+						demoCard.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg)`;
+					});
+					demoCard.addEventListener('mouseleave', () => {
+						demoCard.style.transform = 'perspective(800px) rotateY(0) rotateX(0)';
+						demoCard.style.transition = 'transform 0.5s ease-out';
+					});
+					demoCard.addEventListener('mouseenter', () => {
+						demoCard.style.transition = 'transform 0.1s ease-out';
+					});
+				}
+			}, 500);
+		}
+
+		// TOTP countdown
+		const totpInterval = setInterval(() => {
+			totpSeconds = totpSeconds <= 0 ? 30 : totpSeconds - 1;
+		}, 1000);
+
+		// Testimonial carousel
+		const testimonialInterval = setInterval(() => {
+			activeTestimonial = (activeTestimonial + 1) % testimonials.length;
+		}, 5000);
+
+		return () => {
+			observer.disconnect();
+			window.removeEventListener('scroll', onScroll);
+			clearInterval(totpInterval);
+			clearInterval(testimonialInterval);
+		};
 	});
 
 	function isRevealed(id: string): boolean {
@@ -38,44 +173,81 @@
 		openFaq = openFaq === index ? null : index;
 	}
 
-	// ---- Data ----
+	function animateCounter(type: string, start: number, end: number, duration: number) {
+		const startTime = performance.now();
+		function step(now: number) {
+			const elapsed = now - startTime;
+			const progress = Math.min(elapsed / duration, 1);
+			const eased = 1 - Math.pow(1 - progress, 3);
+			const current = start + (end - start) * eased;
+			if (type === 'accounts') counterAccounts = Math.round(current);
+			else if (type === 'bits') counterBits = Math.round(current);
+			else if (type === 'uptime') counterUptime = Math.round(current * 10) / 10;
+			if (progress < 1) requestAnimationFrame(step);
+		}
+		requestAnimationFrame(step);
+	}
 
+	function typeWriter() {
+		let i = 0;
+		function tick() {
+			if (i <= ctaFullText.length) {
+				ctaTyped = ctaFullText.slice(0, i);
+				i++;
+				setTimeout(tick, 40 + Math.random() * 30);
+			}
+		}
+		tick();
+	}
+
+	function handleCopy() {
+		demoCopied = true;
+		setTimeout(() => demoCopied = false, 2000);
+	}
+
+	// ---- Data ----
 	const features = [
 		{
 			icon: 'shield',
 			title: 'Chiffrement militaire',
 			description: 'AES-256-GCM avec derivation de cle PBKDF2. Tes donnees sont illisibles sans ton mot de passe maitre.',
 			color: 'var(--fv-cyan)',
+			size: 'large',
 		},
 		{
 			icon: 'zap',
 			title: 'AutoFill intelligent',
 			description: 'Remplissage automatique dans Safari et toutes tes apps iOS. Un tap et c\'est fait.',
 			color: 'var(--fv-violet)',
+			size: 'medium',
 		},
 		{
 			icon: 'sync',
 			title: 'Sync multi-appareils',
 			description: 'Accede a ton coffre sur iPhone, iPad et navigateur. Synchronisation chiffree de bout en bout.',
 			color: 'var(--fv-success)',
+			size: 'medium',
 		},
 		{
 			icon: 'key',
 			title: 'Generateur de mots de passe',
 			description: 'Cree des mots de passe forts et uniques en un clic. Personnalise longueur et complexite.',
 			color: 'var(--fv-gold)',
+			size: 'small',
 		},
 		{
 			icon: 'eye',
 			title: 'Dark Web monitoring',
 			description: 'Surveillance automatique HIBP. Tu es alerte si un de tes comptes apparait dans une fuite.',
 			color: 'var(--fv-rose)',
+			size: 'small',
 		},
 		{
 			icon: 'lock',
 			title: '2FA integre',
 			description: 'Codes TOTP integres pour chaque compte. Plus besoin d\'une app separee comme Google Authenticator.',
 			color: 'var(--fv-violet-light)',
+			size: 'small',
 		},
 	];
 
@@ -214,7 +386,11 @@
 		},
 	];
 
-	const badges = ['SOC 2', 'RGPD', 'E2E', 'AES-256', 'PBKDF2', 'HIBP'];
+	function getFilteredFaqs() {
+		if (!faqSearch.trim()) return faqs;
+		const s = faqSearch.toLowerCase();
+		return faqs.filter(f => f.q.toLowerCase().includes(s) || f.a.toLowerCase().includes(s));
+	}
 </script>
 
 <svelte:head>
@@ -222,216 +398,267 @@
 	<meta name="description" content="FyxxVault — Le gestionnaire de mots de passe nouvelle generation. Chiffrement AES-256, zero-knowledge, surveillance dark web." />
 </svelte:head>
 
-<div class="fv-landing">
+<!-- Scroll progress bar -->
+<div class="scroll-progress" style="width: {scrollProgress}%"></div>
+
+<!-- Film grain overlay -->
+<div class="grain"></div>
+
+<!-- Mouse-following spotlight -->
+<div class="mouse-spotlight"></div>
+
+<div class="landing">
 	<Navbar />
 
 	<!-- ============================================================ -->
 	<!-- HERO SECTION -->
 	<!-- ============================================================ -->
-	<section class="fv-hero">
-		<!-- Gradient mesh background -->
-		<div class="fv-hero__mesh">
-			<div class="fv-hero__orb fv-hero__orb--1"></div>
-			<div class="fv-hero__orb fv-hero__orb--2"></div>
-			<div class="fv-hero__orb fv-hero__orb--3"></div>
-			<div class="fv-hero__orb fv-hero__orb--4"></div>
+	<section class="hero">
+		<div class="hero-bg">
+			<div class="hero-orb hero-orb--1" style="transform: translateY({scrollY * -0.15}px)"></div>
+			<div class="hero-orb hero-orb--2" style="transform: translateY({scrollY * -0.08}px)"></div>
+			<div class="hero-orb hero-orb--3" style="transform: translateY({scrollY * -0.12}px)"></div>
+			<div class="hero-particles"></div>
+			<div class="hero-grid"></div>
 		</div>
 
-		<!-- Grid pattern -->
-		<div class="fv-hero__grid"></div>
-
-		<div class="fv-hero__content" class:fv-hero__content--visible={heroVisible}>
+		<div class="hero-content" class:hero-content--visible={heroVisible}>
 			<!-- Pill badge -->
-			<div class="fv-hero__badge">
-				<span class="fv-hero__badge-dot"></span>
+			<div class="hero-badge">
+				<span class="hero-badge-dot"></span>
 				<span>Chiffrement de bout en bout</span>
 			</div>
 
-			<h1 class="fv-hero__title">
-				Tes mots de passe
+			<h1 class="hero-title">
+				<span class="reveal-word" style="animation-delay: 0s">Tes</span>{' '}
+				<span class="reveal-word" style="animation-delay: 0.08s">mots</span>{' '}
+				<span class="reveal-word" style="animation-delay: 0.16s">de</span>{' '}
+				<span class="reveal-word" style="animation-delay: 0.24s">passe</span>
 				<br />
-				<span class="fv-hero__title-accent">meritent mieux.</span>
+				<span class="reveal-word hero-title-gold" style="animation-delay: 0.4s">meritent</span>{' '}
+				<span class="reveal-word hero-title-gold" style="animation-delay: 0.48s">mieux.</span>
 			</h1>
 
-			<p class="fv-hero__subtitle">
-				FyxxVault est le gestionnaire de mots de passe nouvelle generation.
+			<p class="hero-subtitle">
+				FyxxVault est le gestionnaire de mots de passe nouvelle generation.<br />
 				Chiffrement zero-knowledge, sync instantanee, surveillance du dark web.
 			</p>
 
-			<!-- CTA Buttons -->
-			<div class="fv-hero__ctas">
-				<a href="/register" class="fv-hero__cta-primary">
+			<div class="hero-ctas">
+				<a href="/register" class="hero-cta-primary magnetic-btn">
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
 					Commencer gratuitement
 				</a>
-				<a href="#features" class="fv-hero__cta-ghost">
+				<a href="#demo" class="hero-cta-ghost magnetic-btn">
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
 					Voir la demo
 				</a>
 			</div>
 
-			<!-- Trust badges -->
-			<div class="fv-hero__trust">
-				<span class="fv-hero__trust-item">
+			<div class="hero-trust">
+				<span class="hero-trust-item">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 					AES-256
 				</span>
-				<span class="fv-hero__trust-sep"></span>
-				<span class="fv-hero__trust-item">
+				<span class="hero-trust-sep"></span>
+				<span class="hero-trust-item">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 					Zero-knowledge
 				</span>
-				<span class="fv-hero__trust-sep"></span>
-				<span class="fv-hero__trust-item">
+				<span class="hero-trust-sep"></span>
+				<span class="hero-trust-item">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 					Multi-plateforme
 				</span>
 			</div>
+		</div>
 
-			<!-- Device mockup -->
-			<div class="fv-hero__mockup">
-				<div class="fv-hero__laptop">
-					<div class="fv-hero__laptop-screen">
-						<div class="fv-hero__laptop-topbar">
-							<div class="fv-hero__laptop-dots">
-								<span></span><span></span><span></span>
-							</div>
-							<div class="fv-hero__laptop-url">fyxxvault.com/vault</div>
-						</div>
-						<div class="fv-hero__laptop-body">
-							<!-- Fake vault UI -->
-							<div class="fv-mock__sidebar">
-								<div class="fv-mock__sidebar-item fv-mock__sidebar-item--active"></div>
-								<div class="fv-mock__sidebar-item"></div>
-								<div class="fv-mock__sidebar-item"></div>
-								<div class="fv-mock__sidebar-item"></div>
-							</div>
-							<div class="fv-mock__main">
-								<div class="fv-mock__entry">
-									<div class="fv-mock__entry-icon" style="background: var(--fv-cyan)"></div>
-									<div class="fv-mock__entry-lines">
-										<div class="fv-mock__line fv-mock__line--w60"></div>
-										<div class="fv-mock__line fv-mock__line--w40 fv-mock__line--dim"></div>
-									</div>
-									<div class="fv-mock__entry-badge">2FA</div>
-								</div>
-								<div class="fv-mock__entry">
-									<div class="fv-mock__entry-icon" style="background: var(--fv-violet)"></div>
-									<div class="fv-mock__entry-lines">
-										<div class="fv-mock__line fv-mock__line--w50"></div>
-										<div class="fv-mock__line fv-mock__line--w70 fv-mock__line--dim"></div>
-									</div>
-								</div>
-								<div class="fv-mock__entry">
-									<div class="fv-mock__entry-icon" style="background: var(--fv-gold)"></div>
-									<div class="fv-mock__entry-lines">
-										<div class="fv-mock__line fv-mock__line--w45"></div>
-										<div class="fv-mock__line fv-mock__line--w55 fv-mock__line--dim"></div>
-									</div>
-									<div class="fv-mock__entry-badge fv-mock__entry-badge--warn">!</div>
-								</div>
-								<div class="fv-mock__entry">
-									<div class="fv-mock__entry-icon" style="background: var(--fv-success)"></div>
-									<div class="fv-mock__entry-lines">
-										<div class="fv-mock__line fv-mock__line--w55"></div>
-										<div class="fv-mock__line fv-mock__line--w35 fv-mock__line--dim"></div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="fv-hero__laptop-base"></div>
-				</div>
+		<div class="hero-scroll-indicator" style="opacity: {1 - scrollY * 0.01}">
+			<div class="hero-scroll-mouse">
+				<div class="hero-scroll-wheel"></div>
+			</div>
+			<span>Scroll</span>
+		</div>
+	</section>
 
-				<!-- iPhone -->
-				<div class="fv-hero__phone">
-					<div class="fv-hero__phone-notch"></div>
-					<div class="fv-hero__phone-screen">
-						<div class="fv-mock__phone-header">
-							<div class="fv-mock__line fv-mock__line--w40" style="margin: 0 auto 8px"></div>
-						</div>
-						<div class="fv-mock__phone-entry">
-							<div class="fv-mock__entry-icon fv-mock__entry-icon--sm" style="background: var(--fv-cyan)"></div>
-							<div class="fv-mock__entry-lines">
-								<div class="fv-mock__line fv-mock__line--w60"></div>
-								<div class="fv-mock__line fv-mock__line--w40 fv-mock__line--dim"></div>
-							</div>
-						</div>
-						<div class="fv-mock__phone-entry">
-							<div class="fv-mock__entry-icon fv-mock__entry-icon--sm" style="background: var(--fv-violet)"></div>
-							<div class="fv-mock__entry-lines">
-								<div class="fv-mock__line fv-mock__line--w50"></div>
-								<div class="fv-mock__line fv-mock__line--w30 fv-mock__line--dim"></div>
-							</div>
-						</div>
-						<div class="fv-mock__phone-entry">
-							<div class="fv-mock__entry-icon fv-mock__entry-icon--sm" style="background: var(--fv-gold)"></div>
-							<div class="fv-mock__entry-lines">
-								<div class="fv-mock__line fv-mock__line--w45"></div>
-								<div class="fv-mock__line fv-mock__line--w55 fv-mock__line--dim"></div>
-							</div>
-						</div>
-					</div>
-				</div>
+	<!-- ============================================================ -->
+	<!-- STATS BAR -->
+	<!-- ============================================================ -->
+	<section class="stats" data-reveal="stats">
+		<div class="stats-inner" class:revealed={isRevealed('stats')}>
+			<div class="stat-item">
+				<span class="stat-number">{counterAccounts.toLocaleString('fr-FR')}+</span>
+				<span class="stat-label">comptes proteges</span>
+			</div>
+			<div class="stat-divider"></div>
+			<div class="stat-item">
+				<span class="stat-number">AES-{counterBits}</span>
+				<span class="stat-label">bits de chiffrement</span>
+			</div>
+			<div class="stat-divider"></div>
+			<div class="stat-item">
+				<span class="stat-number">{counterUptime}%</span>
+				<span class="stat-label">uptime garanti</span>
+			</div>
+			<div class="stat-divider"></div>
+			<div class="stat-item">
+				<span class="stat-number">{counterLeaks}</span>
+				<span class="stat-label">fuites de donnees</span>
 			</div>
 		</div>
 	</section>
 
 	<!-- ============================================================ -->
-	<!-- TRUST BAR -->
+	<!-- BENTO FEATURES -->
 	<!-- ============================================================ -->
-	<section class="fv-trust" data-reveal="trust">
-		<div class="fv-trust__inner" class:fv-reveal={isRevealed('trust')}>
-			<p class="fv-trust__label">Protege deja des milliers de comptes</p>
-			<div class="fv-trust__scroll">
-				<div class="fv-trust__track">
-					{#each [...badges, ...badges] as badge}
-						<div class="fv-trust__badge">
-							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-							{badge}
-						</div>
-					{/each}
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<!-- ============================================================ -->
-	<!-- FEATURES GRID -->
-	<!-- ============================================================ -->
-	<section id="features" class="fv-features" data-reveal="features">
-		<div class="fv-section__inner">
-			<div class="fv-section__header" class:fv-reveal={isRevealed('features')}>
-				<span class="fv-section__pill" style="--pill-color: var(--fv-cyan)">Fonctionnalites</span>
-				<h2 class="fv-section__title">Tout ce qu'il te faut.</h2>
-				<p class="fv-section__subtitle">Plus qu'un gestionnaire de mots de passe — un veritable hub de securite.</p>
+	<section id="features" class="features" data-reveal="features">
+		<div class="section-inner">
+			<div class="section-header" class:revealed={isRevealed('features')}>
+				<span class="section-pill" style="--pill-color: var(--fv-cyan)">Fonctionnalites</span>
+				<h2 class="section-title">Tout ce qu'il te faut.</h2>
+				<p class="section-subtitle">Plus qu'un gestionnaire de mots de passe — un veritable hub de securite.</p>
 			</div>
 
-			<div class="fv-features__grid">
+			<div class="bento-grid" class:revealed={isRevealed('features')}>
 				{#each features as feature, i}
 					<div
-						class="fv-feature-card"
-						class:fv-reveal={isRevealed('features')}
-						style="--reveal-delay: {i * 100}ms; --accent: {feature.color}"
-						data-reveal="feature-{i}"
+						class="bento-card bento-card--{feature.size}"
+						style="--reveal-delay: {i * 80}ms; --accent: {feature.color}; --card-x: 50%; --card-y: 50%"
 					>
-						<div class="fv-feature-card__icon">
-							{#if feature.icon === 'shield'}
-								<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-							{:else if feature.icon === 'zap'}
-								<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-							{:else if feature.icon === 'sync'}
-								<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-							{:else if feature.icon === 'key'}
-								<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-							{:else if feature.icon === 'eye'}
-								<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-							{:else if feature.icon === 'lock'}
-								<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+						<div class="bento-card-glow"></div>
+						<div class="bento-card-border"></div>
+						<div class="bento-card-content">
+							<div class="bento-card-icon">
+								{#if feature.icon === 'shield'}
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+								{:else if feature.icon === 'zap'}
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+								{:else if feature.icon === 'sync'}
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="1.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+								{:else if feature.icon === 'key'}
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="1.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+								{:else if feature.icon === 'eye'}
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+								{:else if feature.icon === 'lock'}
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+								{/if}
+							</div>
+							<h3 class="bento-card-title">{feature.title}</h3>
+							<p class="bento-card-desc">{feature.description}</p>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</section>
+
+	<!-- ============================================================ -->
+	<!-- INTERACTIVE DEMO -->
+	<!-- ============================================================ -->
+	<section id="demo" class="demo" data-reveal="demo">
+		<div class="section-inner">
+			<div class="section-header" class:revealed={isRevealed('demo')}>
+				<span class="section-pill" style="--pill-color: var(--fv-gold)">Demo interactive</span>
+				<h2 class="section-title">Essaie par toi-meme.</h2>
+				<p class="section-subtitle">Un apercu de l'experience FyxxVault. Clique, explore, decouvre.</p>
+			</div>
+
+			<div class="demo-container" class:revealed={isRevealed('demo')}>
+				<div class="demo-glow"></div>
+				<div class="demo-tilt">
+					<div class="demo-card">
+						<div class="demo-card-header">
+							<div class="demo-card-icon">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+							</div>
+							<div class="demo-card-info">
+								<span class="demo-card-site">Google</span>
+								<span class="demo-card-email">user@fyxxvault.com</span>
+							</div>
+							<div class="demo-card-badge">2FA</div>
+						</div>
+
+						<div class="demo-field">
+							<span class="demo-field-label">Mot de passe</span>
+							<div class="demo-field-row">
+								<span class="demo-field-value">
+									{#if demoPasswordVisible}
+										kX9#mP2$vL7@nQ4
+									{:else}
+										&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;
+									{/if}
+								</span>
+								<button class="demo-field-btn" onclick={() => demoPasswordVisible = !demoPasswordVisible} aria-label="Toggle password">
+									{#if demoPasswordVisible}
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+									{:else}
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+									{/if}
+								</button>
+								<button class="demo-field-btn demo-copy-btn" onclick={handleCopy} aria-label="Copy">
+									{#if demoCopied}
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+									{:else}
+										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+									{/if}
+								</button>
+							</div>
+							{#if demoCopied}
+								<span class="demo-copied-toast">Copie !</span>
 							{/if}
 						</div>
-						<h3 class="fv-feature-card__title">{feature.title}</h3>
-						<p class="fv-feature-card__desc">{feature.description}</p>
+
+						<div class="demo-totp">
+							<span class="demo-totp-label">Code TOTP</span>
+							<div class="demo-totp-row">
+								<span class="demo-totp-code">4&nbsp;8&nbsp;3&nbsp;&nbsp;7&nbsp;2&nbsp;1</span>
+								<div class="demo-totp-timer">
+									<svg width="24" height="24" viewBox="0 0 24 24">
+										<circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
+										<circle cx="12" cy="12" r="10" fill="none" stroke={totpSeconds > 10 ? 'var(--fv-cyan)' : 'var(--fv-rose)'} stroke-width="2" stroke-dasharray="62.83" stroke-dashoffset={62.83 - (62.83 * totpSeconds / 30)} stroke-linecap="round" transform="rotate(-90 12 12)" style="transition: stroke-dashoffset 1s linear, stroke 0.3s ease"/>
+										<text x="12" y="16" text-anchor="middle" fill="white" font-size="10" font-weight="600">{totpSeconds}</text>
+									</svg>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ============================================================ -->
+	<!-- SECURITY SECTION -->
+	<!-- ============================================================ -->
+	<section id="security" class="security" data-reveal="security">
+		<div class="security-bg" style="transform: translateY({scrollY * -0.05}px)"></div>
+		<div class="section-inner">
+			<div class="section-header" class:revealed={isRevealed('security')}>
+				<span class="section-pill" style="--pill-color: var(--fv-success)">Securite</span>
+				<h2 class="section-title">La securite dans notre ADN.</h2>
+				<p class="section-subtitle">Chaque decision d'architecture est prise pour que personne ne puisse acceder a tes donnees.</p>
+			</div>
+
+			<div class="security-grid" class:revealed={isRevealed('security')}>
+				{#each securityItems as item, i}
+					<div class="security-card bento-card" style="--reveal-delay: {i * 120}ms; --accent: {item.color}; --card-x: 50%; --card-y: 50%">
+						<div class="bento-card-glow"></div>
+						<div class="bento-card-border"></div>
+						<div class="security-card-inner">
+							<div class="security-card-icon">
+								{#if item.icon === 'lock'}
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={item.color} stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+								{:else if item.icon === 'cpu'}
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={item.color} stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+								{:else if item.icon === 'eye-off'}
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={item.color} stroke-width="1.5"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+								{:else if item.icon === 'alert'}
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={item.color} stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+								{/if}
+							</div>
+							<h3 class="security-card-label">{item.label}</h3>
+							<p class="security-card-detail">{item.detail}</p>
+						</div>
 					</div>
 				{/each}
 			</div>
@@ -441,60 +668,23 @@
 	<!-- ============================================================ -->
 	<!-- HOW IT WORKS -->
 	<!-- ============================================================ -->
-	<section class="fv-steps" data-reveal="steps">
-		<div class="fv-section__inner">
-			<div class="fv-section__header" class:fv-reveal={isRevealed('steps')}>
-				<span class="fv-section__pill" style="--pill-color: var(--fv-violet)">Comment ca marche</span>
-				<h2 class="fv-section__title">3 etapes. C'est tout.</h2>
-				<p class="fv-section__subtitle">De l'inscription a la securite totale en moins de 2 minutes.</p>
+	<section class="steps" data-reveal="steps">
+		<div class="section-inner">
+			<div class="section-header" class:revealed={isRevealed('steps')}>
+				<span class="section-pill" style="--pill-color: var(--fv-violet)">Comment ca marche</span>
+				<h2 class="section-title">3 etapes. C'est tout.</h2>
+				<p class="section-subtitle">De l'inscription a la securite totale en moins de 2 minutes.</p>
 			</div>
 
-			<div class="fv-steps__grid" class:fv-reveal={isRevealed('steps')}>
+			<div class="steps-grid" class:revealed={isRevealed('steps')}>
 				{#each steps as step, i}
-					<div class="fv-step" style="--reveal-delay: {i * 150}ms">
-						<!-- Connector line -->
+					<div class="step-card" style="--reveal-delay: {i * 150}ms">
 						{#if i < steps.length - 1}
-							<div class="fv-step__connector"></div>
+							<div class="step-connector"></div>
 						{/if}
-						<div class="fv-step__num">{step.num}</div>
-						<h3 class="fv-step__title">{step.title}</h3>
-						<p class="fv-step__desc">{step.description}</p>
-					</div>
-				{/each}
-			</div>
-		</div>
-	</section>
-
-	<!-- ============================================================ -->
-	<!-- SECURITY SECTION -->
-	<!-- ============================================================ -->
-	<section id="security" class="fv-security" data-reveal="security">
-		<div class="fv-section__inner">
-			<div class="fv-section__header" class:fv-reveal={isRevealed('security')}>
-				<span class="fv-section__pill" style="--pill-color: var(--fv-success)">Securite</span>
-				<h2 class="fv-section__title">La securite n'est pas une option,<br />c'est notre fondation.</h2>
-				<p class="fv-section__subtitle">Chaque decision d'architecture est prise pour que personne ne puisse acceder a tes donnees.</p>
-			</div>
-
-			<div class="fv-security__grid" class:fv-reveal={isRevealed('security')}>
-				{#each securityItems as item, i}
-					<div class="fv-security-card" style="--reveal-delay: {i * 120}ms; --accent: {item.color}">
-						<div class="fv-security-card__icon">
-							{#if item.icon === 'lock'}
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={item.color} stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-							{:else if item.icon === 'cpu'}
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={item.color} stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
-							{:else if item.icon === 'eye-off'}
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={item.color} stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-							{:else if item.icon === 'alert'}
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={item.color} stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-							{/if}
-						</div>
-						<div class="fv-security-card__content">
-							<h3 class="fv-security-card__label">{item.label}</h3>
-							<p class="fv-security-card__detail">{item.detail}</p>
-						</div>
-						<div class="fv-security-card__glow"></div>
+						<div class="step-num">{step.num}</div>
+						<h3 class="step-title">{step.title}</h3>
+						<p class="step-desc">{step.description}</p>
 					</div>
 				{/each}
 			</div>
@@ -504,20 +694,20 @@
 	<!-- ============================================================ -->
 	<!-- COMPARISON TABLE -->
 	<!-- ============================================================ -->
-	<section class="fv-comparison" data-reveal="comparison">
-		<div class="fv-section__inner">
-			<div class="fv-section__header" class:fv-reveal={isRevealed('comparison')}>
-				<span class="fv-section__pill" style="--pill-color: var(--fv-rose)">Comparaison</span>
-				<h2 class="fv-section__title">Pourquoi FyxxVault ?</h2>
-				<p class="fv-section__subtitle">Compare les fonctionnalites et fais ton choix.</p>
+	<section class="comparison" data-reveal="comparison">
+		<div class="section-inner">
+			<div class="section-header" class:revealed={isRevealed('comparison')}>
+				<span class="section-pill" style="--pill-color: var(--fv-rose)">Comparaison</span>
+				<h2 class="section-title">Pourquoi FyxxVault ?</h2>
+				<p class="section-subtitle">Compare les fonctionnalites et fais ton choix.</p>
 			</div>
 
-			<div class="fv-comparison__table-wrap" class:fv-reveal={isRevealed('comparison')}>
-				<table class="fv-comparison__table">
+			<div class="comparison-table-wrap" class:revealed={isRevealed('comparison')}>
+				<table class="comparison-table">
 					<thead>
 						<tr>
-							<th class="fv-comparison__th-feature">Fonctionnalite</th>
-							<th class="fv-comparison__th-highlight">FyxxVault</th>
+							<th class="comparison-th-feature">Fonctionnalite</th>
+							<th class="comparison-th-highlight">FyxxVault</th>
 							<th>1Password</th>
 							<th>Bitwarden</th>
 							<th>LastPass</th>
@@ -525,9 +715,9 @@
 					</thead>
 					<tbody>
 						{#each comparisonFeatures as row}
-							<tr>
-								<td class="fv-comparison__feature-name">{row.name}</td>
-								<td class="fv-comparison__highlight-cell">
+							<tr class="comparison-row">
+								<td class="comparison-feature-name">{row.name}</td>
+								<td class="comparison-highlight-cell">
 									{#if typeof row.fyxx === 'boolean'}
 										{#if row.fyxx}
 											<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
@@ -535,7 +725,7 @@
 											<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 										{/if}
 									{:else}
-										<span class="fv-comparison__text-value">{row.fyxx}</span>
+										<span class="comparison-text-value">{row.fyxx}</span>
 									{/if}
 								</td>
 								<td>
@@ -546,7 +736,7 @@
 											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 										{/if}
 									{:else}
-										<span class="fv-comparison__dim">{row.one}</span>
+										<span class="comparison-dim">{row.one}</span>
 									{/if}
 								</td>
 								<td>
@@ -557,7 +747,7 @@
 											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 										{/if}
 									{:else}
-										<span class="fv-comparison__dim">{row.bit}</span>
+										<span class="comparison-dim">{row.bit}</span>
 									{/if}
 								</td>
 								<td>
@@ -568,7 +758,7 @@
 											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 										{/if}
 									{:else}
-										<span class="fv-comparison__dim">{row.last}</span>
+										<span class="comparison-dim">{row.last}</span>
 									{/if}
 								</td>
 							</tr>
@@ -582,64 +772,70 @@
 	<!-- ============================================================ -->
 	<!-- PRICING SECTION -->
 	<!-- ============================================================ -->
-	<section id="pricing" class="fv-pricing" data-reveal="pricing">
-		<div class="fv-section__inner">
-			<div class="fv-section__header" class:fv-reveal={isRevealed('pricing')}>
-				<span class="fv-section__pill" style="--pill-color: var(--fv-gold)">Tarifs</span>
-				<h2 class="fv-section__title">Simple et transparent.</h2>
-				<p class="fv-section__subtitle">14 jours d'essai gratuit. Sans carte bancaire.</p>
+	<section id="pricing" class="pricing" data-reveal="pricing">
+		<div class="section-inner">
+			<div class="section-header" class:revealed={isRevealed('pricing')}>
+				<span class="section-pill" style="--pill-color: var(--fv-gold)">Tarifs</span>
+				<h2 class="section-title">Simple et transparent.</h2>
+				<p class="section-subtitle">14 jours d'essai gratuit. Sans carte bancaire.</p>
 			</div>
 
-			<div class="fv-pricing__grid" class:fv-reveal={isRevealed('pricing')}>
+			<div class="pricing-grid" class:revealed={isRevealed('pricing')}>
 				<!-- Free Plan -->
-				<div class="fv-pricing-card">
-					<div class="fv-pricing-card__header">
-						<h3 class="fv-pricing-card__name">Gratuit</h3>
-						<p class="fv-pricing-card__tagline">Pour commencer en securite</p>
+				<div class="pricing-card" style="--reveal-delay: 0ms">
+					<div class="pricing-card-border"></div>
+					<div class="pricing-card-inner">
+						<div class="pricing-card-header">
+							<h3 class="pricing-card-name">Gratuit</h3>
+							<p class="pricing-card-tagline">Pour commencer en securite</p>
+						</div>
+						<div class="pricing-card-price">
+							<span class="pricing-card-amount">0</span>
+							<span class="pricing-card-currency">EUR</span>
+							<span class="pricing-card-period">/mois</span>
+						</div>
+						<ul class="pricing-card-features">
+							{#each freeFeatures as f}
+								<li>
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+									{f}
+								</li>
+							{/each}
+						</ul>
+						<a href="/register" class="pricing-card-cta pricing-card-cta--ghost magnetic-btn">Creer un compte</a>
 					</div>
-					<div class="fv-pricing-card__price">
-						<span class="fv-pricing-card__amount">0EUR</span>
-						<span class="fv-pricing-card__period">/mois</span>
-					</div>
-					<ul class="fv-pricing-card__features">
-						{#each freeFeatures as f}
-							<li>
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-								{f}
-							</li>
-						{/each}
-					</ul>
-					<a href="/register" class="fv-pricing-card__cta fv-pricing-card__cta--ghost">Creer un compte</a>
 				</div>
 
 				<!-- Pro Plan -->
-				<div class="fv-pricing-card fv-pricing-card--pro">
-					<div class="fv-pricing-card__popular">Populaire</div>
-					<div class="fv-pricing-card__header">
-						<h3 class="fv-pricing-card__name">
-							Pro
-							<span class="fv-pricing-card__crown">&#9733;</span>
-						</h3>
-						<p class="fv-pricing-card__tagline">Securite maximale</p>
+				<div class="pricing-card pricing-card--pro" style="--reveal-delay: 150ms">
+					<div class="pricing-card-shimmer"></div>
+					<div class="pricing-card-border pricing-card-border--gold"></div>
+					<div class="pricing-card-popular">Populaire</div>
+					<div class="pricing-card-inner">
+						<div class="pricing-card-header">
+							<h3 class="pricing-card-name">Pro <span class="pricing-crown">&#9733;</span></h3>
+							<p class="pricing-card-tagline">Securite maximale</p>
+						</div>
+						<div class="pricing-card-price">
+							<span class="pricing-card-amount">4,99</span>
+							<span class="pricing-card-currency">EUR</span>
+							<span class="pricing-card-period">/mois</span>
+						</div>
+						<p class="pricing-card-annual">ou 41,99EUR/an <span>(-30%)</span></p>
+						<ul class="pricing-card-features">
+							{#each proFeatures as f}
+								<li>
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-gold)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+									{f}
+								</li>
+							{/each}
+						</ul>
+						<a href="/register" class="pricing-card-cta pricing-card-cta--gold magnetic-btn">Essai gratuit 14 jours</a>
+						<p class="pricing-card-guarantee">
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+							Satisfait ou rembourse 30 jours
+						</p>
 					</div>
-					<div class="fv-pricing-card__price">
-						<span class="fv-pricing-card__amount">4,99EUR</span>
-						<span class="fv-pricing-card__period">/mois</span>
-					</div>
-					<p class="fv-pricing-card__annual">ou 41,99EUR/an <span>(-30%)</span></p>
-					<ul class="fv-pricing-card__features">
-						{#each proFeatures as f}
-							<li>
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-gold)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-								{f}
-							</li>
-						{/each}
-					</ul>
-					<a href="/register" class="fv-pricing-card__cta fv-pricing-card__cta--gold">Essai gratuit 14 jours</a>
-					<p class="fv-pricing-card__guarantee">
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-						Satisfait ou rembourse 30 jours
-					</p>
 				</div>
 			</div>
 		</div>
@@ -648,30 +844,45 @@
 	<!-- ============================================================ -->
 	<!-- TESTIMONIALS -->
 	<!-- ============================================================ -->
-	<section class="fv-testimonials" data-reveal="testimonials">
-		<div class="fv-section__inner">
-			<div class="fv-section__header" class:fv-reveal={isRevealed('testimonials')}>
-				<span class="fv-section__pill" style="--pill-color: var(--fv-violet)">Temoignages</span>
-				<h2 class="fv-section__title">Ils nous font confiance.</h2>
+	<section class="testimonials" data-reveal="testimonials">
+		<div class="section-inner">
+			<div class="section-header" class:revealed={isRevealed('testimonials')}>
+				<span class="section-pill" style="--pill-color: var(--fv-violet)">Temoignages</span>
+				<h2 class="section-title">Ils nous font confiance.</h2>
 			</div>
 
-			<div class="fv-testimonials__grid" class:fv-reveal={isRevealed('testimonials')}>
+			<div class="testimonials-grid" class:revealed={isRevealed('testimonials')}>
 				{#each testimonials as t, i}
-					<div class="fv-testimonial" style="--reveal-delay: {i * 120}ms; --accent: {t.color}">
-						<div class="fv-testimonial__stars">
+					<div
+						class="testimonial-card"
+						class:testimonial-card--active={activeTestimonial === i}
+						style="--reveal-delay: {i * 120}ms; --accent: {t.color}"
+					>
+						<div class="testimonial-gradient-bar"></div>
+						<div class="testimonial-stars">
 							{#each Array(t.stars) as _}
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--fv-gold)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
 							{/each}
 						</div>
-						<p class="fv-testimonial__text">{t.text}</p>
-						<div class="fv-testimonial__author">
-							<div class="fv-testimonial__avatar" style="--avatar-color: {t.color}">{t.initials}</div>
+						<p class="testimonial-text">{t.text}</p>
+						<div class="testimonial-author">
+							<div class="testimonial-avatar" style="--avatar-color: {t.color}">{t.initials}</div>
 							<div>
-								<div class="fv-testimonial__name">{t.name}</div>
-								<div class="fv-testimonial__role">{t.role}</div>
+								<div class="testimonial-name">{t.name}</div>
+								<div class="testimonial-role">{t.role}</div>
 							</div>
 						</div>
 					</div>
+				{/each}
+			</div>
+			<div class="testimonials-dots">
+				{#each testimonials as _, i}
+					<button
+						class="testimonial-dot"
+						class:testimonial-dot--active={activeTestimonial === i}
+						onclick={() => activeTestimonial = i}
+						aria-label="Testimonial {i + 1}"
+					></button>
 				{/each}
 			</div>
 		</div>
@@ -680,22 +891,27 @@
 	<!-- ============================================================ -->
 	<!-- FAQ -->
 	<!-- ============================================================ -->
-	<section class="fv-faq" data-reveal="faq">
-		<div class="fv-section__inner fv-section__inner--narrow">
-			<div class="fv-section__header" class:fv-reveal={isRevealed('faq')}>
-				<span class="fv-section__pill" style="--pill-color: var(--fv-cyan)">FAQ</span>
-				<h2 class="fv-section__title">Questions frequentes</h2>
+	<section id="faq" class="faq" data-reveal="faq">
+		<div class="section-inner section-inner--narrow">
+			<div class="section-header" class:revealed={isRevealed('faq')}>
+				<span class="section-pill" style="--pill-color: var(--fv-cyan)">FAQ</span>
+				<h2 class="section-title">Questions frequentes</h2>
 			</div>
 
-			<div class="fv-faq__list" class:fv-reveal={isRevealed('faq')}>
-				{#each faqs as faq, i}
-					<div class="fv-faq__item" class:fv-faq__item--open={openFaq === i}>
-						<button class="fv-faq__question" onclick={() => toggleFaq(i)}>
+			<div class="faq-search" class:revealed={isRevealed('faq')}>
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-smoke)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+				<input type="text" placeholder="Rechercher..." bind:value={faqSearch} class="faq-search-input" />
+			</div>
+
+			<div class="faq-list" class:revealed={isRevealed('faq')}>
+				{#each getFilteredFaqs() as faq, i}
+					<div class="faq-item" class:faq-item--open={openFaq === i}>
+						<button class="faq-question" onclick={() => toggleFaq(i)}>
 							<span>{faq.q}</span>
-							<svg class="fv-faq__chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+							<svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
 						</button>
-						<div class="fv-faq__answer-wrap" style="grid-template-rows: {openFaq === i ? '1fr' : '0fr'}">
-							<div class="fv-faq__answer">
+						<div class="faq-answer-wrap" style="grid-template-rows: {openFaq === i ? '1fr' : '0fr'}">
+							<div class="faq-answer">
 								<p>{faq.a}</p>
 							</div>
 						</div>
@@ -708,15 +924,17 @@
 	<!-- ============================================================ -->
 	<!-- FINAL CTA -->
 	<!-- ============================================================ -->
-	<section class="fv-final-cta" data-reveal="finalcta">
-		<div class="fv-final-cta__bg">
-			<div class="fv-final-cta__orb fv-final-cta__orb--1"></div>
-			<div class="fv-final-cta__orb fv-final-cta__orb--2"></div>
+	<section class="final-cta" data-reveal="finalcta">
+		<div class="final-cta-bg">
+			<div class="final-cta-orb final-cta-orb--1"></div>
+			<div class="final-cta-orb final-cta-orb--2"></div>
 		</div>
-		<div class="fv-section__inner fv-final-cta__content" class:fv-reveal={isRevealed('finalcta')}>
-			<h2 class="fv-final-cta__title">Pret a securiser tes comptes ?</h2>
-			<p class="fv-final-cta__subtitle">Rejoins des milliers d'utilisateurs qui protegent leurs mots de passe avec FyxxVault.</p>
-			<a href="/register" class="fv-final-cta__btn">
+		<div class="section-inner final-cta-content" class:revealed={isRevealed('finalcta')}>
+			<h2 class="final-cta-title">
+				{ctaTyped}<span class="cta-cursor">|</span>
+			</h2>
+			<p class="final-cta-subtitle">Rejoins des milliers d'utilisateurs qui protegent leurs mots de passe avec FyxxVault.</p>
+			<a href="/register" class="final-cta-btn magnetic-btn">
 				Commencer gratuitement
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
 			</a>
@@ -726,43 +944,41 @@
 	<!-- ============================================================ -->
 	<!-- FOOTER -->
 	<!-- ============================================================ -->
-	<footer class="fv-footer">
-		<div class="fv-footer__inner">
-			<div class="fv-footer__grid">
-				<!-- Brand -->
-				<div class="fv-footer__brand">
-					<div class="fv-footer__logo">
-						<div class="fv-footer__logo-icon">
+	<footer class="footer">
+		<div class="footer-inner">
+			<div class="footer-grid">
+				<div class="footer-brand">
+					<div class="footer-logo">
+						<div class="footer-logo-icon">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
 						</div>
 						<span>FyxxVault</span>
 					</div>
-					<p class="fv-footer__desc">Le gestionnaire de mots de passe nouvelle generation. Securite sans compromis.</p>
-					<div class="fv-footer__socials">
-						<a href="https://twitter.com/fyxxvault" aria-label="Twitter" class="fv-footer__social">
+					<p class="footer-desc">Le gestionnaire de mots de passe nouvelle generation. Securite sans compromis.</p>
+					<div class="footer-socials">
+						<a href="https://twitter.com/fyxxvault" aria-label="Twitter" class="footer-social">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
 						</a>
-						<a href="https://github.com/fyxxvault" aria-label="GitHub" class="fv-footer__social">
+						<a href="https://github.com/fyxxvault" aria-label="GitHub" class="footer-social">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
 						</a>
 					</div>
 				</div>
 
-				<!-- Links -->
-				<div class="fv-footer__col">
+				<div class="footer-col">
 					<h4>Produit</h4>
 					<a href="#features">Fonctionnalites</a>
 					<a href="#security">Securite</a>
 					<a href="#pricing">Prix</a>
 					<a href="/login">Web App</a>
 				</div>
-				<div class="fv-footer__col">
+				<div class="footer-col">
 					<h4>Legal</h4>
 					<a href="/privacy">Politique de confidentialite</a>
 					<a href="/terms">CGV</a>
 					<a href="/mentions-legales">Mentions legales</a>
 				</div>
-				<div class="fv-footer__col">
+				<div class="footer-col">
 					<h4>Support</h4>
 					<a href="mailto:support@fyxxvault.com">Contact</a>
 					<a href="#faq">FAQ</a>
@@ -770,9 +986,9 @@
 				</div>
 			</div>
 
-			<div class="fv-footer__bottom">
+			<div class="footer-bottom">
 				<p>&copy; 2026 FyxxVault. Tous droits reserves.</p>
-				<div class="fv-footer__badges">
+				<div class="footer-badges">
 					<span>AES-256</span>
 					<span>Zero-Knowledge</span>
 					<span>E2E</span>
@@ -784,628 +1000,884 @@
 
 <style>
 	/* ============================================================ */
-	/* BASE / RESET */
+	/* CSS CUSTOM PROPERTIES & KEYFRAMES */
 	/* ============================================================ */
-	.fv-landing {
+	:root {
+		--mouse-x: 50vw;
+		--mouse-y: 50vh;
+		--angle: 0deg;
+	}
+
+	@property --angle {
+		syntax: '<angle>';
+		initial-value: 0deg;
+		inherits: false;
+	}
+
+	@keyframes revealWord {
+		from { opacity: 0; transform: translateY(30px) scale(0.97); }
+		to { opacity: 1; transform: translateY(0) scale(1); }
+	}
+
+	@keyframes rotateGradient {
+		to { --angle: 360deg; }
+	}
+
+	@keyframes fadeInUp {
+		from { opacity: 0; transform: translateY(40px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	@keyframes scaleIn {
+		from { opacity: 0; transform: scale(0.8); }
+		to { opacity: 1; transform: scale(1); }
+	}
+
+	@keyframes slideInBottom {
+		from { opacity: 0; transform: translateY(60px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	@keyframes float {
+		0%, 100% { transform: translateY(0); }
+		50% { transform: translateY(-10px); }
+	}
+
+	@keyframes pulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.5; }
+	}
+
+	@keyframes shimmer {
+		0% { background-position: -200% 0; }
+		100% { background-position: 200% 0; }
+	}
+
+	@keyframes scrollWheel {
+		0% { transform: translateY(0); opacity: 1; }
+		100% { transform: translateY(6px); opacity: 0; }
+	}
+
+	@keyframes blink {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0; }
+	}
+
+	@keyframes dashMove {
+		to { stroke-dashoffset: -20; }
+	}
+
+	@keyframes popularPulse {
+		0%, 100% { box-shadow: 0 0 0 0 rgba(255, 200, 55, 0.4); }
+		50% { box-shadow: 0 0 0 8px rgba(255, 200, 55, 0); }
+	}
+
+	@keyframes orbFloat1 {
+		0%, 100% { transform: translate(0, 0) scale(1); }
+		33% { transform: translate(30px, -50px) scale(1.05); }
+		66% { transform: translate(-20px, 20px) scale(0.95); }
+	}
+
+	@keyframes orbFloat2 {
+		0%, 100% { transform: translate(0, 0) scale(1); }
+		33% { transform: translate(-40px, 30px) scale(0.95); }
+		66% { transform: translate(50px, -20px) scale(1.05); }
+	}
+
+	/* ============================================================ */
+	/* SCROLL PROGRESS */
+	/* ============================================================ */
+	.scroll-progress {
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 2px;
+		background: linear-gradient(90deg, var(--fv-cyan), var(--fv-violet));
+		z-index: 10000;
+		transition: width 0.1s linear;
+	}
+
+	/* ============================================================ */
+	/* GRAIN OVERLAY */
+	/* ============================================================ */
+	.grain::after {
+		content: '';
+		position: fixed;
+		inset: 0;
+		background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+		opacity: 0.025;
+		pointer-events: none;
+		z-index: 9999;
+	}
+
+	/* ============================================================ */
+	/* MOUSE SPOTLIGHT */
+	/* ============================================================ */
+	.mouse-spotlight {
+		position: fixed;
+		inset: 0;
+		background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(0, 212, 255, 0.04), transparent 40%);
+		pointer-events: none;
+		z-index: 1;
+	}
+
+	/* ============================================================ */
+	/* LANDING BASE */
+	/* ============================================================ */
+	.landing {
 		min-height: 100vh;
 		background: var(--fv-abyss);
 		overflow-x: hidden;
-	}
-
-	/* ============================================================ */
-	/* REVEAL ANIMATION */
-	/* ============================================================ */
-	.fv-reveal {
-		animation: fvRevealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-		animation-delay: var(--reveal-delay, 0ms);
-	}
-
-	@keyframes fvRevealUp {
-		from { opacity: 0; transform: translateY(32px); }
-		to { opacity: 1; transform: translateY(0); }
+		position: relative;
 	}
 
 	/* ============================================================ */
 	/* SECTION SHARED */
 	/* ============================================================ */
-	.fv-section__inner {
+	.section-inner {
 		max-width: 1200px;
 		margin: 0 auto;
 		padding: 0 24px;
 	}
-
-	.fv-section__inner--narrow {
+	.section-inner--narrow {
 		max-width: 800px;
 	}
-
-	.fv-section__header {
+	.section-header {
 		text-align: center;
 		margin-bottom: 64px;
 		opacity: 0;
+		transform: translateY(30px);
+		transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 	}
-
-	.fv-section__pill {
-		display: inline-block;
+	.section-header.revealed {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	.section-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
 		padding: 6px 16px;
 		border-radius: 100px;
-		font-size: 11px;
+		font-size: 12px;
 		font-weight: 700;
-		letter-spacing: 0.08em;
+		letter-spacing: 1.5px;
 		text-transform: uppercase;
 		color: var(--pill-color);
-		background: color-mix(in srgb, var(--pill-color) 12%, transparent);
-		margin-bottom: 16px;
+		background: color-mix(in srgb, var(--pill-color) 10%, transparent);
+		border: 1px solid color-mix(in srgb, var(--pill-color) 20%, transparent);
+		margin-bottom: 20px;
 	}
-
-	.fv-section__title {
-		font-size: clamp(28px, 5vw, 48px);
+	.section-title {
+		font-size: clamp(32px, 5vw, 48px);
 		font-weight: 800;
 		color: white;
 		line-height: 1.15;
+		margin: 0 0 16px;
 		letter-spacing: -0.02em;
-		margin: 0 0 12px;
 	}
-
-	.fv-section__subtitle {
-		font-size: 17px;
-		color: var(--fv-mist);
-		max-width: 560px;
-		margin: 0 auto;
+	.section-subtitle {
+		font-size: 18px;
+		color: var(--fv-smoke);
 		line-height: 1.6;
+		max-width: 600px;
+		margin: 0 auto;
 	}
 
 	/* ============================================================ */
 	/* HERO */
 	/* ============================================================ */
-	.fv-hero {
+	.hero {
 		position: relative;
 		min-height: 100vh;
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+		padding: 120px 24px 80px;
 		overflow: hidden;
-		padding: 100px 24px 60px;
 	}
 
-	.fv-hero__mesh {
+	.hero-bg {
 		position: absolute;
 		inset: 0;
 		overflow: hidden;
 	}
 
-	.fv-hero__orb {
+	.hero-orb {
 		position: absolute;
 		border-radius: 50%;
-		filter: blur(120px);
+		filter: blur(100px);
+		will-change: transform;
 	}
-
-	.fv-hero__orb--1 {
+	.hero-orb--1 {
 		width: 600px;
 		height: 600px;
-		top: -10%;
-		left: -5%;
-		background: var(--fv-cyan);
-		opacity: 0.07;
-		animation: fvFloat 20s ease-in-out infinite;
+		background: radial-gradient(circle, rgba(0, 212, 255, 0.12), transparent 70%);
+		top: -200px;
+		left: -100px;
+		animation: orbFloat1 20s ease-in-out infinite;
 	}
-
-	.fv-hero__orb--2 {
+	.hero-orb--2 {
 		width: 500px;
 		height: 500px;
-		bottom: -10%;
-		right: -5%;
-		background: var(--fv-violet);
-		opacity: 0.06;
-		animation: fvFloat 25s ease-in-out infinite reverse;
+		background: radial-gradient(circle, rgba(138, 92, 246, 0.1), transparent 70%);
+		top: -100px;
+		right: -150px;
+		animation: orbFloat2 25s ease-in-out infinite;
 	}
-
-	.fv-hero__orb--3 {
+	.hero-orb--3 {
 		width: 400px;
 		height: 400px;
-		top: 30%;
-		left: 50%;
-		background: var(--fv-rose);
-		opacity: 0.04;
-		animation: fvFloat 22s ease-in-out infinite 3s;
+		background: radial-gradient(circle, rgba(255, 200, 55, 0.06), transparent 70%);
+		bottom: -100px;
+		left: 30%;
+		animation: orbFloat1 18s ease-in-out infinite reverse;
 	}
 
-	.fv-hero__orb--4 {
-		width: 300px;
-		height: 300px;
-		top: 10%;
-		right: 20%;
-		background: var(--fv-gold);
-		opacity: 0.03;
-		animation: fvFloat 18s ease-in-out infinite 5s;
-	}
-
-	@keyframes fvFloat {
-		0%, 100% { transform: translate(0, 0) scale(1); }
-		33% { transform: translate(30px, -30px) scale(1.05); }
-		66% { transform: translate(-20px, 20px) scale(0.95); }
-	}
-
-	.fv-hero__grid {
+	.hero-particles {
 		position: absolute;
 		inset: 0;
-		opacity: 0.025;
-		background-image: radial-gradient(circle, var(--fv-mist) 1px, transparent 1px);
-		background-size: 48px 48px;
+	}
+	.hero-particles::before,
+	.hero-particles::after {
+		content: '';
+		position: absolute;
+		width: 2px;
+		height: 2px;
+		border-radius: 50%;
+		animation: float 6s ease-in-out infinite;
+	}
+	.hero-particles::before {
+		box-shadow:
+			100px 100px 0 rgba(0, 212, 255, 0.3),
+			300px 200px 0 rgba(138, 92, 246, 0.2),
+			500px 150px 0 rgba(255, 200, 55, 0.2),
+			700px 300px 0 rgba(0, 212, 255, 0.15),
+			200px 400px 0 rgba(138, 92, 246, 0.25),
+			900px 100px 0 rgba(255, 55, 130, 0.15),
+			150px 350px 0 rgba(0, 212, 255, 0.2),
+			800px 250px 0 rgba(138, 92, 246, 0.15),
+			400px 500px 0 rgba(255, 200, 55, 0.2),
+			600px 50px 0 rgba(0, 212, 255, 0.1),
+			1000px 400px 0 rgba(138, 92, 246, 0.2),
+			50px 250px 0 rgba(255, 200, 55, 0.15);
+	}
+	.hero-particles::after {
+		box-shadow:
+			250px 150px 0 rgba(138, 92, 246, 0.2),
+			450px 350px 0 rgba(0, 212, 255, 0.15),
+			650px 100px 0 rgba(255, 200, 55, 0.2),
+			850px 450px 0 rgba(0, 212, 255, 0.2),
+			350px 50px 0 rgba(138, 92, 246, 0.15),
+			50px 500px 0 rgba(255, 55, 130, 0.2),
+			750px 200px 0 rgba(0, 212, 255, 0.15),
+			550px 400px 0 rgba(255, 200, 55, 0.1);
+		animation-delay: -3s;
 	}
 
-	.fv-hero__content {
+	.hero-grid {
+		position: absolute;
+		inset: 0;
+		background-image:
+			linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+		background-size: 80px 80px;
+		mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black, transparent);
+	}
+
+	.hero-content {
 		position: relative;
 		z-index: 2;
 		text-align: center;
-		max-width: 900px;
+		max-width: 800px;
 		opacity: 0;
-		transform: translateY(24px);
-		transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+		transition: opacity 0.3s ease;
 	}
-
-	.fv-hero__content--visible {
+	.hero-content--visible {
 		opacity: 1;
-		transform: translateY(0);
 	}
 
-	.fv-hero__badge {
+	.hero-badge {
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
-		padding: 8px 18px;
+		padding: 8px 20px;
 		border-radius: 100px;
-		background: rgba(255, 255, 255, 0.04);
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		font-size: 12px;
+		font-size: 13px;
 		font-weight: 600;
-		color: var(--fv-mist);
-		letter-spacing: 0.02em;
+		color: var(--fv-cyan);
+		background: rgba(0, 212, 255, 0.08);
+		border: 1px solid rgba(0, 212, 255, 0.15);
 		margin-bottom: 32px;
+		backdrop-filter: blur(10px);
 	}
-
-	.fv-hero__badge-dot {
-		width: 7px;
-		height: 7px;
+	.hero-badge-dot {
+		width: 6px;
+		height: 6px;
 		border-radius: 50%;
 		background: var(--fv-success);
-		animation: fvPulse 2s ease-in-out infinite;
+		animation: pulse 2s ease-in-out infinite;
 	}
 
-	@keyframes fvPulse {
-		0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
-		50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
-	}
-
-	.fv-hero__title {
-		font-size: clamp(36px, 7vw, 72px);
-		font-weight: 900;
-		color: white;
+	.hero-title {
+		font-size: clamp(42px, 7vw, 80px);
+		font-weight: 850;
 		line-height: 1.05;
 		letter-spacing: -0.03em;
+		color: white;
 		margin: 0 0 24px;
 	}
 
-	.fv-hero__title-accent {
-		background: linear-gradient(135deg, var(--fv-gold), var(--fv-gold-light));
+	.reveal-word {
+		display: inline-block;
+		opacity: 0;
+		transform: translateY(30px);
+		animation: revealWord 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+	.hero-content:not(.hero-content--visible) .reveal-word {
+		animation: none;
+		opacity: 0;
+	}
+
+	.hero-title-gold {
+		background: linear-gradient(135deg, var(--fv-gold), var(--fv-gold-light), var(--fv-gold));
+		background-size: 200% auto;
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
 	}
 
-	.fv-hero__subtitle {
-		font-size: clamp(16px, 2vw, 19px);
-		color: var(--fv-mist);
-		line-height: 1.65;
-		max-width: 600px;
-		margin: 0 auto 40px;
+	.hero-subtitle {
+		font-size: 18px;
+		color: var(--fv-smoke);
+		line-height: 1.7;
+		margin: 0 0 40px;
+		opacity: 0;
+		animation: fadeInUp 0.8s 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+	.hero-content:not(.hero-content--visible) .hero-subtitle {
+		animation: none;
 	}
 
-	.fv-hero__ctas {
+	.hero-ctas {
 		display: flex;
-		flex-wrap: wrap;
+		gap: 16px;
 		justify-content: center;
-		gap: 12px;
+		flex-wrap: wrap;
 		margin-bottom: 40px;
+		opacity: 0;
+		animation: fadeInUp 0.8s 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	}
+	.hero-content:not(.hero-content--visible) .hero-ctas {
+		animation: none;
 	}
 
-	.fv-hero__cta-primary {
+	.hero-cta-primary {
 		display: inline-flex;
 		align-items: center;
-		gap: 8px;
+		gap: 10px;
 		padding: 16px 32px;
 		border-radius: 14px;
-		background: linear-gradient(135deg, var(--fv-gold), var(--fv-gold-light));
-		color: #0a101e;
-		font-size: 15px;
 		font-weight: 700;
+		font-size: 16px;
+		color: #1a1a2e;
+		background: linear-gradient(135deg, var(--fv-gold), var(--fv-gold-light));
 		text-decoration: none;
-		transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-		box-shadow: 0 4px 24px rgba(255, 200, 55, 0.25);
+		transition: box-shadow 0.3s ease;
+		will-change: transform;
+	}
+	.hero-cta-primary:hover {
+		box-shadow: 0 8px 40px rgba(255, 200, 55, 0.35), 0 0 0 1px rgba(255, 200, 55, 0.1);
 	}
 
-	.fv-hero__cta-primary:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 8px 40px rgba(255, 200, 55, 0.4);
-	}
-
-	.fv-hero__cta-ghost {
+	.hero-cta-ghost {
 		display: inline-flex;
 		align-items: center;
-		gap: 8px;
+		gap: 10px;
 		padding: 16px 32px;
 		border-radius: 14px;
-		background: rgba(255, 255, 255, 0.04);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		color: var(--fv-silver);
-		font-size: 15px;
 		font-weight: 600;
+		font-size: 16px;
+		color: var(--fv-silver);
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.1);
 		text-decoration: none;
-		transition: all 0.2s;
+		transition: background 0.3s ease, border-color 0.3s ease;
+		will-change: transform;
+	}
+	.hero-cta-ghost:hover {
+		background: rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.2);
 	}
 
-	.fv-hero__cta-ghost:hover {
-		background: rgba(255, 255, 255, 0.08);
-		border-color: rgba(255, 255, 255, 0.15);
-	}
-
-	.fv-hero__trust {
+	.hero-trust {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		gap: 16px;
 		flex-wrap: wrap;
-		margin-bottom: 64px;
+		opacity: 0;
+		animation: fadeInUp 0.8s 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 	}
-
-	.fv-hero__trust-item {
+	.hero-content:not(.hero-content--visible) .hero-trust {
+		animation: none;
+	}
+	.hero-trust-item {
 		display: flex;
 		align-items: center;
 		gap: 6px;
 		font-size: 13px;
+		color: var(--fv-mist);
 		font-weight: 500;
-		color: var(--fv-smoke);
 	}
-
-	.fv-hero__trust-sep {
+	.hero-trust-sep {
 		width: 4px;
 		height: 4px;
 		border-radius: 50%;
 		background: var(--fv-ash);
 	}
 
-	/* Device Mockup */
-	.fv-hero__mockup {
+	.hero-scroll-indicator {
+		position: absolute;
+		bottom: 32px;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 8px;
+		color: var(--fv-ash);
+		font-size: 11px;
+		font-weight: 500;
+		letter-spacing: 2px;
+		text-transform: uppercase;
+		transition: opacity 0.3s ease;
+	}
+	.hero-scroll-mouse {
+		width: 22px;
+		height: 34px;
+		border: 2px solid var(--fv-ash);
+		border-radius: 12px;
 		position: relative;
-		max-width: 700px;
+	}
+	.hero-scroll-wheel {
+		width: 3px;
+		height: 8px;
+		border-radius: 2px;
+		background: var(--fv-smoke);
+		position: absolute;
+		top: 6px;
+		left: 50%;
+		transform: translateX(-50%);
+		animation: scrollWheel 1.5s ease-in-out infinite;
+	}
+
+	/* ============================================================ */
+	/* STATS BAR */
+	/* ============================================================ */
+	.stats {
+		padding: 0 24px;
+		margin-top: -40px;
+		position: relative;
+		z-index: 3;
+	}
+	.stats-inner {
+		max-width: 1000px;
 		margin: 0 auto;
 		display: flex;
-		justify-content: center;
-	}
-
-	.fv-hero__laptop {
-		width: 100%;
-		max-width: 560px;
-	}
-
-	.fv-hero__laptop-screen {
-		background: var(--fv-obsidian);
-		border-radius: 12px 12px 0 0;
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		overflow: hidden;
-		aspect-ratio: 16 / 10;
-	}
-
-	.fv-hero__laptop-topbar {
-		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding: 8px 12px;
-		background: rgba(255, 255, 255, 0.03);
-		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+		justify-content: center;
+		gap: 40px;
+		padding: 32px 48px;
+		border-radius: 20px;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		opacity: 0;
+		transform: translateY(20px);
+		transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+		flex-wrap: wrap;
 	}
-
-	.fv-hero__laptop-dots {
+	.stats-inner.revealed {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	.stat-item {
 		display: flex;
-		gap: 5px;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
 	}
-
-	.fv-hero__laptop-dots span {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
+	.stat-number {
+		font-size: 28px;
+		font-weight: 800;
+		color: white;
+		letter-spacing: -0.02em;
+		font-variant-numeric: tabular-nums;
+	}
+	.stat-label {
+		font-size: 13px;
+		color: var(--fv-smoke);
+		font-weight: 500;
+	}
+	.stat-divider {
+		width: 1px;
+		height: 40px;
 		background: rgba(255, 255, 255, 0.1);
 	}
 
-	.fv-hero__laptop-dots span:first-child { background: #ff5f57; }
-	.fv-hero__laptop-dots span:nth-child(2) { background: #febc2e; }
-	.fv-hero__laptop-dots span:last-child { background: #28c840; }
-
-	.fv-hero__laptop-url {
-		flex: 1;
-		text-align: center;
-		font-size: 10px;
-		color: var(--fv-ash);
-		background: rgba(255, 255, 255, 0.03);
-		padding: 3px 12px;
-		border-radius: 4px;
-	}
-
-	.fv-hero__laptop-body {
-		display: flex;
-		height: calc(100% - 33px);
-	}
-
-	.fv-hero__laptop-base {
-		height: 12px;
-		background: linear-gradient(to bottom, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
-		border-radius: 0 0 4px 4px;
-		margin: 0 40px;
-	}
-
-	/* Mock vault UI inside laptop */
-	.fv-mock__sidebar {
-		width: 50px;
-		border-right: 1px solid rgba(255, 255, 255, 0.05);
-		padding: 12px 8px;
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
-
-	.fv-mock__sidebar-item {
-		height: 28px;
-		border-radius: 6px;
-		background: rgba(255, 255, 255, 0.04);
-	}
-
-	.fv-mock__sidebar-item--active {
-		background: rgba(0, 212, 255, 0.15);
-		border: 1px solid rgba(0, 212, 255, 0.2);
-	}
-
-	.fv-mock__main {
-		flex: 1;
-		padding: 10px;
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-	}
-
-	.fv-mock__entry {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 8px;
-		border-radius: 8px;
-		background: rgba(255, 255, 255, 0.03);
-		border: 1px solid rgba(255, 255, 255, 0.04);
-	}
-
-	.fv-mock__entry-icon {
-		width: 24px;
-		height: 24px;
-		border-radius: 6px;
-		flex-shrink: 0;
-		opacity: 0.8;
-	}
-
-	.fv-mock__entry-icon--sm {
-		width: 20px;
-		height: 20px;
-		border-radius: 5px;
-	}
-
-	.fv-mock__entry-lines {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-
-	.fv-mock__line {
-		height: 6px;
-		border-radius: 3px;
-		background: rgba(255, 255, 255, 0.12);
-	}
-
-	.fv-mock__line--dim { opacity: 0.4; }
-	.fv-mock__line--w30 { width: 30%; }
-	.fv-mock__line--w35 { width: 35%; }
-	.fv-mock__line--w40 { width: 40%; }
-	.fv-mock__line--w45 { width: 45%; }
-	.fv-mock__line--w50 { width: 50%; }
-	.fv-mock__line--w55 { width: 55%; }
-	.fv-mock__line--w60 { width: 60%; }
-	.fv-mock__line--w70 { width: 70%; }
-
-	.fv-mock__entry-badge {
-		font-size: 8px;
-		font-weight: 700;
-		color: var(--fv-success);
-		background: rgba(52, 211, 153, 0.15);
-		padding: 2px 6px;
-		border-radius: 4px;
-	}
-
-	.fv-mock__entry-badge--warn {
-		color: var(--fv-danger);
-		background: rgba(239, 68, 68, 0.15);
-	}
-
-	/* Phone */
-	.fv-hero__phone {
-		position: absolute;
-		right: -30px;
-		bottom: 30px;
-		width: 120px;
-		background: var(--fv-obsidian);
-		border-radius: 16px;
-		border: 2px solid rgba(255, 255, 255, 0.1);
-		overflow: hidden;
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-		display: none;
-	}
-
-	@media (min-width: 640px) {
-		.fv-hero__phone { display: block; }
-	}
-
-	.fv-hero__phone-notch {
-		width: 40px;
-		height: 5px;
-		background: var(--fv-abyss);
-		border-radius: 10px;
-		margin: 8px auto 4px;
-	}
-
-	.fv-hero__phone-screen {
-		padding: 8px;
-	}
-
-	.fv-mock__phone-header {
-		padding: 4px 0 8px;
-	}
-
-	.fv-mock__phone-entry {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		padding: 6px;
-		border-radius: 6px;
-		background: rgba(255, 255, 255, 0.03);
-		margin-bottom: 4px;
-	}
-
 	/* ============================================================ */
-	/* TRUST BAR */
+	/* BENTO FEATURES */
 	/* ============================================================ */
-	.fv-trust {
-		padding: 48px 0;
-		border-top: 1px solid rgba(255, 255, 255, 0.04);
-		border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-		overflow: hidden;
+	.features {
+		padding: 120px 24px;
 	}
 
-	.fv-trust__inner {
-		text-align: center;
-		opacity: 0;
-	}
-
-	.fv-trust__label {
-		font-size: 13px;
-		font-weight: 500;
-		color: var(--fv-smoke);
-		letter-spacing: 0.02em;
-		margin: 0 0 24px;
-	}
-
-	.fv-trust__scroll {
-		overflow: hidden;
-		mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-		-webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-	}
-
-	.fv-trust__track {
-		display: flex;
-		gap: 16px;
-		animation: fvScroll 25s linear infinite;
-		width: max-content;
-	}
-
-	@keyframes fvScroll {
-		0% { transform: translateX(0); }
-		100% { transform: translateX(-50%); }
-	}
-
-	.fv-trust__badge {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 10px 20px;
-		border-radius: 10px;
-		background: rgba(255, 255, 255, 0.04);
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		font-size: 12px;
-		font-weight: 600;
-		color: var(--fv-mist);
-		white-space: nowrap;
-	}
-
-	/* ============================================================ */
-	/* FEATURES */
-	/* ============================================================ */
-	.fv-features {
-		padding: 120px 0;
-	}
-
-	.fv-features__grid {
+	.bento-grid {
 		display: grid;
-		grid-template-columns: 1fr;
+		grid-template-columns: repeat(4, 1fr);
+		grid-auto-rows: minmax(200px, auto);
 		gap: 16px;
 	}
-
-	@media (min-width: 640px) {
-		.fv-features__grid { grid-template-columns: repeat(2, 1fr); }
+	.bento-grid.revealed .bento-card {
+		animation: scaleIn 0.6s calc(var(--reveal-delay, 0ms)) cubic-bezier(0.16, 1, 0.3, 1) both;
 	}
 
-	@media (min-width: 1024px) {
-		.fv-features__grid { grid-template-columns: repeat(3, 1fr); }
-	}
-
-	.fv-feature-card {
+	.bento-card {
 		position: relative;
-		padding: 32px;
 		border-radius: 20px;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-		backdrop-filter: blur(20px);
-		-webkit-backdrop-filter: blur(20px);
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-		opacity: 0;
 		overflow: hidden;
-	}
-
-	.fv-feature-card::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 1px;
-		background: linear-gradient(90deg, transparent, var(--accent), transparent);
 		opacity: 0;
-		transition: opacity 0.4s;
+		cursor: default;
+		transition: transform 0.3s ease;
+	}
+	.bento-card:hover {
+		transform: scale(1.02);
+	}
+	.bento-card--large {
+		grid-column: span 2;
+		grid-row: span 2;
+	}
+	.bento-card--medium {
+		grid-column: span 2;
+		grid-row: span 1;
+	}
+	.bento-card--small {
+		grid-column: span 1;
+		grid-row: span 1;
 	}
 
-	.fv-feature-card:hover {
-		transform: translateY(-4px);
-		border-color: rgba(255, 255, 255, 0.12);
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+	/* Card mouse-following inner glow */
+	.bento-card-glow {
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(400px circle at var(--card-x) var(--card-y), color-mix(in srgb, var(--accent) 8%, transparent), transparent 50%);
+		z-index: 0;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+	.bento-card:hover .bento-card-glow {
+		opacity: 1;
 	}
 
-	.fv-feature-card:hover::before {
-		opacity: 0.6;
+	/* Animated gradient border */
+	.bento-card-border {
+		position: absolute;
+		inset: 0;
+		border-radius: 20px;
+		padding: 1px;
+		background: conic-gradient(from var(--angle, 0deg), transparent 40%, var(--accent, var(--fv-cyan)) 50%, transparent 60%);
+		-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+		mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+		mask-composite: exclude;
+		-webkit-mask-composite: xor;
+		animation: rotateGradient 4s linear infinite;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+		z-index: 1;
+		pointer-events: none;
+	}
+	.bento-card:hover .bento-card-border {
+		opacity: 1;
 	}
 
-	.fv-feature-card__icon {
-		width: 48px;
-		height: 48px;
-		border-radius: 14px;
+	.bento-card-content {
+		position: relative;
+		z-index: 2;
+		height: 100%;
+		padding: 32px;
+		display: flex;
+		flex-direction: column;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+		border: 1px solid rgba(255, 255, 255, 0.06);
+		border-radius: 20px;
+	}
+
+	.bento-card-icon {
+		width: 52px;
+		height: 52px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		border-radius: 14px;
 		background: color-mix(in srgb, var(--accent) 10%, transparent);
 		margin-bottom: 20px;
 	}
 
-	.fv-feature-card__title {
-		font-size: 17px;
+	.bento-card-title {
+		font-size: 20px;
+		font-weight: 700;
+		color: white;
+		margin: 0 0 10px;
+	}
+	.bento-card--large .bento-card-title {
+		font-size: 26px;
+	}
+	.bento-card-desc {
+		font-size: 14px;
+		color: var(--fv-smoke);
+		line-height: 1.6;
+		margin: 0;
+	}
+	.bento-card--large .bento-card-desc {
+		font-size: 16px;
+		max-width: 400px;
+	}
+
+	/* ============================================================ */
+	/* INTERACTIVE DEMO */
+	/* ============================================================ */
+	.demo {
+		padding: 120px 24px;
+		position: relative;
+	}
+
+	.demo-container {
+		position: relative;
+		display: flex;
+		justify-content: center;
+		opacity: 0;
+		transform: translateY(60px);
+		transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+	.demo-container.revealed {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.demo-glow {
+		position: absolute;
+		width: 500px;
+		height: 500px;
+		background: radial-gradient(circle, rgba(0, 212, 255, 0.08), transparent 60%);
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		pointer-events: none;
+	}
+
+	.demo-tilt {
+		transition: transform 0.5s ease-out;
+		will-change: transform;
+	}
+
+	.demo-card {
+		width: 420px;
+		max-width: 100%;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 20px;
+		padding: 28px;
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+	}
+
+	.demo-card-header {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 24px;
+		padding-bottom: 20px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	}
+	.demo-card-icon {
+		width: 40px;
+		height: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 10px;
+		background: rgba(0, 212, 255, 0.1);
+	}
+	.demo-card-info {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+	.demo-card-site {
+		font-weight: 700;
+		color: white;
+		font-size: 16px;
+	}
+	.demo-card-email {
+		font-size: 13px;
+		color: var(--fv-smoke);
+	}
+	.demo-card-badge {
+		padding: 4px 10px;
+		border-radius: 6px;
+		font-size: 11px;
+		font-weight: 700;
+		color: var(--fv-cyan);
+		background: rgba(0, 212, 255, 0.12);
+	}
+
+	.demo-field {
+		margin-bottom: 20px;
+		position: relative;
+	}
+	.demo-field-label {
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--fv-smoke);
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		margin-bottom: 8px;
+		display: block;
+	}
+	.demo-field-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 12px 16px;
+		border-radius: 12px;
+		background: rgba(0, 0, 0, 0.3);
+		border: 1px solid rgba(255, 255, 255, 0.06);
+	}
+	.demo-field-value {
+		flex: 1;
+		font-family: 'SF Mono', 'Fira Code', monospace;
+		font-size: 15px;
+		color: var(--fv-silver);
+		letter-spacing: 1px;
+	}
+	.demo-field-btn {
+		width: 32px;
+		height: 32px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		color: var(--fv-smoke);
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+	.demo-field-btn:hover {
+		background: rgba(255, 255, 255, 0.12);
+		color: white;
+	}
+
+	.demo-copied-toast {
+		position: absolute;
+		right: 16px;
+		bottom: -28px;
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--fv-success);
+		animation: fadeInUp 0.3s ease;
+	}
+
+	.demo-totp {
+		position: relative;
+	}
+	.demo-totp-label {
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--fv-smoke);
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		margin-bottom: 8px;
+		display: block;
+	}
+	.demo-totp-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 12px 16px;
+		border-radius: 12px;
+		background: rgba(0, 0, 0, 0.3);
+		border: 1px solid rgba(255, 255, 255, 0.06);
+	}
+	.demo-totp-code {
+		font-family: 'SF Mono', 'Fira Code', monospace;
+		font-size: 28px;
+		font-weight: 700;
+		color: var(--fv-cyan);
+		letter-spacing: 4px;
+	}
+	.demo-totp-timer {
+		flex-shrink: 0;
+	}
+
+	/* ============================================================ */
+	/* SECURITY */
+	/* ============================================================ */
+	.security {
+		padding: 120px 24px;
+		position: relative;
+		overflow: hidden;
+	}
+	.security-bg {
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 212, 255, 0.04), transparent 60%);
+		pointer-events: none;
+	}
+	.security-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 16px;
+	}
+	.security-grid.revealed .security-card {
+		animation: scaleIn 0.6s calc(var(--reveal-delay, 0ms)) cubic-bezier(0.16, 1, 0.3, 1) both;
+	}
+	.security-card {
+		opacity: 0;
+	}
+	.security-card-inner {
+		position: relative;
+		z-index: 2;
+		height: 100%;
+		padding: 32px;
+		display: flex;
+		flex-direction: column;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+		border: 1px solid rgba(255, 255, 255, 0.06);
+		border-radius: 20px;
+	}
+	.security-card-icon {
+		width: 52px;
+		height: 52px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 14px;
+		background: color-mix(in srgb, var(--accent) 10%, transparent);
+		margin-bottom: 16px;
+	}
+	.security-card-label {
+		font-size: 20px;
 		font-weight: 700;
 		color: white;
 		margin: 0 0 8px;
 	}
-
-	.fv-feature-card__desc {
+	.security-card-detail {
 		font-size: 14px;
 		color: var(--fv-smoke);
 		line-height: 1.6;
@@ -1415,68 +1887,61 @@
 	/* ============================================================ */
 	/* STEPS */
 	/* ============================================================ */
-	.fv-steps {
-		padding: 120px 0;
-		background: linear-gradient(180deg, transparent, rgba(138, 92, 246, 0.03), transparent);
+	.steps {
+		padding: 120px 24px;
 	}
-
-	.fv-steps__grid {
+	.steps-grid {
 		display: grid;
-		grid-template-columns: 1fr;
+		grid-template-columns: repeat(3, 1fr);
 		gap: 32px;
-		opacity: 0;
+		position: relative;
 	}
-
-	@media (min-width: 768px) {
-		.fv-steps__grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+	.steps-grid.revealed .step-card {
+		animation: fadeInUp 0.7s calc(var(--reveal-delay, 0ms)) cubic-bezier(0.16, 1, 0.3, 1) both;
 	}
-
-	.fv-step {
+	.step-card {
 		position: relative;
 		text-align: center;
-		padding: 32px 24px;
+		padding: 40px 24px;
+		opacity: 0;
 	}
-
-	.fv-step__connector {
-		display: none;
+	.step-connector {
+		position: absolute;
+		top: 52px;
+		right: -16px;
+		width: 32px;
+		height: 2px;
+		overflow: hidden;
 	}
-
-	@media (min-width: 768px) {
-		.fv-step__connector {
-			display: block;
-			position: absolute;
-			top: 40px;
-			right: -12px;
-			width: 24px;
-			height: 2px;
-			background: linear-gradient(90deg, var(--fv-violet), transparent);
-			opacity: 0.3;
-		}
+	.step-connector::after {
+		content: '';
+		display: block;
+		width: 100%;
+		height: 100%;
+		background: repeating-linear-gradient(90deg, var(--fv-cyan) 0, var(--fv-cyan) 4px, transparent 4px, transparent 10px);
+		animation: shimmer 3s linear infinite;
 	}
-
-	.fv-step__num {
+	.step-num {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		width: 56px;
 		height: 56px;
 		border-radius: 16px;
-		background: linear-gradient(135deg, rgba(138, 92, 246, 0.15), rgba(138, 92, 246, 0.05));
-		border: 1px solid rgba(138, 92, 246, 0.2);
-		font-size: 18px;
+		font-size: 20px;
 		font-weight: 800;
-		color: var(--fv-violet-light);
+		color: var(--fv-cyan);
+		background: rgba(0, 212, 255, 0.08);
+		border: 1px solid rgba(0, 212, 255, 0.15);
 		margin-bottom: 20px;
 	}
-
-	.fv-step__title {
-		font-size: 18px;
+	.step-title {
+		font-size: 20px;
 		font-weight: 700;
 		color: white;
-		margin: 0 0 8px;
+		margin: 0 0 12px;
 	}
-
-	.fv-step__desc {
+	.step-desc {
 		font-size: 14px;
 		color: var(--fv-smoke);
 		line-height: 1.6;
@@ -1484,264 +1949,213 @@
 	}
 
 	/* ============================================================ */
-	/* SECURITY */
+	/* COMPARISON TABLE */
 	/* ============================================================ */
-	.fv-security {
-		padding: 120px 0;
+	.comparison {
+		padding: 120px 24px;
 	}
-
-	.fv-security__grid {
-		display: grid;
-		grid-template-columns: 1fr;
-		gap: 16px;
-		opacity: 0;
-	}
-
-	@media (min-width: 768px) {
-		.fv-security__grid { grid-template-columns: repeat(2, 1fr); }
-	}
-
-	.fv-security-card {
-		position: relative;
-		display: flex;
-		align-items: flex-start;
-		gap: 16px;
-		padding: 28px;
-		border-radius: 20px;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		overflow: hidden;
-		transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-	}
-
-	.fv-security-card:hover {
-		border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-		transform: translateY(-2px);
-	}
-
-	.fv-security-card__glow {
-		position: absolute;
-		top: -50%;
-		right: -50%;
-		width: 200px;
-		height: 200px;
-		border-radius: 50%;
-		background: var(--accent);
-		opacity: 0;
-		filter: blur(80px);
-		transition: opacity 0.4s;
-		pointer-events: none;
-	}
-
-	.fv-security-card:hover .fv-security-card__glow {
-		opacity: 0.08;
-	}
-
-	.fv-security-card__icon {
-		width: 48px;
-		height: 48px;
-		border-radius: 14px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: color-mix(in srgb, var(--accent) 10%, transparent);
-		flex-shrink: 0;
-	}
-
-	.fv-security-card__label {
-		font-size: 17px;
-		font-weight: 700;
-		color: white;
-		margin: 0 0 6px;
-	}
-
-	.fv-security-card__detail {
-		font-size: 14px;
-		color: var(--fv-smoke);
-		line-height: 1.6;
-		margin: 0;
-	}
-
-	/* ============================================================ */
-	/* COMPARISON */
-	/* ============================================================ */
-	.fv-comparison {
-		padding: 120px 0;
-		background: linear-gradient(180deg, transparent, rgba(255, 55, 130, 0.02), transparent);
-	}
-
-	.fv-comparison__table-wrap {
+	.comparison-table-wrap {
 		overflow-x: auto;
 		border-radius: 20px;
-		border: 1px solid rgba(255, 255, 255, 0.06);
 		background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+		border: 1px solid rgba(255, 255, 255, 0.06);
 		opacity: 0;
+		transform: translateY(30px);
+		transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 	}
-
-	.fv-comparison__table {
+	.comparison-table-wrap.revealed {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	.comparison-table {
 		width: 100%;
 		border-collapse: collapse;
-		min-width: 600px;
+		text-align: center;
+		font-size: 14px;
 	}
-
-	.fv-comparison__table thead {
+	.comparison-table thead th {
+		padding: 20px 16px;
+		font-weight: 700;
+		color: var(--fv-smoke);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+		font-size: 13px;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+	.comparison-th-feature {
+		text-align: left;
+		padding-left: 24px !important;
+	}
+	.comparison-th-highlight {
+		color: var(--fv-cyan) !important;
+		background: rgba(0, 212, 255, 0.04);
+	}
+	.comparison-row {
+		transition: background 0.2s ease;
+	}
+	.comparison-row:hover {
 		background: rgba(255, 255, 255, 0.03);
 	}
-
-	.fv-comparison__table th {
-		padding: 16px 20px;
-		font-size: 12px;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		color: var(--fv-smoke);
-		text-align: center;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-	}
-
-	.fv-comparison__th-feature {
-		text-align: left !important;
-	}
-
-	.fv-comparison__th-highlight {
-		color: var(--fv-gold) !important;
-		background: rgba(255, 200, 55, 0.05);
-	}
-
-	.fv-comparison__table td {
-		padding: 14px 20px;
-		text-align: center;
+	.comparison-table tbody td {
+		padding: 16px;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-		font-size: 13px;
 		color: var(--fv-mist);
 	}
-
-	.fv-comparison__table tr:last-child td {
-		border-bottom: none;
-	}
-
-	.fv-comparison__feature-name {
-		text-align: left !important;
+	.comparison-feature-name {
+		text-align: left;
+		padding-left: 24px !important;
 		font-weight: 500;
+		color: var(--fv-silver);
 	}
-
-	.fv-comparison__highlight-cell {
-		background: rgba(255, 200, 55, 0.03);
+	.comparison-highlight-cell {
+		background: rgba(0, 212, 255, 0.04);
+		position: relative;
 	}
-
-	.fv-comparison__text-value {
+	.comparison-highlight-cell::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: 1px;
+		background: rgba(0, 212, 255, 0.1);
+	}
+	.comparison-text-value {
 		font-weight: 700;
-		color: var(--fv-gold);
+		color: var(--fv-cyan);
 	}
-
-	.fv-comparison__dim {
+	.comparison-dim {
 		color: var(--fv-smoke);
 	}
 
 	/* ============================================================ */
 	/* PRICING */
 	/* ============================================================ */
-	.fv-pricing {
-		padding: 120px 0;
+	.pricing {
+		padding: 120px 24px;
 	}
-
-	.fv-pricing__grid {
+	.pricing-grid {
 		display: grid;
-		grid-template-columns: 1fr;
+		grid-template-columns: repeat(2, 1fr);
 		gap: 24px;
 		max-width: 800px;
 		margin: 0 auto;
+		align-items: start;
+	}
+	.pricing-grid.revealed .pricing-card {
+		animation: scaleIn 0.7s calc(var(--reveal-delay, 0ms)) cubic-bezier(0.16, 1, 0.3, 1) both;
+	}
+
+	.pricing-card {
+		position: relative;
+		border-radius: 24px;
+		overflow: hidden;
 		opacity: 0;
 	}
 
-	@media (min-width: 640px) {
-		.fv-pricing__grid { grid-template-columns: repeat(2, 1fr); }
-	}
-
-	.fv-pricing-card {
-		position: relative;
-		padding: 36px;
-		border-radius: 24px;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		overflow: hidden;
-	}
-
-	.fv-pricing-card--pro {
-		border-color: rgba(255, 200, 55, 0.25);
-		box-shadow: 0 0 40px rgba(255, 200, 55, 0.1);
-	}
-
-	.fv-pricing-card__popular {
+	.pricing-card-border {
 		position: absolute;
-		top: 0;
-		right: 0;
-		padding: 6px 20px;
-		font-size: 10px;
-		font-weight: 800;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		background: linear-gradient(135deg, var(--fv-gold), var(--fv-gold-light));
-		color: #0a101e;
-		border-bottom-left-radius: 12px;
+		inset: 0;
+		border-radius: 24px;
+		padding: 1px;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+		-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+		mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+		mask-composite: exclude;
+		-webkit-mask-composite: xor;
+		z-index: 0;
+		pointer-events: none;
+	}
+	.pricing-card-border--gold {
+		background: conic-gradient(from var(--angle, 0deg), transparent 30%, var(--fv-gold) 50%, transparent 70%);
+		animation: rotateGradient 3s linear infinite;
 	}
 
-	.fv-pricing-card__header {
+	.pricing-card-shimmer {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(90deg, transparent, rgba(255, 200, 55, 0.03), transparent);
+		background-size: 200% 100%;
+		animation: shimmer 4s linear infinite;
+		z-index: 0;
+		pointer-events: none;
+	}
+
+	.pricing-card-popular {
+		position: absolute;
+		top: 16px;
+		right: 16px;
+		padding: 4px 14px;
+		border-radius: 100px;
+		font-size: 11px;
+		font-weight: 700;
+		color: #1a1a2e;
+		background: linear-gradient(135deg, var(--fv-gold), var(--fv-gold-light));
+		z-index: 3;
+		animation: popularPulse 2s ease-in-out infinite;
+	}
+
+	.pricing-card-inner {
+		position: relative;
+		z-index: 2;
+		padding: 36px;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+		border-radius: 24px;
+	}
+	.pricing-card--pro .pricing-card-inner {
+		background: linear-gradient(135deg, rgba(255, 200, 55, 0.04), rgba(255, 255, 255, 0.015));
+	}
+
+	.pricing-card-header {
 		margin-bottom: 24px;
 	}
-
-	.fv-pricing-card__name {
-		font-size: 22px;
+	.pricing-card-name {
+		font-size: 24px;
 		font-weight: 800;
 		color: white;
-		margin: 0 0 4px;
-		display: flex;
-		align-items: center;
-		gap: 8px;
+		margin: 0 0 6px;
 	}
-
-	.fv-pricing-card__crown {
+	.pricing-crown {
 		color: var(--fv-gold);
-		font-size: 16px;
 	}
-
-	.fv-pricing-card__tagline {
+	.pricing-card-tagline {
 		font-size: 14px;
 		color: var(--fv-smoke);
 		margin: 0;
 	}
 
-	.fv-pricing-card__price {
-		margin-bottom: 8px;
+	.pricing-card-price {
 		display: flex;
 		align-items: baseline;
 		gap: 4px;
+		margin-bottom: 8px;
 	}
-
-	.fv-pricing-card__amount {
-		font-size: 40px;
-		font-weight: 900;
+	.pricing-card-amount {
+		font-size: 48px;
+		font-weight: 850;
 		color: white;
-		letter-spacing: -0.02em;
+		letter-spacing: -0.03em;
 	}
-
-	.fv-pricing-card__period {
-		font-size: 15px;
+	.pricing-card-currency {
+		font-size: 18px;
+		font-weight: 700;
 		color: var(--fv-smoke);
 	}
-
-	.fv-pricing-card__annual {
+	.pricing-card-period {
+		font-size: 16px;
+		color: var(--fv-ash);
+	}
+	.pricing-card-annual {
 		font-size: 13px;
 		color: var(--fv-smoke);
 		margin: 0 0 24px;
 	}
-
-	.fv-pricing-card__annual span {
-		color: var(--fv-gold);
+	.pricing-card-annual span {
+		color: var(--fv-success);
 		font-weight: 700;
 	}
 
-	.fv-pricing-card__features {
+	.pricing-card-features {
 		list-style: none;
 		padding: 0;
 		margin: 0 0 28px;
@@ -1749,8 +2163,7 @@
 		flex-direction: column;
 		gap: 12px;
 	}
-
-	.fv-pricing-card__features li {
+	.pricing-card-features li {
 		display: flex;
 		align-items: center;
 		gap: 10px;
@@ -1758,168 +2171,212 @@
 		color: var(--fv-mist);
 	}
 
-	.fv-pricing-card__cta {
+	.pricing-card-cta {
 		display: block;
-		width: 100%;
 		text-align: center;
-		padding: 14px;
-		border-radius: 12px;
-		font-size: 14px;
+		padding: 14px 24px;
+		border-radius: 14px;
 		font-weight: 700;
+		font-size: 15px;
 		text-decoration: none;
-		transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+		transition: all 0.3s ease;
+		will-change: transform;
 	}
-
-	.fv-pricing-card__cta--ghost {
-		background: rgba(255, 255, 255, 0.06);
+	.pricing-card-cta--ghost {
 		color: var(--fv-silver);
+		background: rgba(255, 255, 255, 0.06);
 		border: 1px solid rgba(255, 255, 255, 0.1);
 	}
-
-	.fv-pricing-card__cta--ghost:hover {
+	.pricing-card-cta--ghost:hover {
 		background: rgba(255, 255, 255, 0.1);
 	}
-
-	.fv-pricing-card__cta--gold {
+	.pricing-card-cta--gold {
+		color: #1a1a2e;
 		background: linear-gradient(135deg, var(--fv-gold), var(--fv-gold-light));
-		color: #0a101e;
-		box-shadow: 0 4px 20px rgba(255, 200, 55, 0.25);
+	}
+	.pricing-card-cta--gold:hover {
+		box-shadow: 0 8px 30px rgba(255, 200, 55, 0.3);
 	}
 
-	.fv-pricing-card__cta--gold:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 8px 32px rgba(255, 200, 55, 0.4);
-	}
-
-	.fv-pricing-card__guarantee {
+	.pricing-card-guarantee {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		gap: 6px;
-		margin: 16px 0 0;
 		font-size: 12px;
 		color: var(--fv-smoke);
+		margin: 16px 0 0;
 	}
 
 	/* ============================================================ */
 	/* TESTIMONIALS */
 	/* ============================================================ */
-	.fv-testimonials {
-		padding: 120px 0;
-		background: linear-gradient(180deg, transparent, rgba(138, 92, 246, 0.03), transparent);
+	.testimonials {
+		padding: 120px 24px;
 	}
-
-	.fv-testimonials__grid {
+	.testimonials-grid {
 		display: grid;
-		grid-template-columns: 1fr;
+		grid-template-columns: repeat(3, 1fr);
 		gap: 20px;
-		opacity: 0;
+	}
+	.testimonials-grid.revealed .testimonial-card {
+		animation: fadeInUp 0.7s calc(var(--reveal-delay, 0ms)) cubic-bezier(0.16, 1, 0.3, 1) both;
 	}
 
-	@media (min-width: 768px) {
-		.fv-testimonials__grid { grid-template-columns: repeat(3, 1fr); }
-	}
-
-	.fv-testimonial {
+	.testimonial-card {
+		position: relative;
 		padding: 28px;
 		border-radius: 20px;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
 		border: 1px solid rgba(255, 255, 255, 0.06);
-		transition: all 0.4s;
-		position: relative;
+		opacity: 0;
+		transition: border-color 0.3s ease, box-shadow 0.3s ease;
 		overflow: hidden;
 	}
+	.testimonial-card--active {
+		border-color: rgba(255, 255, 255, 0.12);
+		box-shadow: 0 0 40px rgba(0, 212, 255, 0.05);
+	}
 
-	.fv-testimonial::before {
-		content: '';
+	.testimonial-gradient-bar {
 		position: absolute;
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 2px;
-		background: linear-gradient(90deg, transparent, var(--accent), transparent);
-		opacity: 0.4;
+		height: 3px;
+		background: linear-gradient(90deg, var(--accent), transparent);
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+	.testimonial-card--active .testimonial-gradient-bar,
+	.testimonial-card:hover .testimonial-gradient-bar {
+		opacity: 1;
 	}
 
-	.fv-testimonial:hover {
-		transform: translateY(-3px);
-		border-color: color-mix(in srgb, var(--accent) 25%, transparent);
-	}
-
-	.fv-testimonial__stars {
+	.testimonial-stars {
 		display: flex;
 		gap: 2px;
 		margin-bottom: 16px;
 	}
-
-	.fv-testimonial__text {
+	.testimonial-text {
 		font-size: 14px;
 		color: var(--fv-mist);
 		line-height: 1.7;
 		margin: 0 0 20px;
 	}
-
-	.fv-testimonial__author {
+	.testimonial-author {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: 12px;
 	}
-
-	.fv-testimonial__avatar {
-		width: 36px;
-		height: 36px;
-		border-radius: 10px;
+	.testimonial-avatar {
+		width: 40px;
+		height: 40px;
+		border-radius: 12px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 12px;
-		font-weight: 800;
+		font-weight: 700;
+		font-size: 13px;
 		color: white;
-		background: color-mix(in srgb, var(--avatar-color) 25%, var(--fv-obsidian));
+		background: color-mix(in srgb, var(--avatar-color) 20%, transparent);
 		border: 1px solid color-mix(in srgb, var(--avatar-color) 30%, transparent);
 	}
-
-	.fv-testimonial__name {
-		font-size: 13px;
-		font-weight: 700;
+	.testimonial-name {
+		font-size: 14px;
+		font-weight: 600;
 		color: white;
 	}
-
-	.fv-testimonial__role {
+	.testimonial-role {
 		font-size: 12px;
 		color: var(--fv-smoke);
+	}
+
+	.testimonials-dots {
+		display: flex;
+		justify-content: center;
+		gap: 8px;
+		margin-top: 32px;
+	}
+	.testimonial-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		border: none;
+		background: var(--fv-ash);
+		cursor: pointer;
+		transition: all 0.3s ease;
+		padding: 0;
+	}
+	.testimonial-dot--active {
+		background: var(--fv-cyan);
+		width: 24px;
+		border-radius: 4px;
 	}
 
 	/* ============================================================ */
 	/* FAQ */
 	/* ============================================================ */
-	.fv-faq {
-		padding: 120px 0;
+	.faq {
+		padding: 120px 24px;
+	}
+	.faq-search {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 14px 20px;
+		border-radius: 14px;
+		background: rgba(255, 255, 255, 0.04);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		margin-bottom: 24px;
+		opacity: 0;
+		transform: translateY(20px);
+		transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+	.faq-search.revealed {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	.faq-search-input {
+		flex: 1;
+		background: none;
+		border: none;
+		outline: none;
+		color: var(--fv-silver);
+		font-size: 15px;
+		font-family: inherit;
+	}
+	.faq-search-input::placeholder {
+		color: var(--fv-ash);
 	}
 
-	.fv-faq__list {
+	.faq-list {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
 		opacity: 0;
+		transform: translateY(20px);
+		transition: all 0.6s 0.1s cubic-bezier(0.16, 1, 0.3, 1);
 	}
-
-	.fv-faq__item {
+	.faq-list.revealed {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	.faq-item {
 		border-radius: 16px;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+		background: rgba(255, 255, 255, 0.03);
 		border: 1px solid rgba(255, 255, 255, 0.06);
 		overflow: hidden;
-		transition: border-color 0.3s;
+		transition: border-color 0.3s ease;
 	}
-
-	.fv-faq__item--open {
-		border-color: rgba(0, 212, 255, 0.2);
+	.faq-item--open {
+		border-color: rgba(0, 212, 255, 0.15);
 	}
-
-	.fv-faq__question {
+	.faq-question {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		gap: 16px;
 		width: 100%;
 		padding: 20px 24px;
 		background: none;
@@ -1927,259 +2384,347 @@
 		color: white;
 		font-size: 15px;
 		font-weight: 600;
-		cursor: pointer;
 		text-align: left;
-		gap: 16px;
+		cursor: pointer;
 		font-family: inherit;
 	}
-
-	.fv-faq__question:hover {
-		color: var(--fv-cyan);
-	}
-
-	.fv-faq__chevron {
+	.faq-chevron {
 		flex-shrink: 0;
-		transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+		transition: transform 0.3s ease;
 		color: var(--fv-smoke);
 	}
-
-	.fv-faq__item--open .fv-faq__chevron {
+	.faq-item--open .faq-chevron {
 		transform: rotate(180deg);
 		color: var(--fv-cyan);
 	}
-
-	.fv-faq__answer-wrap {
+	.faq-answer-wrap {
 		display: grid;
-		transition: grid-template-rows 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+		transition: grid-template-rows 0.3s ease;
 	}
-
-	.fv-faq__answer {
+	.faq-answer {
 		overflow: hidden;
 	}
-
-	.fv-faq__answer p {
+	.faq-answer p {
 		padding: 0 24px 20px;
+		margin: 0;
 		font-size: 14px;
 		color: var(--fv-smoke);
 		line-height: 1.7;
-		margin: 0;
 	}
 
 	/* ============================================================ */
 	/* FINAL CTA */
 	/* ============================================================ */
-	.fv-final-cta {
+	.final-cta {
 		position: relative;
 		padding: 120px 24px;
 		overflow: hidden;
 	}
-
-	.fv-final-cta__bg {
+	.final-cta-bg {
 		position: absolute;
 		inset: 0;
+		overflow: hidden;
 	}
-
-	.fv-final-cta__orb {
+	.final-cta-orb {
 		position: absolute;
 		border-radius: 50%;
-		filter: blur(100px);
+		filter: blur(120px);
 	}
-
-	.fv-final-cta__orb--1 {
+	.final-cta-orb--1 {
 		width: 500px;
 		height: 500px;
-		top: -30%;
+		background: radial-gradient(circle, rgba(0, 212, 255, 0.1), transparent);
+		top: -100px;
 		left: 20%;
-		background: var(--fv-gold);
-		opacity: 0.06;
-		animation: fvFloat 20s ease-in-out infinite;
+		animation: orbFloat1 15s ease-in-out infinite;
 	}
-
-	.fv-final-cta__orb--2 {
+	.final-cta-orb--2 {
 		width: 400px;
 		height: 400px;
-		bottom: -30%;
+		background: radial-gradient(circle, rgba(255, 200, 55, 0.08), transparent);
+		bottom: -100px;
 		right: 20%;
-		background: var(--fv-cyan);
-		opacity: 0.05;
-		animation: fvFloat 24s ease-in-out infinite reverse;
+		animation: orbFloat2 18s ease-in-out infinite;
 	}
 
-	.fv-final-cta__content {
+	.final-cta-content {
 		position: relative;
 		z-index: 2;
 		text-align: center;
 		opacity: 0;
+		transform: translateY(30px);
+		transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+	.final-cta-content.revealed {
+		opacity: 1;
+		transform: translateY(0);
 	}
 
-	.fv-final-cta__title {
-		font-size: clamp(28px, 5vw, 48px);
-		font-weight: 900;
+	.final-cta-title {
+		font-size: clamp(32px, 5vw, 52px);
+		font-weight: 850;
 		color: white;
+		margin: 0 0 20px;
 		letter-spacing: -0.02em;
-		margin: 0 0 16px;
+		min-height: 1.3em;
 	}
-
-	.fv-final-cta__subtitle {
-		font-size: 17px;
-		color: var(--fv-mist);
-		max-width: 500px;
-		margin: 0 auto 36px;
+	.cta-cursor {
+		color: var(--fv-cyan);
+		animation: blink 0.8s ease-in-out infinite;
+		font-weight: 300;
+	}
+	.final-cta-subtitle {
+		font-size: 18px;
+		color: var(--fv-smoke);
 		line-height: 1.6;
+		margin: 0 0 40px;
+		max-width: 600px;
+		margin-left: auto;
+		margin-right: auto;
 	}
-
-	.fv-final-cta__btn {
+	.final-cta-btn {
 		display: inline-flex;
 		align-items: center;
 		gap: 10px;
 		padding: 18px 40px;
 		border-radius: 16px;
+		font-weight: 700;
+		font-size: 17px;
+		color: #1a1a2e;
 		background: linear-gradient(135deg, var(--fv-gold), var(--fv-gold-light));
-		color: #0a101e;
-		font-size: 16px;
-		font-weight: 800;
 		text-decoration: none;
-		transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-		box-shadow: 0 4px 24px rgba(255, 200, 55, 0.3);
+		transition: box-shadow 0.3s ease;
+		will-change: transform;
 	}
-
-	.fv-final-cta__btn:hover {
-		transform: translateY(-3px);
-		box-shadow: 0 12px 48px rgba(255, 200, 55, 0.45);
+	.final-cta-btn:hover {
+		box-shadow: 0 8px 50px rgba(255, 200, 55, 0.4), 0 0 0 1px rgba(255, 200, 55, 0.1);
 	}
 
 	/* ============================================================ */
 	/* FOOTER */
 	/* ============================================================ */
-	.fv-footer {
-		border-top: 1px solid rgba(255, 255, 255, 0.05);
+	.footer {
+		border-top: 1px solid rgba(255, 255, 255, 0.06);
 		padding: 64px 24px 32px;
 	}
-
-	.fv-footer__inner {
+	.footer-inner {
 		max-width: 1200px;
 		margin: 0 auto;
 	}
-
-	.fv-footer__grid {
+	.footer-grid {
 		display: grid;
-		grid-template-columns: 1fr;
-		gap: 40px;
+		grid-template-columns: 2fr 1fr 1fr 1fr;
+		gap: 48px;
 		margin-bottom: 48px;
 	}
-
-	@media (min-width: 768px) {
-		.fv-footer__grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
+	.footer-brand {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
 	}
-
-	.fv-footer__logo {
+	.footer-logo {
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		font-size: 18px;
 		font-weight: 800;
+		font-size: 18px;
 		color: white;
-		margin-bottom: 12px;
 	}
-
-	.fv-footer__logo-icon {
-		width: 32px;
-		height: 32px;
-		border-radius: 8px;
-		background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet));
+	.footer-logo-icon {
+		width: 36px;
+		height: 36px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		border-radius: 10px;
+		background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet));
 	}
-
-	.fv-footer__desc {
+	.footer-desc {
 		font-size: 14px;
 		color: var(--fv-smoke);
 		line-height: 1.6;
-		margin: 0 0 16px;
+		margin: 0;
+		max-width: 300px;
 	}
-
-	.fv-footer__socials {
+	.footer-socials {
 		display: flex;
-		gap: 8px;
+		gap: 12px;
 	}
-
-	.fv-footer__social {
+	.footer-social {
 		width: 36px;
 		height: 36px;
-		border-radius: 10px;
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.06);
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.08);
 		color: var(--fv-smoke);
 		text-decoration: none;
-		transition: all 0.2s;
+		transition: all 0.2s ease;
 	}
-
-	.fv-footer__social:hover {
+	.footer-social:hover {
 		background: rgba(255, 255, 255, 0.1);
 		color: white;
 	}
 
-	.fv-footer__col h4 {
-		font-size: 12px;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: white;
-		margin: 0 0 16px;
+	.footer-col {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
 	}
-
-	.fv-footer__col a {
-		display: block;
+	.footer-col h4 {
+		font-size: 13px;
+		font-weight: 700;
+		color: white;
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		margin: 0 0 4px;
+	}
+	.footer-col a {
 		font-size: 14px;
 		color: var(--fv-smoke);
 		text-decoration: none;
-		padding: 4px 0;
-		transition: color 0.2s;
+		transition: color 0.2s ease;
+	}
+	.footer-col a:hover {
+		color: var(--fv-silver);
 	}
 
-	.fv-footer__col a:hover {
-		color: white;
-	}
-
-	.fv-footer__bottom {
+	.footer-bottom {
 		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
 		align-items: center;
-		gap: 16px;
-		padding-top: 32px;
-		border-top: 1px solid rgba(255, 255, 255, 0.05);
+		justify-content: space-between;
+		padding-top: 24px;
+		border-top: 1px solid rgba(255, 255, 255, 0.06);
 	}
-
-	.fv-footer__bottom p {
-		font-size: 12px;
+	.footer-bottom p {
+		font-size: 13px;
 		color: var(--fv-ash);
 		margin: 0;
 	}
-
-	.fv-footer__badges {
+	.footer-badges {
 		display: flex;
-		gap: 8px;
+		gap: 12px;
 	}
-
-	.fv-footer__badges span {
-		font-size: 10px;
-		font-weight: 700;
+	.footer-badges span {
+		font-size: 11px;
 		padding: 4px 12px;
-		border-radius: 100px;
+		border-radius: 6px;
 		background: rgba(255, 255, 255, 0.04);
-		border: 1px solid rgba(255, 255, 255, 0.06);
 		color: var(--fv-smoke);
+		font-weight: 600;
 	}
 
 	/* ============================================================ */
-	/* SMOOTH SCROLL */
+	/* RESPONSIVE */
 	/* ============================================================ */
-	:global(html) {
-		scroll-behavior: smooth;
+	@media (max-width: 1024px) {
+		.bento-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+		.bento-card--large {
+			grid-column: span 2;
+			grid-row: span 1;
+		}
+		.bento-card--medium {
+			grid-column: span 1;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.hero {
+			padding: 100px 20px 60px;
+			min-height: auto;
+		}
+		.hero-title {
+			font-size: 36px;
+		}
+
+		.stats-inner {
+			flex-direction: column;
+			gap: 20px;
+			padding: 24px;
+		}
+		.stat-divider {
+			width: 40px;
+			height: 1px;
+		}
+
+		.bento-grid {
+			grid-template-columns: 1fr;
+		}
+		.bento-card--large,
+		.bento-card--medium {
+			grid-column: span 1;
+			grid-row: span 1;
+		}
+
+		.security-grid {
+			grid-template-columns: 1fr;
+		}
+		.steps-grid {
+			grid-template-columns: 1fr;
+		}
+		.step-connector {
+			display: none;
+		}
+
+		.pricing-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.testimonials-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.comparison-table {
+			font-size: 12px;
+		}
+
+		.footer-grid {
+			grid-template-columns: 1fr 1fr;
+			gap: 32px;
+		}
+		.footer-brand {
+			grid-column: span 2;
+		}
+		.footer-bottom {
+			flex-direction: column;
+			gap: 16px;
+			text-align: center;
+		}
+
+		.hero-scroll-indicator {
+			display: none;
+		}
+		.demo-card {
+			width: 100%;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.hero-ctas {
+			flex-direction: column;
+			align-items: center;
+		}
+		.hero-cta-primary,
+		.hero-cta-ghost {
+			width: 100%;
+			justify-content: center;
+		}
+		.hero-trust {
+			flex-direction: column;
+			gap: 8px;
+		}
+		.hero-trust-sep {
+			display: none;
+		}
+		.footer-grid {
+			grid-template-columns: 1fr;
+		}
+		.footer-brand {
+			grid-column: span 1;
+		}
 	}
 </style>
