@@ -177,7 +177,7 @@ struct PaywallView: View {
             planCard(
                 type: .monthly,
                 title: String(localized: "paywall.monthly"),
-                price: subscriptionService.monthlyProduct?.displayPrice ?? "$2.99",
+                price: subscriptionService.monthlyProduct?.displayPrice ?? "4,99€",
                 period: String(localized: "paywall.monthly.price"),
                 badge: nil
             )
@@ -186,7 +186,7 @@ struct PaywallView: View {
             planCard(
                 type: .yearly,
                 title: String(localized: "paywall.yearly"),
-                price: subscriptionService.yearlyProduct?.displayPrice ?? "$24.99",
+                price: subscriptionService.yearlyProduct?.displayPrice ?? "41,99€",
                 period: String(localized: "paywall.yearly.price"),
                 badge: String(localized: "paywall.yearly.save")
             )
