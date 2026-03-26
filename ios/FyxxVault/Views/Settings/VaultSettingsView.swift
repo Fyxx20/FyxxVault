@@ -362,7 +362,8 @@ struct VaultSettingsView: View {
             Image(systemName: "arrow.triangle.2.circlepath.icloud.fill")
                 .font(.system(size: 12))
                 .foregroundStyle(FVColor.cyan)
-                .symbolEffect(.rotate)
+                .rotationEffect(.degrees(syncService.state == .syncing ? 360 : 0))
+                .animation(.linear(duration: 1.5).repeatForever(autoreverses: false), value: syncService.state)
         case .error:
             Image(systemName: "exclamationmark.icloud.fill")
                 .font(.system(size: 12))
