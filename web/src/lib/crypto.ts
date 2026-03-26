@@ -5,6 +5,16 @@ const AES_KEY_BITS = 256;
 const IV_LENGTH = 12;
 
 /**
+ * Safely access getSubtle(), throwing a clear error if unavailable.
+ */
+function getSubtle(): SubtleCrypto {
+	if (typeof globalThis.crypto?.subtle === 'undefined') {
+		throw new Error('Web Crypto API non disponible. Utilise HTTPS ou localhost.');
+	}
+	return globalThis.getSubtle();
+}
+
+/**
  * Derive a Key-Encryption Key (KEK) from the master password using PBKDF2.
  * The KEK is used to wrap/unwrap the Vault Encryption Key (VEK).
  */
@@ -14,7 +24,7 @@ export async function deriveKEK(
 	rounds: number = PBKDF2_ROUNDS_DEFAULT
 ): Promise<CryptoKey> {
 	const enc = new TextEncoder();
-	const keyMaterial = await crypto.subtle.importKey(
+	const keyMaterial = await getSubtle().importKey(
 		'raw',
 		enc.encode(masterPassword),
 		'PBKDF2',
@@ -22,7 +32,7 @@ export async function deriveKEK(
 		['deriveKey']
 	);
 
-	return crypto.subtle.deriveKey(
+	return getSubtle().deriveKey(
 		{
 			name: 'PBKDF2',
 			salt,
@@ -56,7 +66,7 @@ export function generateSalt(): Uint8Array {
  */
 export async function wrapVEK(vek: Uint8Array, kek: CryptoKey): Promise<Uint8Array> {
 	const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-	const ciphertext = await crypto.subtle.encrypt(
+	const ciphertext = await getSubtle().encrypt(
 		{ name: 'AES-GCM', iv },
 		kek,
 		vek
@@ -76,7 +86,7 @@ export async function unwrapVEK(wrapped: Uint8Array, kek: CryptoKey): Promise<Ui
 	const iv = wrapped.slice(0, IV_LENGTH);
 	const ciphertext = wrapped.slice(IV_LENGTH);
 
-	const plaintext = await crypto.subtle.decrypt(
+	const plaintext = await getSubtle().decrypt(
 		{ name: 'AES-GCM', iv },
 		kek,
 		ciphertext
@@ -89,7 +99,7 @@ export async function unwrapVEK(wrapped: Uint8Array, kek: CryptoKey): Promise<Ui
  * Import raw VEK bytes as a CryptoKey for AES-GCM.
  */
 async function importVEKKey(vek: Uint8Array): Promise<CryptoKey> {
-	return crypto.subtle.importKey(
+	return getSubtle().importKey(
 		'raw',
 		vek,
 		{ name: 'AES-GCM', length: AES_KEY_BITS },
@@ -108,7 +118,7 @@ export async function encryptEntry(entry: VaultEntry, vek: Uint8Array): Promise<
 	const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
 	const key = await importVEKKey(vek);
 
-	const ciphertext = await crypto.subtle.encrypt(
+	const ciphertext = await getSubtle().encrypt(
 		{ name: 'AES-GCM', iv },
 		key,
 		plaintext
@@ -129,7 +139,7 @@ export async function decryptEntry(blob: Uint8Array, vek: Uint8Array): Promise<V
 	const ciphertext = blob.slice(IV_LENGTH);
 	const key = await importVEKKey(vek);
 
-	const plaintext = await crypto.subtle.decrypt(
+	const plaintext = await getSubtle().decrypt(
 		{ name: 'AES-GCM', iv },
 		key,
 		ciphertext

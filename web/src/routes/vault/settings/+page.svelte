@@ -78,7 +78,10 @@
 		changeError = '';
 
 		if (!currentPassword) { changeError = 'Mot de passe actuel requis.'; return; }
-		if (newPassword.length < 12) { changeError = 'Le nouveau mot de passe doit contenir au moins 12 caractères.'; return; }
+		if (newPassword.length < 12) { changeError = 'Min 12 caractères.'; return; }
+		if (!/[A-Z]/.test(newPassword)) { changeError = '1 majuscule requise.'; return; }
+		if (!/[0-9]/.test(newPassword)) { changeError = '1 chiffre requis.'; return; }
+		if (!/[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/\\]/.test(newPassword)) { changeError = '1 caractère spécial requis.'; return; }
 		if (newPassword !== confirmNewPassword) { changeError = 'Les mots de passe ne correspondent pas.'; return; }
 
 		changeLoading = true;

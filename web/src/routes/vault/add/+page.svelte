@@ -11,7 +11,7 @@
 
 	// Free user limit
 	const FREE_LIMIT = 5;
-	const canAdd = $derived(auth.isPro || !editId && vault.entries.length < FREE_LIMIT || !!editId);
+	const canAdd = $derived(auth.isPro || (editId ? true : vault.entries.length < FREE_LIMIT));
 
 	// Determine if editing
 	const editId = $derived($page.url.searchParams.get('edit'));
@@ -113,7 +113,7 @@
 				entry.passwordHistory = [
 					...(entry.passwordHistory || []),
 					{ password: existingEntry.password, changedAt: new Date().toISOString() }
-				];
+				].slice(-20);
 			}
 
 			let result;

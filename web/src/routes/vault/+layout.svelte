@@ -49,6 +49,13 @@
 		const events = ['mousedown', 'keydown', 'touchstart', 'scroll', 'mousemove'];
 		events.forEach(e => document.addEventListener(e, resetTimer, { passive: true }));
 
+		function handleVisibilityChange() {
+			if (document.hidden) {
+				lastActivity = Date.now();
+			}
+		}
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+
 		const checker = setInterval(() => {
 			if (Date.now() - lastActivity > timeoutMs) {
 				handleLock();
@@ -57,6 +64,7 @@
 
 		return () => {
 			events.forEach(e => document.removeEventListener(e, resetTimer));
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			clearInterval(checker);
 		};
 	});

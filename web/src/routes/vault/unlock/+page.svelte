@@ -42,7 +42,13 @@
 				error = result.error || 'Échec du déverrouillage.';
 			}
 		} catch (e: any) {
-			error = e.message || 'Erreur inconnue.';
+			if (e?.message?.includes('Web Crypto API')) {
+				error = 'Web Crypto API non disponible. Utilise HTTPS ou localhost.';
+			} else if (e?.name === 'OperationError' || e?.message?.includes('decrypt') || e?.message?.includes('importKey')) {
+				error = 'Mot de passe incorrect ou erreur de déchiffrement.';
+			} else {
+				error = e.message || 'Erreur inconnue.';
+			}
 		} finally {
 			loading = false;
 		}
