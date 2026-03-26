@@ -6,9 +6,11 @@ struct VaultSettingsView: View {
     @ObservedObject var vaultStore: VaultStore
     @ObservedObject var syncService: SyncService
     @ObservedObject var maskedEmailService: MaskedEmailService
+    @ObservedObject var subscriptionService: SubscriptionService
 
     @State private var showMaskedEmails = false
     @State private var showCloudSync = false
+    @State private var showPaywall = false
     @State private var showTrash = false
     @State private var showActivityLog = false
     @State private var showReorder = false
@@ -71,6 +73,7 @@ struct VaultSettingsView: View {
             .sheet(isPresented: $showImportCSV) { ImportView(vaultStore: vaultStore) }
             .sheet(isPresented: $showMaskedEmails) { MaskedEmailView(maskedEmailService: maskedEmailService) }
             .sheet(isPresented: $showCloudSync) { CloudSyncView(syncService: syncService, vaultStore: vaultStore) }
+            .sheet(isPresented: $showPaywall) { PaywallView(subscriptionService: subscriptionService) }
             .sheet(isPresented: $showLogoutSheet) {
                 LogoutConfirmSheet(
                     onCancel: { showLogoutSheet = false },
@@ -194,6 +197,25 @@ struct VaultSettingsView: View {
             FVSectionHeader(icon: "person.crop.circle", title: String(localized: "settings.section.account"))
             Button(String(localized: "settings.account.change_password")) { showChangePassword = true }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
+
+            // Subscription status
+            HStack {
+                Text(String(localized: "paywall.current.plan"))
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(FVColor.mist)
+                Spacer()
+                if subscriptionService.isProUser {
+                    FVProBadge()
+                } else {
+                    FVTag(text: String(localized: "paywall.free"), color: FVColor.mist)
+                }
+            }
+
+            if !subscriptionService.isProUser {
+                Button(String(localized: "paywall.upgrade")) { showPaywall = true }
+                    .buttonStyle(FVSettingsButton(tint: FVColor.gold))
+            }
+
             HStack(spacing: 10) {
                 FVTag(text: String(localized: "settings.account.local"), color: FVColor.cyan)
                 FVTag(text: String(localized: "settings.account.encryption_active"), color: FVColor.success)
@@ -227,7 +249,13 @@ struct VaultSettingsView: View {
                     .font(.system(size: 12, design: .rounded))
                     .foregroundStyle(FVColor.cyan.opacity(0.8))
             }
-            Button(String(localized: "settings.cloud.configure")) { showCloudSync = true }
+            Button(String(localized: "settings.cloud.configure")) {
+                    if subscriptionService.isProUser {
+                        showCloudSync = true
+                    } else {
+                        showPaywall = true
+                    }
+                }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
             Text(String(localized: "settings.cloud.zero_knowledge_note"))
                 .font(FVFont.caption(11))
@@ -254,7 +282,13 @@ struct VaultSettingsView: View {
                     FVTag(text: String(localized: "settings.cloud.not_configured"), color: FVColor.mist)
                 }
             }
-            Button(String(localized: "settings.masked.button \(maskedEmailService.aliases.count)")) { showMaskedEmails = true }
+            Button(String(localized: "settings.masked.button \(maskedEmailService.aliases.count)")) {
+                    if subscriptionService.isProUser {
+                        showMaskedEmails = true
+                    } else {
+                        showPaywall = true
+                    }
+                }
                 .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
             Text(String(localized: "settings.masked.description"))
                 .font(FVFont.caption(11))

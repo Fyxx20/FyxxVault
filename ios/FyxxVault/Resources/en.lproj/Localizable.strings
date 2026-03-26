@@ -480,8 +480,34 @@
 "vault.list.tag" = "Tag";
 "vault.list.toast.deleted" = "Entry(ies) deleted";
 
+/* Vault Greeting */
+"vault.greeting.morning" = "Good morning";
+"vault.greeting.evening" = "Good evening";
+
 /* Vault General */
 "vault.subtitle" = "Local encrypted storage • per-entry MFA access";
+
+/* Paywall */
+"paywall.title" = "FyxxVault Pro";
+"paywall.subtitle" = "Unlock the full security suite";
+"paywall.feature.cloud" = "Cloud Sync across devices";
+"paywall.feature.masked" = "Masked Emails";
+"paywall.feature.darkweb" = "Dark Web Monitoring";
+"paywall.feature.sharing" = "Secure Sharing";
+"paywall.feature.support" = "Priority Support";
+"paywall.monthly" = "Monthly";
+"paywall.yearly" = "Yearly";
+"paywall.monthly.price" = "$2.99/month";
+"paywall.yearly.price" = "$24.99/year";
+"paywall.yearly.save" = "Save 30%";
+"paywall.cta" = "Start 14-Day Free Trial";
+"paywall.restore" = "Restore Purchases";
+"paywall.terms" = "Terms of Service";
+"paywall.privacy" = "Privacy Policy";
+"paywall.current.plan" = "Current Plan";
+"paywall.free" = "Free";
+"paywall.pro" = "Pro";
+"paywall.upgrade" = "Upgrade to Pro";
 
 /* Vault Warnings */
 "vault.warning.breached %lld" = "⚠️ This password appeared in %lld known breach(es)";

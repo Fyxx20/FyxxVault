@@ -32,7 +32,7 @@ struct SecurityDashboardView: View {
 
                 // Security Score Card
                 VStack(spacing: 12) {
-                    Text("SCORE DE SECURITE")
+                    Text(String(localized: "security.score.label"))
                         .font(FVFont.caption(10))
                         .kerning(2)
                         .foregroundStyle(FVColor.smoke)

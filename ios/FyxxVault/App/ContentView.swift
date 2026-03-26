@@ -10,6 +10,7 @@ struct ContentView: View {
     @StateObject private var syncService = SyncService()
     @StateObject private var breachMonitor = BreachMonitorService()
     @StateObject private var maskedEmailService = MaskedEmailService()
+    @StateObject private var subscriptionService = SubscriptionService()
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -26,7 +27,7 @@ struct ContentView: View {
                     if appLock.isLocked {
                         VaultLockView(appLock: appLock, authManager: authManager)
                     } else {
-                        VaultDashboardView(authManager: authManager, vaultStore: vaultStore, syncService: syncService, breachMonitor: breachMonitor, maskedEmailService: maskedEmailService)
+                        VaultDashboardView(authManager: authManager, vaultStore: vaultStore, syncService: syncService, breachMonitor: breachMonitor, maskedEmailService: maskedEmailService, subscriptionService: subscriptionService)
                     }
                 }
             }

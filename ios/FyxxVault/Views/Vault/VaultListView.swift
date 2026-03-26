@@ -26,7 +26,7 @@ struct VaultListView: View {
 
     private var timeGreeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
-        return hour < 18 ? "Bonjour" : "Bonsoir"
+        return hour < 18 ? String(localized: "vault.greeting.morning") : String(localized: "vault.greeting.evening")
     }
 
     private var filteredEntries: [VaultEntry] {

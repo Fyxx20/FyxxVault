@@ -13,6 +13,7 @@ struct VaultDashboardView: View {
     @ObservedObject var syncService: SyncService
     @ObservedObject var breachMonitor: BreachMonitorService
     @ObservedObject var maskedEmailService: MaskedEmailService
+    @ObservedObject var subscriptionService: SubscriptionService
 
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var selectedTab: Int = 1
@@ -86,7 +87,7 @@ struct VaultDashboardView: View {
                         removal: .move(edge: slidesFromRight ? .leading : .trailing).combined(with: .opacity)
                     ))
             case 2:
-                VaultSettingsView(authManager: authManager, vaultStore: vaultStore, syncService: syncService, maskedEmailService: maskedEmailService)
+                VaultSettingsView(authManager: authManager, vaultStore: vaultStore, syncService: syncService, maskedEmailService: maskedEmailService, subscriptionService: subscriptionService)
                     .transition(.asymmetric(
                         insertion: .move(edge: .trailing).combined(with: .opacity),
                         removal: .move(edge: .trailing).combined(with: .opacity)

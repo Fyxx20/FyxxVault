@@ -480,8 +480,34 @@
 "vault.list.tag" = "Tag";
 "vault.list.toast.deleted" = "Entrée(s) supprimée(s)";
 
+/* Vault Greeting */
+"vault.greeting.morning" = "Bonjour";
+"vault.greeting.evening" = "Bonsoir";
+
 /* Vault General */
 "vault.subtitle" = "Stockage chiffré local • accès MFA par entrée";
+
+/* Paywall */
+"paywall.title" = "FyxxVault Pro";
+"paywall.subtitle" = "Débloque la suite complète de sécurité";
+"paywall.feature.cloud" = "Synchronisation Cloud multi-appareils";
+"paywall.feature.masked" = "Emails masqués";
+"paywall.feature.darkweb" = "Surveillance Dark Web";
+"paywall.feature.sharing" = "Partage sécurisé";
+"paywall.feature.support" = "Support prioritaire";
+"paywall.monthly" = "Mensuel";
+"paywall.yearly" = "Annuel";
+"paywall.monthly.price" = "2,99€/mois";
+"paywall.yearly.price" = "24,99€/an";
+"paywall.yearly.save" = "Économise 30%";
+"paywall.cta" = "Essai gratuit 14 jours";
+"paywall.restore" = "Restaurer les achats";
+"paywall.terms" = "Conditions d'utilisation";
+"paywall.privacy" = "Politique de confidentialité";
+"paywall.current.plan" = "Abonnement actuel";
+"paywall.free" = "Gratuit";
+"paywall.pro" = "Pro";
+"paywall.upgrade" = "Passer à Pro";
 
 /* Vault Warnings */
 "vault.warning.breached %lld" = "⚠️ Ce mot de passe apparaît dans %lld fuite(s) connue(s)";
