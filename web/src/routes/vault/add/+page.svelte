@@ -4,8 +4,14 @@
 	import { CATEGORY_META, newVaultEntry, type VaultCategory, type VaultEntry } from '$lib/types';
 	import { generatePassword, generatePassphrase, passwordStrength } from '$lib/crypto';
 	import { addEntry, updateEntry, getVaultState } from '$lib/stores/vault.svelte';
+	import { getAuthState } from '$lib/stores/auth.svelte';
 
 	const vault = getVaultState();
+	const auth = getAuthState();
+
+	// Free user limit
+	const FREE_LIMIT = 5;
+	const canAdd = $derived(auth.isPro || !editId && vault.entries.length < FREE_LIMIT || !!editId);
 
 	// Determine if editing
 	const editId = $derived($page.url.searchParams.get('edit'));
@@ -151,7 +157,16 @@
 		<h1 class="text-xl font-bold text-white">{editId ? 'Modifier l\'élément' : 'Nouvel élément'}</h1>
 	</div>
 
-	{#if success}
+	{#if !canAdd}
+		<div class="fv-glass p-10 text-center">
+			<div class="w-20 h-20 rounded-full bg-[var(--fv-gold)]/10 flex items-center justify-center mx-auto mb-5">
+				<span class="text-4xl">👑</span>
+			</div>
+			<h2 class="text-xl font-bold text-white mb-2">Limite atteinte</h2>
+			<p class="text-sm text-[var(--fv-smoke)] mb-6">Tu as atteint la limite de {FREE_LIMIT} comptes du plan gratuit. Passe à Pro pour des comptes illimités.</p>
+			<a href="/vault/settings" class="fv-btn fv-btn-gold">Passer à Pro — 4,99€/mois</a>
+		</div>
+	{:else if success}
 		<div class="fv-glass p-8 text-center fv-glow-cyan">
 			<div class="w-16 h-16 rounded-full bg-[var(--fv-success)]/15 flex items-center justify-center mx-auto mb-4">
 				<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>

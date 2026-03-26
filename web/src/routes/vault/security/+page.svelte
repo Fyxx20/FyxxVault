@@ -176,7 +176,26 @@
 		</div>
 	</div>
 
-	<!-- Dark Web Monitoring (HIBP) -->
+	<!-- Dark Web Monitoring (HIBP) — Pro only -->
+	{#if !auth.isPro}
+	<div class="fv-glass p-5 mb-6 opacity-70">
+		<div class="flex items-center gap-3 mb-3">
+			<span class="text-lg">🌐</span>
+			<div>
+				<h2 class="text-sm font-bold text-white">Surveillance Dark Web</h2>
+				<p class="text-[10px] text-[var(--fv-smoke)]">Vérifie si tes mots de passe sont dans des fuites</p>
+			</div>
+		</div>
+		<div class="p-4 rounded-xl bg-[var(--fv-gold)]/5 border border-[var(--fv-gold)]/20 flex items-center gap-3">
+			<span>👑</span>
+			<div class="flex-1">
+				<p class="text-xs font-semibold text-[var(--fv-gold)]">Fonctionnalité Pro</p>
+				<p class="text-[10px] text-[var(--fv-smoke)]">Passe au plan Pro pour scanner le dark web</p>
+			</div>
+			<a href="/vault/settings" class="px-3 py-1.5 rounded-lg bg-[var(--fv-gold)] text-[#1a1a2e] text-[10px] font-bold">Upgrade</a>
+		</div>
+	</div>
+	{:else}
 	<div class="fv-glass p-5 mb-6">
 		<div class="flex items-center justify-between mb-4">
 			<div class="flex items-center gap-3">
@@ -245,6 +264,7 @@
 			<p class="text-xs text-[var(--fv-ash)] text-center py-2">Clique sur "Scanner" pour vérifier tes mots de passe.</p>
 		{/if}
 	</div>
+	{/if}
 
 	<!-- Recommendations -->
 	<div class="fv-glass p-5 mb-6">

@@ -205,6 +205,18 @@
 	<title>Emails masqués — FyxxVault</title>
 </svelte:head>
 
+{#if !auth.isPro}
+<div class="max-w-2xl mx-auto">
+	<div class="fv-glass p-10 text-center">
+		<div class="w-20 h-20 rounded-full bg-[var(--fv-gold)]/10 flex items-center justify-center mx-auto mb-5">
+			<span class="text-4xl">👑</span>
+		</div>
+		<h1 class="text-2xl font-bold text-white mb-2">Fonctionnalité Pro</h1>
+		<p class="text-sm text-[var(--fv-smoke)] mb-6 max-w-md mx-auto">Les emails masqués sont réservés aux abonnés FyxxVault Pro. Passe au plan Pro pour protéger ta vraie adresse email.</p>
+		<a href="/vault/settings" class="fv-btn fv-btn-gold">Passer à Pro — 4,99€/mois</a>
+	</div>
+</div>
+{:else}
 <div class="max-w-2xl mx-auto">
 	<div class="flex items-center justify-between mb-6">
 		<div>
@@ -390,3 +402,4 @@
 		</div>
 	{/if}
 </div>
+{/if}
