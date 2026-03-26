@@ -510,14 +510,16 @@ struct FVSecurityGauge: View {
                 .rotationEffect(.degrees(-90))
 
             // Center content
-            VStack(spacing: 2) {
+            VStack(spacing: size < 80 ? 0 : 2) {
                 Text("\(Int(animatedScore))")
-                    .font(FVFont.display(max(24, size * 0.27)))
+                    .font(FVFont.display(size * 0.3))
                     .foregroundStyle(.white)
                     .contentTransition(.numericText())
-                Text(label)
-                    .font(FVFont.caption(max(10, size * 0.09)))
-                    .foregroundStyle(gaugeColor)
+                if size >= 80 {
+                    Text(label)
+                        .font(FVFont.caption(size * 0.09))
+                        .foregroundStyle(gaugeColor)
+                }
             }
         }
         .frame(width: size, height: size)
