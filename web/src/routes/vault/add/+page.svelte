@@ -556,8 +556,8 @@
 		<!-- Strength bar -->
 		{#if entry.password}
 			<div class="mt-3 flex items-center gap-3">
-				<div class="flex-1 h-2.5 rounded-full bg-white/5 overflow-hidden">
-					<div class="h-full rounded-full" style="width: {strength.score}%; background: linear-gradient(90deg, {strength.color}, {strength.color}dd); transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;"></div>
+				<div class="flex-1 h-3 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.08);">
+					<div class="h-full rounded-full" style="width: {strength.score}%; background: {strength.color}; box-shadow: 0 0 12px {strength.color}; transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;"></div>
 				</div>
 				<span class="text-xs font-bold transition-colors duration-300 min-w-[60px] text-right" style="color: {strength.color};">{strength.label}</span>
 			</div>
