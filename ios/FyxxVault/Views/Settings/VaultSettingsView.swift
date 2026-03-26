@@ -1,20 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-// MARK: - FVProBadge
-
-struct FVProBadge: View {
-    var body: some View {
-        Text("PRO")
-            .font(.system(size: 10, weight: .black, design: .rounded))
-            .foregroundStyle(FVColor.abyss)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(FVGradient.goldShimmer)
-            .clipShape(Capsule())
-    }
-}
-
 // MARK: - FVCollapsibleSection
 
 struct FVCollapsibleSection<Content: View>: View {
