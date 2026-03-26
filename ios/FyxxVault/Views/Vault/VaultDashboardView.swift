@@ -68,7 +68,7 @@ struct VaultDashboardView: View {
         Group {
             switch selectedTab {
             case 0:
-                SecurityDashboardView(vaultStore: vaultStore, breachMonitor: breachMonitor) { action in
+                SecurityDashboardView(vaultStore: vaultStore, breachMonitor: breachMonitor, subscriptionService: subscriptionService) { action in
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                         selectedTab = 1
                     }

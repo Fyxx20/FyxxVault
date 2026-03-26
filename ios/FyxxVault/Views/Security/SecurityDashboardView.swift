@@ -3,7 +3,9 @@ import SwiftUI
 struct SecurityDashboardView: View {
     @ObservedObject var vaultStore: VaultStore
     @ObservedObject var breachMonitor: BreachMonitorService
+    @ObservedObject var subscriptionService: SubscriptionService
     var onRecommendationTap: (VaultQuickAction) -> Void
+    @State private var showPaywall = false
     @State private var editingEntry: VaultEntry?
     @State private var statsAppeared = false
 
@@ -140,9 +142,40 @@ struct SecurityDashboardView: View {
 
                 // MARK: Dark Web Monitoring
                 VStack(alignment: .leading, spacing: 10) {
-                    FVSectionHeader(icon: "network.badge.shield.half.filled", title: String(localized: "security.section.darkweb"))
+                    HStack {
+                        FVSectionHeader(icon: "network.badge.shield.half.filled", title: String(localized: "security.section.darkweb"))
+                        Spacer()
+                        if !subscriptionService.isProUser {
+                            FVProBadge()
+                        }
+                    }
 
-                    if breachMonitor.isScanning {
+                    if !subscriptionService.isProUser {
+                        // Free users see a locked state
+                        VStack(spacing: 12) {
+                            Image(systemName: "lock.shield.fill")
+                                .font(.system(size: 32))
+                                .foregroundStyle(FVColor.gold)
+                            Text("Analyse tes mots de passe contre les fuites du Dark Web")
+                                .font(FVFont.body(13))
+                                .foregroundStyle(FVColor.mist)
+                                .multilineTextAlignment(.center)
+                            Button {
+                                showPaywall = true
+                            } label: {
+                                Text("Passer à Pro")
+                                    .font(FVFont.label(13))
+                                    .foregroundStyle(FVColor.abyss)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 10)
+                                    .background(FVColor.gold)
+                                    .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                    } else if breachMonitor.isScanning {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack(spacing: 8) {
                                 ProgressView()
@@ -227,6 +260,9 @@ struct SecurityDashboardView: View {
         .scrollIndicators(.hidden)
         .sheet(item: $editingEntry) { entry in
             EditVaultEntryView(vaultStore: vaultStore, entry: entry)
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(subscriptionService: subscriptionService)
         }
     }
 

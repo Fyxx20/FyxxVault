@@ -64,7 +64,7 @@ struct ContentView: View {
             }
         }
         .task(id: authManager.phase) {
-            if authManager.phase == .vault && breachMonitor.shouldAutoScan() {
+            if authManager.phase == .vault && breachMonitor.shouldAutoScan() && subscriptionService.isProUser {
                 await breachMonitor.scanAll(entries: vaultStore.entries)
             }
             // Auto-sync on vault entry
