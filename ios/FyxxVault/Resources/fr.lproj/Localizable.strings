@@ -1,0 +1,491 @@
+/* French Localizable.strings - FyxxVault */
+
+/* Activity */
+"activity.empty" = "Aucune activité";
+"activity.export" = "Exporter";
+"activity.title %lld" = "Journal (%lld)";
+
+/* Auth */
+"auth.button.login" = "Se connecter";
+"auth.button.register" = "Créer le compte";
+"auth.field.confirm_password" = "Confirmer le mot de passe";
+"auth.field.email" = "Email";
+"auth.field.master_password" = "Mot de passe maître";
+"auth.field.panic_password" = "Mot de passe panic (optionnel)";
+"auth.footer.tagline" = "Connexion locale, chiffrée, sans compromis.";
+"auth.header.subtitle" = "Accès sécurisé à ton coffre";
+"auth.mode.login" = "Connexion";
+"auth.mode.register" = "Inscription";
+"auth.panic.description" = "Le mot de passe panic efface immédiatement tout le coffre si utilisé à la place du mot de passe maître.";
+"auth.password.requirement.digit" = "1 chiffre";
+"auth.password.requirement.length" = "12 caractères minimum";
+"auth.password.requirement.special" = "1 caractère spécial (!@#$...)";
+"auth.password.requirement.uppercase" = "1 majuscule";
+"auth.password.requirements.title" = "Exigences du mot de passe maître:";
+"auth.recovery.button.unlock" = "Accéder avec la clé de récupération";
+"auth.recovery.cancel" = "Annuler";
+"auth.recovery.error.invalid" = "Clé de récupération invalide.";
+"auth.recovery.field.key" = "Clé de récupération (XXXX-XXXX-...)";
+"auth.recovery.forgot_password" = "Mot de passe oublié? Utiliser la clé de récupération";
+
+/* Category */
+"category.bankAccount" = "Compte bancaire";
+"category.creditCard" = "Carte bancaire";
+"category.identity" = "Identité";
+"category.login" = "Identifiant";
+"category.passport" = "Passeport";
+"category.secureNote" = "Note sécurisée";
+"category.softwareLicense" = "Licence logicielle";
+"category.wifiPassword" = "Mot de passe Wi-Fi";
+
+/* Change Password */
+"changepassword.button.change" = "Changer le mot de passe";
+"changepassword.field.confirm" = "Confirmer le nouveau";
+"changepassword.field.current" = "Mot de passe actuel";
+"changepassword.field.new" = "Nouveau mot de passe";
+"changepassword.nav.title" = "Mot de passe";
+"changepassword.success" = "Mot de passe maître changé avec succès.";
+"changepassword.title" = "Changer le mot de passe maître";
+
+/* Cloud */
+"cloud.auth.create_account" = "Créer un compte cloud";
+"cloud.auth.description" = "Synchronise ton coffre entre tes appareils";
+"cloud.auth.e2e_encrypted" = "Chiffrement de bout en bout • Zero-knowledge";
+"cloud.auth.loading" = "Connexion en cours...";
+"cloud.auth.password_note" = "Ton mot de passe maître chiffre tes données localement";
+"cloud.auth.title" = "Cloud Sync";
+"cloud.authenticated.title" = "Compte cloud";
+"cloud.button.signout" = "Déconnexion cloud";
+"cloud.button.sync_now" = "Synchroniser maintenant";
+"cloud.dialog.signout.confirm" = "Déconnexion";
+"cloud.dialog.signout.message" = "Tes données locales seront conservées.";
+"cloud.dialog.signout.title" = "Déconnexion cloud";
+"cloud.field.cloud_password" = "Mot de passe cloud";
+"cloud.field.master_for_encryption" = "Mot de passe maître (chiffrement)";
+"cloud.last_sync" = "Dernière sync";
+"cloud.mode.signin" = "Connexion";
+"cloud.mode.signup" = "Inscription";
+"cloud.nav.title" = "Synchronisation Cloud";
+"cloud.section.sync" = "Synchronisation";
+"cloud.status.disabled" = "Désactivé";
+"cloud.status.ready" = "Prêt";
+"cloud.status.syncing" = "Synchronisation...";
+"cloud.unlock.button" = "Déverrouiller le cloud";
+"cloud.unlock.description" = "Entre ton mot de passe maître pour déchiffrer tes données cloud";
+"cloud.unlock.signout" = "Déconnexion";
+"cloud.unlock.title" = "Cloud verrouillé";
+"cloud.unlock.unlocking" = "Déverrouillage...";
+
+/* Common */
+"common.close" = "Fermer";
+
+/* Expiration */
+"expiration.1year" = "1 an";
+"expiration.30days" = "30 jours";
+"expiration.60days" = "60 jours";
+"expiration.6months" = "6 mois";
+"expiration.90days" = "90 jours";
+"expiration.never" = "Jamais";
+
+/* Field */
+"field.accountNumber" = "Numéro de compte";
+"field.address" = "Adresse";
+"field.bank" = "Banque";
+"field.birthDate" = "Date de naissance";
+"field.cardHolder" = "Titulaire de la carte";
+"field.cardNumber" = "Numéro de carte";
+"field.country" = "Pays émetteur";
+"field.expirationDate" = "Date d'expiration";
+"field.firstName" = "Prénom";
+"field.lastName" = "Nom";
+"field.licenseKey" = "Clé de licence";
+"field.number" = "Numéro";
+"field.phone" = "Téléphone";
+"field.purchaseDate" = "Date d'achat";
+"field.securityType" = "Type de sécurité";
+"field.version" = "Version";
+
+/* Gauge */
+"gauge.critical" = "Critique";
+"gauge.excellent" = "Excellent";
+"gauge.good" = "Bon";
+"gauge.medium" = "Moyen";
+"gauge.weak" = "Faible";
+
+/* Generator */
+"generator.generate" = "Générer";
+"generator.length %lld" = "Longueur: %lld";
+"generator.lowercase" = "Minuscules";
+"generator.mode" = "Mode";
+"generator.numbers" = "Chiffres";
+"generator.symbols" = "Symboles";
+"generator.title" = "Générateur";
+"generator.uppercase" = "Majuscules";
+"generator.word.count %lld" = "Mots: %lld";
+
+/* History */
+"history.current" = "Actuel";
+"history.empty.subtitle" = "Les anciennes versions apparaîtront ici";
+"history.empty.title" = "Aucun historique";
+"history.nav.title" = "Historique des mots de passe";
+"history.previous" = "Précédents";
+
+/* Import */
+"import.button.choose_file" = "Choisir un fichier CSV";
+"import.button.continue" = "Continuer";
+"import.button.finish" = "Terminé";
+"import.button.import %lld" = "Importer %lld entrée(s)";
+"import.error.empty_file" = "Le fichier est vide";
+"import.error.file_read" = "Impossible de lire le fichier";
+"import.error.no_entries" = "Aucune entrée trouvée";
+"import.format.description" = "Sélectionne le format de ton fichier CSV";
+"import.format.hint" = "Format auto-détecté";
+"import.mapping.description" = "Associe les colonnes à leurs champs";
+"import.mapping.folder" = "Dossier";
+"import.mapping.notes" = "Notes";
+"import.mapping.password" = "Mot de passe";
+"import.mapping.title" = "Titre";
+"import.mapping.username" = "Identifiant";
+"import.mapping.website" = "Site web";
+"import.nav.title" = "Importer";
+"import.preview.duplicates" = "Doublons détectés";
+"import.preview.entries_detected %lld" = "%lld entrée(s) détectée(s)";
+"import.preview.more %lld" = "+%lld de plus...";
+"import.preview.strategy" = "Stratégie de doublons";
+"import.result.duplicates" = "Doublons ignorés";
+"import.result.imported" = "Importés";
+"import.result.skipped" = "Ignorés";
+"import.result.title" = "Import terminé";
+"import.section.column_mapping" = "Mappage des colonnes";
+"import.section.format" = "Format du fichier";
+"import.section.preview" = "Aperçu";
+
+/* Lock */
+"lock.button.back_to_login" = "Retour à la connexion";
+"lock.button.biometric" = "Déverrouiller avec Face ID / Touch ID";
+"lock.button.cancel_recovery" = "Annuler";
+"lock.button.password" = "Déverrouiller avec mot de passe";
+"lock.button.recovery" = "Déverrouiller avec clé de récupération";
+"lock.button.use_recovery" = "Utiliser la clé de récupération";
+"lock.error.invalid_recovery" = "Clé de récupération invalide.";
+"lock.error.wrong_password" = "Mot de passe maître incorrect.";
+"lock.field.master_password" = "Mot de passe maître";
+"lock.field.recovery_key" = "Clé de récupération (XXXX-XXXX-...)";
+"lock.header.subtitle" = "Coffre verrouillé";
+
+/* Logout */
+"logout.button.cancel" = "Annuler";
+"logout.button.confirm" = "Se déconnecter";
+"logout.message" = "Tu devras te reconnecter avec ton mot de passe maître.";
+"logout.title" = "Déconnexion";
+
+/* Masked Email */
+"masked.email.active.count %lld" = "%lld alias actif(s)";
+"masked.email.alias.description" = "Redirige vers ton adresse réelle";
+"masked.email.api.key" = "Clé API addy.io";
+"masked.email.connect" = "Connecter addy.io";
+"masked.email.create.alias" = "Créer un alias";
+"masked.email.creating" = "Création...";
+"masked.email.delete.alias.message" = "Cet alias ne redirigera plus les emails.";
+"masked.email.delete.alias.title" = "Supprimer cet alias ?";
+"masked.email.description" = "Protège ta vraie adresse email";
+"masked.email.disconnect" = "Déconnecter addy.io";
+"masked.email.empty.subtitle" = "Crée ton premier alias email";
+"masked.email.empty.title" = "Aucun alias";
+"masked.email.nav.title" = "Emails masqués";
+"masked.email.new.alias" = "Nouvel alias";
+"masked.email.setup.step1" = "1. Crée un compte sur addy.io";
+"masked.email.setup.step2" = "2. Va dans Settings → API Keys";
+"masked.email.setup.step3" = "3. Copie ta clé API ici";
+"masked.email.setup.title" = "Configuration";
+"masked.email.status.active" = "Actif";
+"masked.email.status.disabled" = "Désactivé";
+"masked.email.tag.free" = "Gratuit";
+"masked.email.tag.included" = "Inclus";
+"masked.email.title" = "Emails masqués";
+
+/* Recovery */
+"recovery.button.continue" = "J'ai noté ma clé";
+"recovery.button.copy" = "Copier";
+"recovery.nav.title" = "Clé de récupération";
+"recovery.tip.never_share" = "Ne la partage jamais avec personne";
+"recovery.tip.no_unencrypted" = "Ne la stocke pas en clair sur ton appareil";
+"recovery.tip.write_down" = "Note-la sur papier et garde-la en lieu sûr";
+"recovery.title" = "Ta clé de récupération";
+"recovery.toggle.saved" = "J'ai sauvegardé ma clé de récupération en lieu sûr";
+"recovery.warning" = "⚠️ Cette clé ne sera plus jamais affichée. Elle est ton unique moyen de récupérer ton coffre si tu oublies ton mot de passe maître.";
+
+/* Reorder */
+"reorder.title" = "Réorganiser";
+
+/* Screenshot */
+"screenshot.detected" = "Capture d'écran détectée";
+"screenshot.vaultLocked" = "Le coffre a été verrouillé.";
+
+/* Security */
+"security.action.change" = "Changer";
+"security.darkweb.appeared.in %lld" = "Apparu dans %lld fuite(s)";
+"security.darkweb.breached %lld" = "%lld compromis";
+"security.darkweb.last.scan %@" = "Dernier scan %@";
+"security.darkweb.no.breach" = "Aucun mot de passe compromis";
+"security.darkweb.scan.now" = "Scanner maintenant";
+"security.darkweb.scanning %lld" = "Scan en cours... %lld%%";
+"security.expirations.none" = "Aucune expiration à signaler";
+"security.expired.since %lld" = "Expiré depuis %lld jour(s)";
+"security.expires.in %lld" = "Expire dans %lld jour(s)";
+"security.rec.excellent" = "Excellent ! Toutes les entrées sont sécurisées.";
+"security.rec.expired %lld" = "Renouvelez %lld mot(s) de passe expiré(s)";
+"security.rec.mfa %lld" = "Activez la MFA sur %lld compte(s)";
+"security.rec.reused %lld" = "Changez %lld mot(s) de passe réutilisé(s)";
+"security.rec.weak %lld" = "Renforcez %lld mot(s) de passe faible(s)";
+"security.score.label" = "SCORE DE SÉCURITÉ";
+"security.section.darkweb" = "DARK WEB MONITORING";
+"security.section.expirations" = "EXPIRATIONS";
+"security.section.recommendations" = "RECOMMANDATIONS";
+"security.stat.expired" = "Expirés";
+"security.stat.no.mfa" = "Sans MFA";
+"security.stat.reused" = "Réutilisés";
+"security.stat.weak" = "Faibles";
+"security.subtitle" = "Analyse en temps réel de ton coffre";
+"security.title" = "Sécurité";
+
+/* Settings */
+"settings.account.change_password" = "Changer le mot de passe maître";
+"settings.account.encryption_active" = "Chiffrement AES-256-GCM actif";
+"settings.account.local" = "Compte local";
+"settings.advanced.csv_warning" = "⚠️ Les exports CSV ne sont PAS chiffrés";
+"settings.advanced.export_csv" = "Exporter CSV générique";
+"settings.advanced.export_csv_1password" = "Exporter CSV 1Password";
+"settings.advanced.export_csv_bitwarden" = "Exporter CSV Bitwarden";
+"settings.advanced.rotate_key" = "Forcer la rotation de clé";
+"settings.alert.backup_passphrase.export" = "Exporter";
+"settings.alert.backup_passphrase.message" = "Ce mot de passe chiffrera ton backup.";
+"settings.alert.backup_passphrase.placeholder" = "Mot de passe de backup";
+"settings.alert.backup_passphrase.title" = "Mot de passe de backup";
+"settings.alert.csv_copied" = "CSV copié dans le presse-papier";
+"settings.alert.export_cancelled" = "Export annulé";
+"settings.alert.export_failed" = "Échec de l'export";
+"settings.alert.file_read_failed" = "Impossible de lire le fichier";
+"settings.alert.import_failed" = "Échec de l'import";
+"settings.alert.import_passphrase.import" = "Importer";
+"settings.alert.import_passphrase.message" = "Entre le mot de passe utilisé lors de l'export.";
+"settings.alert.import_passphrase.placeholder" = "Mot de passe";
+"settings.alert.import_passphrase.title" = "Mot de passe de backup";
+"settings.alert.info" = "Info";
+"settings.alert.key_rotated" = "Clé de chiffrement renouvelée avec succès.";
+"settings.alert.prefs_reset" = "Préférences visuelles réinitialisées.";
+"settings.backup.export_encrypted" = "Exporter backup chiffré";
+"settings.backup.format_note" = "Format: AES-256-GCM + HMAC-SHA256";
+"settings.backup.import" = "Importer un backup chiffré";
+"settings.backup.import_csv" = "Importer depuis CSV (Bitwarden / 1Password)";
+"settings.button.logout" = "Se déconnecter";
+"settings.cloud.configure" = "Configurer la synchronisation";
+"settings.cloud.connected" = "Connecté";
+"settings.cloud.locked" = "Verrouillé";
+"settings.cloud.not_configured" = "Non configuré";
+"settings.cloud.status" = "Statut";
+"settings.cloud.zero_knowledge_note" = "Chiffrement zero-knowledge • E2E";
+"settings.data.activity_log %lld" = "Journal d'activité (%lld)";
+"settings.data.empty_trash" = "Vider la corbeille";
+"settings.data.purge_log" = "Purger le journal";
+"settings.data.reorder" = "Réorganiser les entrées";
+"settings.data.trash %lld" = "Corbeille (%lld)";
+"settings.dialog.cancel" = "Annuler";
+"settings.dialog.clear_log.confirm" = "Purger";
+"settings.dialog.clear_log.message" = "Tout le journal sera supprimé.";
+"settings.dialog.clear_log.title" = "Purger le journal ?";
+"settings.dialog.csv_export.confirm" = "Exporter";
+"settings.dialog.csv_export.message" = "Les mots de passe seront en clair.";
+"settings.dialog.csv_export.title" = "Export CSV non chiffré";
+"settings.dialog.empty_trash.confirm" = "Vider";
+"settings.dialog.empty_trash.message" = "Toutes les entrées seront définitivement supprimées.";
+"settings.dialog.empty_trash.title" = "Vider la corbeille ?";
+"settings.dialog.reset_prefs.confirm" = "Réinitialiser";
+"settings.dialog.reset_prefs.message" = "Les préférences visuelles seront remises par défaut.";
+"settings.dialog.reset_prefs.title" = "Réinitialiser les préférences ?";
+"settings.dialog.rotate_key.confirm" = "Renouveler";
+"settings.dialog.rotate_key.message" = "Le coffre sera re-chiffré avec une nouvelle clé AES-256.";
+"settings.dialog.rotate_key.title" = "Renouveler la clé de chiffrement ?";
+"settings.header.accounts_count %lld" = "%lld comptes";
+"settings.header.subtitle" = "Gestion complète de ton coffre";
+"settings.header.title" = "Réglages";
+"settings.masked.alias_count %lld" = "%lld alias";
+"settings.masked.button %lld" = "Gérer les emails masqués (%lld)";
+"settings.masked.description" = "Protège ta vraie adresse email";
+"settings.nav.title" = "Réglages";
+"settings.privacy.haptic_feedback" = "Retour haptique";
+"settings.privacy.hide_mfa" = "Masquer les codes 2FA";
+"settings.privacy.hide_passwords" = "Masquer les mots de passe";
+"settings.privacy.reset_visual" = "Réinitialiser les préférences visuelles";
+"settings.score.critical" = "Critique";
+"settings.score.excellent" = "Excellent";
+"settings.score.fair" = "Correct";
+"settings.score.fragile" = "Fragile";
+"settings.score.solid" = "Solide";
+"settings.section.account" = "COMPTE";
+"settings.section.advanced" = "AVANCÉ";
+"settings.section.backups" = "SAUVEGARDE & EXPORT";
+"settings.section.cloud_sync" = "SYNCHRONISATION CLOUD";
+"settings.section.data" = "DONNÉES";
+"settings.section.masked_emails" = "EMAILS MASQUÉS";
+"settings.section.privacy" = "CONFIDENTIALITÉ";
+"settings.section.security" = "SÉCURITÉ";
+"settings.security.auto_lock" = "Verrouillage automatique";
+"settings.security.auto_lock_delay %lld" = "Délai: %lld minute(s)";
+"settings.security.biometric_unlock" = "Déverrouillage biométrique";
+"settings.security.clear_delay" = "Délai d'effacement";
+"settings.security.clipboard_clear" = "Effacement du presse-papier";
+"settings.security.panic_note" = "Le mot de passe panic est actif. Si utilisé, il efface le coffre.";
+"settings.security.screenshot_lock" = "Verrouiller sur capture d'écran";
+
+/* Share */
+"share.copied" = "Copié !";
+"share.copy.all" = "Copier les données chiffrées";
+"share.decryption.key" = "Clé de déchiffrement";
+"share.description" = "Partage un mot de passe de manière sécurisée";
+"share.encrypted.data" = "Données chiffrées";
+"share.ephemeral" = "Lien éphémère";
+"share.expiration" = "Expiration";
+"share.generate" = "Générer le lien sécurisé";
+"share.generated.description" = "Envoie ces données séparément pour plus de sécurité";
+"share.generated.title" = "Partage prêt !";
+"share.max.views" = "Nombre max de consultations";
+"share.nav.title" = "Partage sécurisé";
+"share.title" = "Partager";
+"share.via.system" = "Partager via...";
+"share.warning" = "Les données sont chiffrées AES-256-GCM";
+
+/* Strength */
+"strength.excellent" = "Excellent";
+"strength.medium" = "Moyen";
+"strength.strong" = "Fort";
+"strength.title" = "Robustesse";
+"strength.weak" = "Faible";
+
+/* Tabs */
+"tab.security" = "Sécurité";
+"tab.settings" = "Réglages";
+"tab.vault" = "Coffre";
+
+/* TOTP */
+"totp.invalid.key" = "Clé TOTP invalide";
+"totp.title" = "Code 2FA";
+
+/* Trash */
+"trash.deletePermanently" = "Supprimer définitivement";
+"trash.deletionIn %lld" = "Suppression dans %lld jour(s)";
+"trash.empty" = "Corbeille vide";
+"trash.restore" = "Restaurer";
+"trash.title" = "Corbeille";
+
+/* Vault Actions */
+"vault.action.apply" = "Appliquer";
+"vault.action.cancel" = "Annuler";
+"vault.action.close" = "Fermer";
+"vault.action.delete" = "Supprimer";
+"vault.action.history" = "Historique";
+"vault.action.save" = "Sauvegarder";
+"vault.action.save.changes" = "Enregistrer les modifications";
+"vault.action.share" = "Partager";
+
+/* Vault Add */
+"vault.add.category" = "Catégorie";
+"vault.add.custom.field.add" = "+ Ajouter un champ";
+"vault.add.custom.fields" = "Champs personnalisés";
+"vault.add.enable.mfa" = "Activer la MFA";
+"vault.add.mark.favorite" = "Marquer comme favori";
+"vault.add.nav.title" = "Nouveau Compte";
+"vault.add.scan.qr" = "Scanner QR";
+
+/* Vault Card */
+"vault.card.breached %lld" = "Compromis (%lld fuite(s))";
+"vault.card.copied" = "Copié !";
+"vault.card.copy" = "Copier";
+"vault.card.expired" = "Expiré";
+"vault.card.expiring.soon" = "Expire bientôt";
+"vault.card.hide" = "Masquer";
+"vault.card.mfa.hide" = "Masquer le code 2FA";
+"vault.card.mfa.show" = "Afficher le code 2FA";
+"vault.card.password.expired.since %lld" = "Expiré depuis %lld jour(s)";
+"vault.card.password.expires.in %lld %@" = "Expire dans %lld jour(s) (%@)";
+"vault.card.reveal" = "Afficher";
+
+/* Vault Dialogs */
+"vault.dialog.bulk.delete.message" = "Cette action est irréversible.";
+"vault.dialog.bulk.delete.title" = "Supprimer les entrées sélectionnées ?";
+"vault.dialog.delete.message" = "Cette entrée sera déplacée dans la corbeille.";
+"vault.dialog.delete.title" = "Supprimer cette entrée ?";
+"vault.dialog.folder.placeholder" = "Nom du dossier";
+"vault.dialog.folder.title" = "Déplacer vers un dossier";
+"vault.dialog.tag.placeholder" = "Nom du tag";
+"vault.dialog.tag.title" = "Ajouter un tag";
+
+/* Vault Edit */
+"vault.edit.enable.mfa" = "MFA activée";
+"vault.edit.favorite" = "Favori";
+"vault.edit.nav.title" = "Modifier";
+
+/* Vault Fields */
+"vault.field.account.email" = "Email du compte";
+"vault.field.account.name" = "Nom du compte";
+"vault.field.account.number" = "Numéro de compte";
+"vault.field.address" = "Adresse";
+"vault.field.bank" = "Banque";
+"vault.field.bic.swift" = "BIC / SWIFT";
+"vault.field.card.expiry" = "Expiration (MM/AA)";
+"vault.field.card.name" = "Nom du titulaire";
+"vault.field.card.number" = "Numéro de carte";
+"vault.field.cardholder" = "Titulaire";
+"vault.field.custom.key" = "Nom du champ";
+"vault.field.custom.value" = "Valeur";
+"vault.field.date.of.birth" = "Date de naissance";
+"vault.field.email" = "Email";
+"vault.field.expiration" = "Expiration";
+"vault.field.expiration.date" = "Date d'expiration";
+"vault.field.first.name" = "Prénom";
+"vault.field.full.name" = "Nom complet";
+"vault.field.issuing.country" = "Pays émetteur";
+"vault.field.last.name" = "Nom";
+"vault.field.license.key" = "Clé de licence";
+"vault.field.mfa.secret" = "Secret MFA (base32 ou otpauth://)";
+"vault.field.mfa.secret.short" = "Secret MFA";
+"vault.field.network.name" = "Nom du réseau";
+"vault.field.note.title" = "Titre de la note";
+"vault.field.notes" = "Notes";
+"vault.field.passport.number" = "Numéro de passeport";
+"vault.field.password" = "Mot de passe";
+"vault.field.password.expiration" = "Expiration du mot de passe";
+"vault.field.phone" = "Téléphone";
+"vault.field.purchase.date" = "Date d'achat";
+"vault.field.security.type" = "Type de sécurité";
+"vault.field.software.name" = "Nom du logiciel";
+"vault.field.username" = "Identifiant / Email";
+"vault.field.version" = "Version";
+"vault.field.website" = "Site web";
+"vault.field.wifi.password" = "Mot de passe Wi-Fi";
+
+/* Vault Header */
+"vault.header.accounts" = "COMPTES";
+
+/* Vault List */
+"vault.list.delete" = "Supprimer";
+"vault.list.done" = "Terminé";
+"vault.list.empty.subtitle" = "Ajoute ton premier mot de passe";
+"vault.list.empty.title" = "Coffre vide";
+"vault.list.favorite" = "Favoris";
+"vault.list.move" = "Déplacer";
+"vault.list.search" = "Recherche";
+"vault.list.select" = "Sélectionner";
+"vault.list.selected %lld" = "%lld sélectionné(s)";
+"vault.list.tag" = "Tag";
+"vault.list.toast.deleted" = "Entrée(s) supprimée(s)";
+
+/* Vault General */
+"vault.subtitle" = "Stockage chiffré local • accès MFA par entrée";
+
+/* Vault Warnings */
+"vault.warning.breached %lld" = "⚠️ Ce mot de passe apparaît dans %lld fuite(s) connue(s)";
+"vault.warning.duplicate" = "⚠️ Ce mot de passe est déjà utilisé pour un autre compte";
+"vault.warning.duplicate.short" = "Mot de passe réutilisé";
+"vault.warning.insecure.url" = "⚠️ Cette URL utilise HTTP. Préfère HTTPS pour une connexion sécurisée.";
+"vault.warning.reused.password" = "Mot de passe réutilisé détecté";
