@@ -198,7 +198,7 @@
 
 		<!-- Sidebar (desktop + mobile drawer) -->
 		<aside class="
-			fixed lg:sticky top-0 left-0 z-50 h-screen w-[260px]
+			fixed top-0 left-0 z-50 h-screen w-[260px]
 			bg-[var(--fv-obsidian)] border-r border-white/[0.06]
 			flex flex-col overflow-hidden transition-transform duration-300
 			{sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -323,7 +323,7 @@
 		</aside>
 
 		<!-- Main content -->
-		<div class="flex-1 min-h-screen lg:ml-0 pb-16 lg:pb-0">
+		<div class="flex-1 min-h-screen lg:ml-[260px] pb-16 lg:pb-0">
 			<!-- Mobile header -->
 			<header class="lg:hidden sticky top-0 z-30 bg-[var(--fv-abyss)]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 py-3 flex items-center gap-3">
 				<button onclick={() => sidebarOpen = true} class="p-2 rounded-lg hover:bg-white/5 text-white transition-colors duration-200">
