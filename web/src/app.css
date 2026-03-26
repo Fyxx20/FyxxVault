@@ -312,10 +312,7 @@ html {
   color: white;
 }
 
-/* Custom cursor - desktop only */
-@media (hover: hover) {
-  * { cursor: none !important; }
-}
+/* Custom cursor removed */
 
 /* Animated background gradient for landing */
 .landing-bg-animate {
