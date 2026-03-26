@@ -10,6 +10,9 @@ final class AuthManager: ObservableObject {
     /// Holds the raw (unhashed) recovery key immediately after registration, then nilled.
     @Published var pendingRecoveryKey: String? = nil
 
+    /// Cloud sync service — wired up by ContentView via setSyncService(_:)
+    private var syncService: SyncService?
+
     private var account: Account?
     /// In-memory mirror of the persisted attempt counter
     private var failedAttempts: Int = 0
@@ -18,6 +21,12 @@ final class AuthManager: ObservableObject {
     init() {
         loadAccount()
         loadPersistedAttemptState()
+    }
+
+    // MARK: Sync Integration
+
+    func setSyncService(_ service: SyncService) {
+        self.syncService = service
     }
 
     // MARK: Registration
@@ -90,6 +99,15 @@ final class AuthManager: ObservableObject {
         // Show recovery key to user ONCE
         pendingRecoveryKey = CryptoService.formatRecoveryKey(rawRecoveryKey)
         phase = .onboarding
+
+        // Auto cloud sync: sign up in the background (failures are silent)
+        if let syncService {
+            let email = cleanEmail
+            let pw = password
+            Task {
+                try? await syncService.signUpWithEmail(email: email, password: pw, masterPassword: pw)
+            }
+        }
     }
 
     // MARK: Login
@@ -138,6 +156,15 @@ final class AuthManager: ObservableObject {
         resetFailedAttempts()
         migrateAccountHashIfNeeded(password: password)
         phase = account.didCompleteOnboarding ? .vault : .onboarding
+
+        // Auto cloud sync: sign in in the background (failures are silent)
+        if let syncService {
+            let email = cleanEmail
+            let pw = password
+            Task {
+                try? await syncService.signInWithEmail(email: email, password: pw, masterPassword: pw)
+            }
+        }
     }
 
     // MARK: Recovery Key Unlock
@@ -191,6 +218,7 @@ final class AuthManager: ObservableObject {
     }
 
     func logout() {
+        syncService?.signOut()
         phase = .auth
         authError = ""
     }

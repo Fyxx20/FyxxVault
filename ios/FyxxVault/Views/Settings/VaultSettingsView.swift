@@ -74,7 +74,6 @@ struct VaultSettingsView: View {
     // MARK: - Sheet / Alert State
 
     @State private var showMaskedEmails = false
-    @State private var showCloudSync = false
     @State private var showPaywall = false
     @State private var showTrash = false
     @State private var showActivityLog = false
@@ -114,7 +113,6 @@ struct VaultSettingsView: View {
 
     @State private var subscriptionExpanded = false
     @State private var securityExpanded = false
-    @State private var cloudSyncExpanded = false
     @State private var maskedEmailExpanded = false
     @State private var privacyExpanded = false
     @State private var dataExpanded = false
@@ -142,13 +140,6 @@ struct VaultSettingsView: View {
                         color: FVColor.cyan,
                         isExpanded: $securityExpanded
                     ) { securityContent }
-
-                    FVCollapsibleSection(
-                        title: String(localized: "settings.section.cloud_sync"),
-                        icon: "cloud.fill",
-                        color: FVColor.violet,
-                        isExpanded: $cloudSyncExpanded
-                    ) { cloudSyncContent }
 
                     FVCollapsibleSection(
                         title: String(localized: "settings.section.masked_emails"),
@@ -204,7 +195,6 @@ struct VaultSettingsView: View {
             .sheet(isPresented: $showChangePassword) { ChangePasswordView(authManager: authManager) }
             .sheet(isPresented: $showImportCSV) { ImportView(vaultStore: vaultStore) }
             .sheet(isPresented: $showMaskedEmails) { MaskedEmailView(maskedEmailService: maskedEmailService) }
-            .sheet(isPresented: $showCloudSync) { CloudSyncView(syncService: syncService, vaultStore: vaultStore) }
             .sheet(isPresented: $showPaywall) { PaywallView(subscriptionService: subscriptionService) }
             .sheet(isPresented: $showLogoutSheet) {
                 LogoutConfirmSheet(
@@ -296,10 +286,14 @@ struct VaultSettingsView: View {
             HStack(alignment: .center, spacing: 14) {
                 // Left side: email, tags, plan
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(authManager.currentEmail)
-                        .font(FVFont.body(14))
-                        .foregroundStyle(FVColor.cyan)
-                        .lineLimit(1)
+                    HStack(spacing: 6) {
+                        Text(authManager.currentEmail)
+                            .font(FVFont.body(14))
+                            .foregroundStyle(FVColor.cyan)
+                            .lineLimit(1)
+
+                        syncStatusIcon
+                    }
 
                     HStack(spacing: 6) {
                         FVTag(text: "\(score)/100 \u{2022} \(level)", color: scoreColor)
@@ -359,6 +353,29 @@ struct VaultSettingsView: View {
         .shadow(color: FVColor.cyan.opacity(0.06), radius: 20, y: 8)
     }
 
+    // MARK: - Sync Status Icon
+
+    @ViewBuilder
+    private var syncStatusIcon: some View {
+        switch syncService.state {
+        case .syncing:
+            Image(systemName: "arrow.triangle.2.circlepath.icloud.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(FVColor.cyan)
+                .symbolEffect(.rotate)
+        case .error:
+            Image(systemName: "exclamationmark.icloud.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(FVColor.warning)
+        case .idle where syncService.isCloudAuthenticated:
+            Image(systemName: "checkmark.icloud.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(FVColor.success)
+        default:
+            EmptyView()
+        }
+    }
+
     // MARK: - Subscription Content
 
     @ViewBuilder
@@ -408,38 +425,6 @@ struct VaultSettingsView: View {
             }.pickerStyle(.segmented)
         }
         Text(String(localized: "settings.security.panic_note"))
-            .font(FVFont.caption(11))
-            .foregroundStyle(FVColor.mist.opacity(0.75))
-    }
-
-    // MARK: - Cloud Sync Content
-
-    @ViewBuilder
-    private var cloudSyncContent: some View {
-        HStack {
-            Text(String(localized: "settings.cloud.status"))
-                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundStyle(FVColor.mist)
-            Spacer()
-            if syncService.isCloudAuthenticated {
-                FVTag(text: String(localized: "settings.cloud.connected"), color: FVColor.success)
-            } else if syncService.cloudEmail != nil {
-                FVTag(text: String(localized: "settings.cloud.locked"), color: FVColor.warning)
-            } else {
-                FVTag(text: String(localized: "settings.cloud.not_configured"), color: FVColor.mist)
-            }
-        }
-        if let email = syncService.cloudEmail {
-            Text(email)
-                .font(.system(size: 12, design: .rounded))
-                .foregroundStyle(FVColor.cyan.opacity(0.8))
-        }
-        Button(String(localized: "settings.cloud.configure")) {
-            showCloudSync = true
-        }
-        .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-
-        Text(String(localized: "settings.cloud.zero_knowledge_note"))
             .font(FVFont.caption(11))
             .foregroundStyle(FVColor.mist.opacity(0.75))
     }

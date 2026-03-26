@@ -448,6 +448,9 @@ final class VaultStore: ObservableObject {
             reusedCount: audit.reusedCount,
             lastSyncDate: nil
         )
+
+        // Notify observers (ContentView auto-sync listener)
+        NotificationCenter.default.post(name: .fyxxVaultDataChanged, object: nil)
     }
 
     // MARK: Private — Activity Log

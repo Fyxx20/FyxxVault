@@ -480,6 +480,12 @@ struct TOTPSnapshot {
     let remainingSeconds: Int
 }
 
+// MARK: - Notifications
+
+extension Notification.Name {
+    static let fyxxVaultDataChanged = Notification.Name("fyxxvault.data.changed")
+}
+
 // MARK: - Settings Keys
 
 enum SettingsKey {

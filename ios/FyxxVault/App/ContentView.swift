@@ -12,6 +12,8 @@ struct ContentView: View {
     @StateObject private var maskedEmailService = MaskedEmailService()
     @StateObject private var subscriptionService = SubscriptionService()
     @Environment(\.scenePhase) private var scenePhase
+    /// Debounce flag to avoid overlapping sync requests
+    @State private var isSyncing = false
 
     var body: some View {
         ZStack {
@@ -56,6 +58,7 @@ struct ContentView: View {
         .preferredColorScheme(.dark)
         .onAppear {
             appLock.configureFromSettings()
+            authManager.setSyncService(syncService)
             if authManager.phase == .vault {
                 appLock.activateForVaultEntry()
             }
@@ -63,6 +66,20 @@ struct ContentView: View {
         .task(id: authManager.phase) {
             if authManager.phase == .vault && breachMonitor.shouldAutoScan() {
                 await breachMonitor.scanAll(entries: vaultStore.entries)
+            }
+            // Auto-sync on vault entry
+            if authManager.phase == .vault && syncService.isCloudAuthenticated {
+                let merged = try? await syncService.sync(localEntries: vaultStore.entries)
+                if let merged { vaultStore.replaceEntries(merged) }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .fyxxVaultDataChanged)) { _ in
+            guard syncService.isCloudAuthenticated, !isSyncing else { return }
+            isSyncing = true
+            Task {
+                let merged = try? await syncService.sync(localEntries: vaultStore.entries)
+                if let merged { vaultStore.replaceEntries(merged) }
+                isSyncing = false
             }
         }
         .onChange(of: scenePhase) { _, newValue in
