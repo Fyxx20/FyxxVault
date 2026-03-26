@@ -44,7 +44,12 @@ final class SubscriptionService: ObservableObject {
     func loadProducts() async {
         do {
             let products = try await Product.products(for: Self.proProductIDs)
-            availableProducts = products.sorted { ($0.subscription?.subscriptionPeriod.unit.rawValue ?? 0) < ($1.subscription?.subscriptionPeriod.unit.rawValue ?? 0) }
+            let sorted = products.sorted { a, b in
+                let aUnit = a.subscription?.subscriptionPeriod.unit.rawValue ?? 0
+                let bUnit = b.subscription?.subscriptionPeriod.unit.rawValue ?? 0
+                return aUnit < bUnit
+            }
+            availableProducts = sorted
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -132,7 +137,12 @@ final class SubscriptionService: ObservableObject {
     // MARK: - Subscription Status
 
     private func updateSubscriptionStatus() async {
-        guard let product = availableProducts.first(where: { $0.subscription != nil }) ?? (try? await Product.products(for: Self.proProductIDs)).flatMap({ $0.first }) else { return }
+        var product = availableProducts.first(where: { $0.subscription != nil })
+        if product == nil {
+            let fetched = try? await Product.products(for: Self.proProductIDs)
+            product = fetched?.first
+        }
+        guard let product else { return }
 
         guard let subscription = product.subscription else { return }
 
