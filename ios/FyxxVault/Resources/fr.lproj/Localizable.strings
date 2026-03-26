@@ -330,6 +330,7 @@
 "settings.section.masked_emails" = "EMAILS MASQUÉS";
 "settings.section.privacy" = "CONFIDENTIALITÉ";
 "settings.section.security" = "SÉCURITÉ";
+"settings.section.subscription" = "Abonnement";
 "settings.security.auto_lock" = "Verrouillage automatique";
 "settings.security.auto_lock_delay %lld" = "Délai: %lld minute(s)";
 "settings.security.biometric_unlock" = "Déverrouillage biométrique";
