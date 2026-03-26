@@ -123,7 +123,7 @@
 					</div>
 					<div class="flex-1 min-w-0">
 						<p class="text-xs text-white font-medium truncate">{auth.user?.email ?? ''}</p>
-						<p class="text-[10px] text-[var(--fv-ash)]">Plan Pro</p>
+						<p class="text-[10px] text-[var(--fv-ash)]">Plan Gratuit</p>
 					</div>
 				</div>
 				<button

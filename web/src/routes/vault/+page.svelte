@@ -13,10 +13,12 @@
 	let showDetail = $state(false);
 	let editingEntry = $state<VaultEntry | null>(null);
 	let showDeleteConfirm = $state<string | null>(null);
+	let hasLoaded = $state(false);
 
-	// Load entries on mount
+	// Load entries once when unlocked
 	$effect(() => {
-		if (auth.isUnlocked && vault.entries.length === 0 && !vault.loading) {
+		if (auth.isUnlocked && !hasLoaded) {
+			hasLoaded = true;
 			loadEntries();
 		}
 	});
@@ -286,13 +288,15 @@
 									</button>
 								</div>
 								<!-- Strength bar -->
-								{@const strength = passwordStrength(entry.password)}
-								<div class="mt-2 flex items-center gap-2">
-									<div class="flex-1 h-1 rounded-full bg-white/5 overflow-hidden">
-										<div class="h-full rounded-full transition-all" style="width: {strength.score}%; background: {strength.color};"></div>
+								{#if true}
+									{@const strength = passwordStrength(entry.password)}
+									<div class="mt-2 flex items-center gap-2">
+										<div class="flex-1 h-1 rounded-full bg-white/5 overflow-hidden">
+											<div class="h-full rounded-full transition-all" style="width: {strength.score}%; background: {strength.color};"></div>
+										</div>
+										<span class="text-[10px] font-medium" style="color: {strength.color};">{strength.label}</span>
 									</div>
-									<span class="text-[10px] font-medium" style="color: {strength.color};">{strength.label}</span>
-								</div>
+								{/if}
 							</div>
 						{/if}
 
