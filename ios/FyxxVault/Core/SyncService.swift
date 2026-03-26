@@ -180,7 +180,7 @@ final class SyncService: ObservableObject {
     }
 
     func unlockCloud(masterPassword: String) async throws {
-        guard let token = accessToken else { throw SyncError.notAuthenticated }
+        guard accessToken != nil else { throw SyncError.notAuthenticated }
 
         // Fetch profile
         let profileData = try await getJSON(path: "/rest/v1/profiles?select=*&limit=1")
