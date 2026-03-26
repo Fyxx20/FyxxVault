@@ -504,8 +504,8 @@
 "paywall.feature.support" = "Priority Support";
 "paywall.monthly" = "Monthly";
 "paywall.yearly" = "Yearly";
-"paywall.monthly.price" = "$2.99/month";
-"paywall.yearly.price" = "$24.99/year";
+"paywall.monthly.price" = "$4.99/month";
+"paywall.yearly.price" = "$41.99/year";
 "paywall.yearly.save" = "Save 30%";
 "paywall.cta" = "Start 14-Day Free Trial";
 "paywall.restore" = "Restore Purchases";

@@ -504,8 +504,8 @@
 "paywall.feature.support" = "Support prioritaire";
 "paywall.monthly" = "Mensuel";
 "paywall.yearly" = "Annuel";
-"paywall.monthly.price" = "2,99€/mois";
-"paywall.yearly.price" = "24,99€/an";
+"paywall.monthly.price" = "4,99€/mois";
+"paywall.yearly.price" = "41,99€/an";
 "paywall.yearly.save" = "Économise 30%";
 "paywall.cta" = "Essai gratuit 14 jours";
 "paywall.restore" = "Restaurer les achats";
