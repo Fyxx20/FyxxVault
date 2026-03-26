@@ -45,9 +45,9 @@ final class SubscriptionService: ObservableObject {
         do {
             let products = try await Product.products(for: Self.proProductIDs)
             let sorted = products.sorted { a, b in
-                let aUnit = a.subscription?.subscriptionPeriod.unit.rawValue ?? 0
-                let bUnit = b.subscription?.subscriptionPeriod.unit.rawValue ?? 0
-                return aUnit < bUnit
+                let aMonthly = a.id == Self.proMonthlyID
+                let bMonthly = b.id == Self.proMonthlyID
+                return aMonthly && !bMonthly
             }
             availableProducts = sorted
         } catch {
