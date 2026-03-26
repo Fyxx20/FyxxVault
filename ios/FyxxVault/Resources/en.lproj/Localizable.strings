@@ -331,6 +331,10 @@
 "settings.section.privacy" = "PRIVACY";
 "settings.section.security" = "SECURITY";
 "settings.section.subscription" = "Subscription";
+"settings.profile.recovery_key" = "Recovery Key ✓";
+"settings.profile.plan.free" = "Free";
+"settings.profile.plan.pro" = "Pro";
+"settings.profile.upgrade" = "Upgrade to Pro";
 "settings.security.auto_lock" = "Auto-lock";
 "settings.security.auto_lock_delay %lld" = "Delay: %lld minute(s)";
 "settings.security.biometric_unlock" = "Biometric unlock";

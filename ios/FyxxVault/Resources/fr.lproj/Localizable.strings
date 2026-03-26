@@ -331,6 +331,10 @@
 "settings.section.privacy" = "CONFIDENTIALITÉ";
 "settings.section.security" = "SÉCURITÉ";
 "settings.section.subscription" = "Abonnement";
+"settings.profile.recovery_key" = "Clé de récupération ✓";
+"settings.profile.plan.free" = "Gratuit";
+"settings.profile.plan.pro" = "Pro";
+"settings.profile.upgrade" = "Passer à Pro";
 "settings.security.auto_lock" = "Verrouillage automatique";
 "settings.security.auto_lock_delay %lld" = "Délai: %lld minute(s)";
 "settings.security.biometric_unlock" = "Déverrouillage biométrique";
