@@ -18,7 +18,7 @@ struct VaultTrashView: View {
                             VStack(alignment: .leading, spacing: 10) {
                                 Text(trash.entry.title).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white)
                                 Text(trash.entry.username).foregroundStyle(.white.opacity(0.72))
-                                Text(String(localized: "trash.deletionIn \(max(0, Calendar.current.dateComponents([.day], from: Date(), to: trash.expiresAt).day ?? 0))"))
+                                Text(String(format: NSLocalizedString("trash.deletionIn %lld", comment: ""), max(0, Calendar.current.dateComponents([.day], from: Date(), to: trash.expiresAt).day ?? 0)))
                                     .font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(.white.opacity(0.58))
                                 HStack {
                                     Button(String(localized: "trash.restore")) { vaultStore.restoreFromTrash(trash.id) }.foregroundStyle(FVColor.cyan)

@@ -79,7 +79,7 @@ struct EditVaultEntryView: View {
                             .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
                     }
                     if let pwnedCount, pwnedCount > 0 {
-                        Text(String(localized: "vault.warning.breached \(pwnedCount)"))
+                        Text(String(format: NSLocalizedString("vault.warning.breached %lld", comment: ""), pwnedCount))
                             .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.danger.opacity(0.9))
                             .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
                     }

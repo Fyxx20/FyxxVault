@@ -79,6 +79,10 @@
 /* Common */
 "common.close" = "Fermer";
 
+/* QR Scanner */
+"qr.scanner.title" = "Scanner le QR TOTP";
+"qr.scanner.instruction" = "Vise le QR dans le cadre, la détection est automatique.";
+
 /* Expiration */
 "expiration.1year" = "1 an";
 "expiration.30days" = "30 jours";

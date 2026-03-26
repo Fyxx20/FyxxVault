@@ -28,7 +28,7 @@ struct ActivityLogView: View {
                 }
                 .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 22)
             }
-            .navigationTitle(String(localized: "activity.title \(vaultStore.activityLog.count)")).fvInlineNavTitle()
+            .navigationTitle(String(format: NSLocalizedString("activity.title %lld", comment: ""), vaultStore.activityLog.count)).fvInlineNavTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(String(localized: "common.close")) { dismiss() }.foregroundStyle(FVColor.cyan) }
                 ToolbarItem(placement: .primaryAction) {

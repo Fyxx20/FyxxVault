@@ -49,6 +49,7 @@ struct VaultListView: View {
             $0.title.localizedCaseInsensitiveContains(cleanQuery)
             || $0.username.localizedCaseInsensitiveContains(cleanQuery)
             || $0.website.localizedCaseInsensitiveContains(cleanQuery)
+            || $0.notes.localizedCaseInsensitiveContains(cleanQuery)
         }
         switch sortMode {
         case .recent:        return queried.sorted { $0.lastModifiedAt > $1.lastModifiedAt }
@@ -249,7 +250,7 @@ struct VaultListView: View {
                     if selectionMode {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 16) {
-                                Text(String(localized: "vault.list.selected \(selectedEntryIDs.count)"))
+                                Text(String(format: NSLocalizedString("vault.list.selected %lld", comment: ""), selectedEntryIDs.count))
                                     .font(FVFont.caption(11))
                                     .kerning(1.2)
                                     .foregroundStyle(FVColor.mist.opacity(0.9))

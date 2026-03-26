@@ -15,11 +15,11 @@ struct QRScannerSheet: View {
             #endif
             LinearGradient(colors: [.black.opacity(0.72), .black.opacity(0.1), .black.opacity(0.72)], startPoint: .top, endPoint: .bottom).ignoresSafeArea()
             VStack(spacing: 14) {
-                HStack { Button("Fermer") { dismiss() }.font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.cyanLight); Spacer() }
+                HStack { Button(String(localized: "common.close")) { dismiss() }.font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.cyanLight); Spacer() }
                     .padding(.horizontal, 20).padding(.top, 6)
                 VStack(spacing: 6) {
-                    Text("Scanner le QR TOTP").font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyle(.white)
-                    Text("Vise le QR dans le cadre, la détection est automatique.").font(.system(size: 13, weight: .medium, design: .rounded)).foregroundStyle(.white.opacity(0.82))
+                    Text(String(localized: "qr.scanner.title")).font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                    Text(String(localized: "qr.scanner.instruction")).font(.system(size: 13, weight: .medium, design: .rounded)).foregroundStyle(.white.opacity(0.82))
                 }
                 Spacer()
                 RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(FVColor.cyanLight.opacity(0.9), lineWidth: 2).frame(width: 250, height: 250)

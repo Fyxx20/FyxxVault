@@ -23,6 +23,15 @@ struct VaultEntryCard: View {
     @AppStorage("fyxxvault.hide.mfa.default") private var hideMFACodeByDefault = false
     @AppStorage("fyxxvault.haptics.enabled") private var hapticsEnabled = true
 
+    private var strengthColor: Color {
+        switch PasswordToolkit.strength(for: entry.password) {
+        case .faible: return .red
+        case .moyen: return .orange
+        case .fort: return .green
+        case .excellent: return .cyan
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 7 : 10) {
             HStack {
@@ -47,6 +56,9 @@ struct VaultEntryCard: View {
                     VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(entry.title).font(FVFont.title(compact ? 16 : 18)).foregroundStyle(.white)
+                        Circle()
+                            .fill(strengthColor)
+                            .frame(width: 6, height: 6)
                         if entry.isFavorite {
                             Image(systemName: "star.fill")
                                 .font(.system(size: 12))
@@ -70,7 +82,7 @@ struct VaultEntryCard: View {
                                 .background(.orange.opacity(0.15)).clipShape(Capsule())
                         }
                         if let breachCount, breachCount > 0 {
-                            Label(String(localized: "vault.card.breached \(breachCount)"), systemImage: "exclamationmark.triangle.fill")
+                            Label(String(format: NSLocalizedString("vault.card.breached %lld", comment: ""), breachCount), systemImage: "exclamationmark.triangle.fill")
                                 .font(.system(size: 10, weight: .bold)).foregroundStyle(FVColor.danger)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
                                 .background(FVColor.danger.opacity(0.15)).clipShape(Capsule())
@@ -109,7 +121,17 @@ struct VaultEntryCard: View {
 
             Rectangle().fill(Color.white.opacity(0.05)).frame(height: 1)
 
-            Text(entry.username).font(FVFont.body(14)).foregroundStyle(.white.opacity(0.8))
+            HStack(spacing: 6) {
+                Text(entry.username).font(FVFont.body(14)).foregroundStyle(.white.opacity(0.8))
+                Button {
+                    ClipboardService.copy(entry.username)
+                    fvHaptic(.light)
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                        .font(.system(size: 11))
+                        .foregroundStyle(FVColor.smoke)
+                }
+            }
 
             HStack(spacing: 8) {
                 Text(revealPassword ? entry.password : String(repeating: "•", count: max(entry.password.count, 8)))
@@ -143,12 +165,16 @@ struct VaultEntryCard: View {
             }
 
             if entry.expirationPolicy != .none, let days = entry.daysUntilExpiration {
-                Text(days < 0 ? String(localized: "vault.card.password.expired.since \(abs(days))") : String(localized: "vault.card.password.expires.in \(days) \(entry.expirationPolicy.label)"))
+                Text(days < 0 ? String(format: NSLocalizedString("vault.card.password.expired.since %lld", comment: ""), abs(days)) : String(format: NSLocalizedString("vault.card.password.expires.in %lld %@", comment: ""), days, entry.expirationPolicy.label))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(days < 0 ? .red : (days < 14 ? .orange : .white.opacity(0.55)))
             }
 
             if !entry.notes.isEmpty { Text(entry.notes).font(FVFont.body(13)).foregroundStyle(.white.opacity(0.67)) }
+
+            Text(entry.lastModifiedAt.formatted(.relative(presentation: .named)))
+                .font(FVFont.caption(10))
+                .foregroundStyle(FVColor.smoke)
 
             if entry.mfaEnabled && entry.mfaType == .totp {
                 Button(showMFACode ? String(localized: "vault.card.mfa.hide") : String(localized: "vault.card.mfa.show")) { showMFACode.toggle(); fvHaptic(.light) }

@@ -103,7 +103,7 @@ struct MaskedEmailView: View {
                     Text(String(localized: "masked.email.title"))
                         .font(FVFont.heading(22))
                         .foregroundStyle(.white)
-                    Text(String(localized: "masked.email.active.count \(maskedEmailService.aliases.count)"))
+                    Text(String(format: NSLocalizedString("masked.email.active.count %lld", comment: ""), maskedEmailService.aliases.count))
                         .font(.system(size: 13, design: .rounded))
                         .foregroundStyle(FVColor.mist)
                 }

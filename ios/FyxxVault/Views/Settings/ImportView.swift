@@ -165,7 +165,7 @@ struct ImportView: View {
         VStack(spacing: 16) {
             FVSectionHeader(icon: "eye", title: String(localized: "import.section.preview"))
 
-            Text(String(localized: "import.preview.entries_detected \(previewEntries.count)"))
+            Text(String(format: NSLocalizedString("import.preview.entries_detected %lld", comment: ""), previewEntries.count))
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -197,7 +197,7 @@ struct ImportView: View {
             }
 
             if previewEntries.count > 10 {
-                Text(String(localized: "import.preview.more \(previewEntries.count - 10)"))
+                Text(String(format: NSLocalizedString("import.preview.more %lld", comment: ""), previewEntries.count - 10))
                     .font(.system(size: 12, design: .rounded))
                     .foregroundStyle(FVColor.mist.opacity(0.6))
             }
@@ -216,7 +216,7 @@ struct ImportView: View {
                 .foregroundStyle(FVColor.cyan)
             }
 
-            FVButton(title: String(localized: "import.button.import \(previewEntries.count)")) {
+            FVButton(title: String(format: NSLocalizedString("import.button.import %lld", comment: ""), previewEntries.count)) {
                 let result = ImportService.deduplicate(
                     imported: previewEntries,
                     existing: vaultStore.entries,

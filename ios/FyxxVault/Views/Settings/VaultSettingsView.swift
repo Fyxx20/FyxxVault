@@ -306,7 +306,7 @@ struct VaultSettingsView: View {
                     }
 
                     HStack(spacing: 6) {
-                        FVTag(text: String(localized: "settings.header.accounts_count \(vaultStore.entries.count)"), color: FVColor.silver)
+                        FVTag(text: String(format: NSLocalizedString("settings.header.accounts_count %lld", comment: ""), vaultStore.entries.count), color: FVColor.silver)
                         if authManager.hasRecoveryKey {
                             FVTag(text: String(localized: "settings.profile.recovery_key"), color: FVColor.violet)
                         }
@@ -414,7 +414,7 @@ struct VaultSettingsView: View {
         Toggle(String(localized: "settings.security.auto_lock"), isOn: $autoLockEnabled)
             .toggleStyle(.switch)
         if autoLockEnabled {
-            Stepper(String(localized: "settings.security.auto_lock_delay \(autoLockMinutes)"), value: $autoLockMinutes, in: 1...15)
+            Stepper(String(format: NSLocalizedString("settings.security.auto_lock_delay %lld", comment: ""), autoLockMinutes), value: $autoLockMinutes, in: 1...15)
                 .foregroundStyle(.white.opacity(0.85))
         }
         Toggle(String(localized: "settings.security.biometric_unlock"), isOn: $biometricUnlock)
@@ -443,12 +443,12 @@ struct VaultSettingsView: View {
                 .foregroundStyle(FVColor.mist)
             Spacer()
             if maskedEmailService.isConfigured {
-                FVTag(text: String(localized: "settings.masked.alias_count \(maskedEmailService.aliases.count)"), color: FVColor.success)
+                FVTag(text: String(format: NSLocalizedString("settings.masked.alias_count %lld", comment: ""), maskedEmailService.aliases.count), color: FVColor.success)
             } else {
                 FVTag(text: String(localized: "settings.cloud.not_configured"), color: FVColor.mist)
             }
         }
-        Button(String(localized: "settings.masked.button \(maskedEmailService.aliases.count)")) {
+        Button(String(format: NSLocalizedString("settings.masked.button %lld", comment: ""), maskedEmailService.aliases.count)) {
             if subscriptionService.isProUser {
                 showMaskedEmails = true
             } else {
@@ -480,9 +480,9 @@ struct VaultSettingsView: View {
 
     @ViewBuilder
     private var dataContent: some View {
-        Button(String(localized: "settings.data.trash \(vaultStore.trashEntries.count)")) { showTrash = true }
+        Button(String(format: NSLocalizedString("settings.data.trash %lld", comment: ""), vaultStore.trashEntries.count)) { showTrash = true }
             .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
-        Button(String(localized: "settings.data.activity_log \(vaultStore.activityLog.count)")) { showActivityLog = true }
+        Button(String(format: NSLocalizedString("settings.data.activity_log %lld", comment: ""), vaultStore.activityLog.count)) { showActivityLog = true }
             .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
         Button(String(localized: "settings.data.reorder")) { showReorder = true }
             .buttonStyle(FVSettingsButton(tint: FVColor.cyan))

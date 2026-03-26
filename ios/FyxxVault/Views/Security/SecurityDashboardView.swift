@@ -124,7 +124,7 @@ struct SecurityDashboardView: View {
                                         .font(FVFont.title(15))
                                         .foregroundStyle(.white)
                                     if let days = entry.daysUntilExpiration {
-                                        Text(days < 0 ? String(localized: "security.expired.since \(abs(days))") : String(localized: "security.expires.in \(days)"))
+                                        Text(days < 0 ? String(format: NSLocalizedString("security.expired.since %lld", comment: ""), abs(days)) : String(format: NSLocalizedString("security.expires.in %lld", comment: ""), days))
                                             .font(FVFont.caption(11))
                                             .foregroundStyle(days < 0 ? FVColor.danger : FVColor.warning)
                                     }
@@ -147,7 +147,7 @@ struct SecurityDashboardView: View {
                             HStack(spacing: 8) {
                                 ProgressView()
                                     .tint(FVColor.cyan)
-                                Text(String(localized: "security.darkweb.scanning \(Int(breachMonitor.scanProgress * 100))"))
+                                Text(String(format: NSLocalizedString("security.darkweb.scanning %lld", comment: ""), Int(breachMonitor.scanProgress * 100)))
                                     .font(FVFont.body(13))
                                     .foregroundStyle(FVColor.mist)
                             }
@@ -156,13 +156,13 @@ struct SecurityDashboardView: View {
                         }
                     } else {
                         if let lastDate = breachMonitor.lastScanDate {
-                            Text(String(localized: "security.darkweb.last.scan \(lastDate.formatted(.relative(presentation: .named)))"))
+                            Text(String(format: NSLocalizedString("security.darkweb.last.scan %@", comment: ""), lastDate.formatted(.relative(presentation: .named))))
                                 .font(FVFont.caption(11))
                                 .foregroundStyle(FVColor.smoke)
                         }
 
                         if breachMonitor.totalBreached > 0 {
-                            Label(String(localized: "security.darkweb.breached \(breachMonitor.totalBreached)"), systemImage: "exclamationmark.triangle.fill")
+                            Label(String(format: NSLocalizedString("security.darkweb.breached %lld", comment: ""), breachMonitor.totalBreached), systemImage: "exclamationmark.triangle.fill")
                                 .font(FVFont.body(13))
                                 .foregroundStyle(FVColor.danger)
                         } else if breachMonitor.lastScanDate != nil {
@@ -202,7 +202,7 @@ struct SecurityDashboardView: View {
                                         .font(FVFont.title(15))
                                         .foregroundStyle(.white)
                                     if let count = breachMonitor.breachCount(for: entry.id) {
-                                        Text(String(localized: "security.darkweb.appeared.in \(count)"))
+                                        Text(String(format: NSLocalizedString("security.darkweb.appeared.in %lld", comment: ""), count))
                                             .font(FVFont.caption(11))
                                             .foregroundStyle(FVColor.danger)
                                     }
@@ -266,16 +266,16 @@ struct SecurityDashboardView: View {
     private func actionableRecommendations(_ audit: SecurityAudit) -> [SecurityRecommendation] {
         var items: [SecurityRecommendation] = []
         if audit.weakCount > 0 {
-            items.append(.init(text: String(localized: "security.rec.weak \(audit.weakCount)"), action: .weakPasswords, severity: .critical))
+            items.append(.init(text: String(format: NSLocalizedString("security.rec.weak %lld", comment: ""), audit.weakCount), action: .weakPasswords, severity: .critical))
         }
         if audit.reusedCount > 0 {
-            items.append(.init(text: String(localized: "security.rec.reused \(audit.reusedCount)"), action: .reusedPasswords, severity: .critical))
+            items.append(.init(text: String(format: NSLocalizedString("security.rec.reused %lld", comment: ""), audit.reusedCount), action: .reusedPasswords, severity: .critical))
         }
         if audit.withoutMFACount > 0 {
-            items.append(.init(text: String(localized: "security.rec.mfa \(audit.withoutMFACount)"), action: .missingMFA, severity: .warning))
+            items.append(.init(text: String(format: NSLocalizedString("security.rec.mfa %lld", comment: ""), audit.withoutMFACount), action: .missingMFA, severity: .warning))
         }
         if audit.expiredCount > 0 {
-            items.append(.init(text: String(localized: "security.rec.expired \(audit.expiredCount)"), action: .expiredPasswords, severity: .warning))
+            items.append(.init(text: String(format: NSLocalizedString("security.rec.expired %lld", comment: ""), audit.expiredCount), action: .expiredPasswords, severity: .warning))
         }
         if items.isEmpty {
             items.append(.init(text: String(localized: "security.rec.excellent"), action: nil, severity: .ok))
