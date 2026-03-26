@@ -396,7 +396,7 @@
 <style>
 	/* Sidebar premium background mesh */
 	.sidebar-premium {
-		position: relative;
+		position: fixed !important;
 		overflow: hidden;
 	}
 
