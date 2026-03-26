@@ -129,7 +129,8 @@
 				{/each}
 			</nav>
 
-			<!-- Upgrade Pro -->
+			<!-- Upgrade Pro (hidden if already Pro) -->
+			{#if !auth.isPro}
 			<div class="px-3 pb-3">
 				<div class="p-4 rounded-2xl bg-gradient-to-br from-[var(--fv-gold)]/10 to-[var(--fv-gold)]/5 border border-[var(--fv-gold)]/20">
 					<div class="flex items-center gap-2 mb-2">
@@ -145,6 +146,7 @@
 					</button>
 				</div>
 			</div>
+			{/if}
 
 			<!-- User section -->
 			<div class="px-4 py-4 border-t border-white/5">
@@ -154,7 +156,7 @@
 					</div>
 					<div class="flex-1 min-w-0">
 						<p class="text-xs text-white font-medium truncate">{auth.user?.email ?? ''}</p>
-						<p class="text-[10px] text-[var(--fv-ash)]">Plan Gratuit</p>
+						<p class="text-[10px] {auth.isPro ? 'text-[var(--fv-gold)]' : 'text-[var(--fv-ash)]'}">{auth.isPro ? 'Plan Pro 👑' : 'Plan Gratuit'}</p>
 					</div>
 				</div>
 				<button

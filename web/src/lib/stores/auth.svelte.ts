@@ -11,6 +11,7 @@ let _session: Session | null = $state(null);
 let _isAuthenticated = $state(false);
 let _isUnlocked = $state(false);
 let _loading = $state(true);
+let _isPro = $state(false);
 let _masterPassword: string | null = null; // kept briefly for profile bootstrap
 
 // ─── Public accessors ───
@@ -20,7 +21,8 @@ export function getAuthState() {
 		get session() { return _session; },
 		get isAuthenticated() { return _isAuthenticated; },
 		get isUnlocked() { return _isUnlocked; },
-		get loading() { return _loading; }
+		get loading() { return _loading; },
+		get isPro() { return _isPro; }
 	};
 }
 
@@ -57,7 +59,7 @@ export async function unlockVault(masterPassword: string): Promise<{ success: bo
 		// Fetch profile
 		const { data: profile, error: profileError } = await supabase
 			.from('profiles')
-			.select('wrapped_vek, vek_salt, vek_rounds')
+			.select('wrapped_vek, vek_salt, vek_rounds, is_pro')
 			.eq('id', _user.id)
 			.single();
 
@@ -81,6 +83,7 @@ export async function unlockVault(masterPassword: string): Promise<{ success: bo
 
 		_vek = vek;
 		_isUnlocked = true;
+		_isPro = profile.is_pro === true;
 		return { success: true };
 	} catch (e: any) {
 		console.error('Unlock failed:', e);
