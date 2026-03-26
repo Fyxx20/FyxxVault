@@ -11,7 +11,7 @@ function getSubtle(): SubtleCrypto {
 	if (typeof globalThis.crypto?.subtle === 'undefined') {
 		throw new Error('Web Crypto API non disponible. Utilise HTTPS ou localhost.');
 	}
-	return globalThis.getSubtle();
+	return globalThis.crypto.subtle;
 }
 
 /**
