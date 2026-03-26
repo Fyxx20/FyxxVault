@@ -90,9 +90,5 @@
 
 <!-- Custom cursor removed -->
 
-<!-- Page content with route transition -->
-{#key $page.url.pathname}
-	<div class="page-transition-wrapper" in:fade={{ duration: 250, delay: 100 }} out:fade={{ duration: 150 }}>
-		{@render children()}
-	</div>
-{/key}
+<!-- Page content -->
+{@render children()}
