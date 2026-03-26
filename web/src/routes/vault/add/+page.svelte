@@ -247,10 +247,10 @@
 			</div>
 
 			<!-- Category-specific fields -->
-			<div class="add-glass-card p-6 space-y-5">
+			<div class="add-glass-card p-8 space-y-7">
 				<!-- Title (always shown) -->
 				<div>
-					<label for="title" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Titre *</label>
+					<label for="title" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Titre *</label>
 					<div class="relative">
 						<input id="title" type="text" bind:value={entry.title} oninput={() => titleTouched = true} placeholder="Ex: Gmail, Netflix, Banque..." class="{inputClass} {titleTouched && titleValid ? '!border-[var(--fv-success)]/40' : ''}" />
 						{#if titleTouched && titleValid}
@@ -262,15 +262,15 @@
 				</div>
 
 				{#key categoryKey}
-			<div class="fv-crossfade-enter">
+			<div class="fv-crossfade-enter space-y-7">
 			{#if entry.category === 'login' || entry.category === 'server' || entry.category === 'other'}
 					<!-- LOGIN / SERVER / OTHER -->
 					<div>
-						<label for="website" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Site web</label>
+						<label for="website" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Site web</label>
 						<input id="website" type="text" bind:value={entry.website} placeholder="example.com" class={inputClass} />
 					</div>
 					<div>
-						<label for="username" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Identifiant / Email</label>
+						<label for="username" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Identifiant / Email</label>
 						<input id="username" type="text" bind:value={entry.username} placeholder="ton@email.com" class={inputClass} />
 					</div>
 					<!-- Password field with generator -->
@@ -279,20 +279,20 @@
 				{:else if entry.category === 'creditCard'}
 					<!-- CREDIT CARD -->
 					<div>
-						<label for="cardholderName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Titulaire de la carte</label>
+						<label for="cardholderName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Titulaire de la carte</label>
 						<input id="cardholderName" type="text" bind:value={entry.cardholderName} placeholder="JEAN DUPONT" class={inputClass} />
 					</div>
 					<div>
-						<label for="cardNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Numéro de carte</label>
+						<label for="cardNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Numéro de carte</label>
 						<input id="cardNumber" type="text" bind:value={entry.cardNumber} placeholder="4242 4242 4242 4242" class="{inputClass} font-mono" maxlength="19" />
 					</div>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="cardExpiry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Expiration</label>
+							<label for="cardExpiry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Expiration</label>
 							<input id="cardExpiry" type="text" bind:value={entry.cardExpiry} placeholder="MM/AA" class="{inputClass} font-mono" maxlength="5" />
 						</div>
 						<div>
-							<label for="cardCVV" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">CVV</label>
+							<label for="cardCVV" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">CVV</label>
 							<input id="cardCVV" type="password" bind:value={entry.cardCVV} placeholder="•••" class="{inputClass} font-mono" maxlength="4" />
 						</div>
 					</div>
@@ -301,29 +301,29 @@
 					<!-- IDENTITY -->
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="firstName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Prénom</label>
+							<label for="firstName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Prénom</label>
 							<input id="firstName" type="text" bind:value={entry.firstName} placeholder="Jean" class={inputClass} />
 						</div>
 						<div>
-							<label for="lastName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Nom</label>
+							<label for="lastName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Nom</label>
 							<input id="lastName" type="text" bind:value={entry.lastName} placeholder="Dupont" class={inputClass} />
 						</div>
 					</div>
 					<div>
-						<label for="dateOfBirth" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Date de naissance</label>
+						<label for="dateOfBirth" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Date de naissance</label>
 						<input id="dateOfBirth" type="date" bind:value={entry.dateOfBirth} class={inputClass} />
 					</div>
 					<div>
-						<label for="address" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Adresse</label>
+						<label for="address" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Adresse</label>
 						<input id="address" type="text" bind:value={entry.address} placeholder="123 Rue de la Paix, Paris" class={inputClass} />
 					</div>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="phone" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Téléphone</label>
+							<label for="phone" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Téléphone</label>
 							<input id="phone" type="tel" bind:value={entry.phone} placeholder="+33 6 12 34 56 78" class={inputClass} />
 						</div>
 						<div>
-							<label for="email" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Email</label>
+							<label for="email" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Email</label>
 							<input id="email" type="email" bind:value={entry.email} placeholder="jean@email.com" class={inputClass} />
 						</div>
 					</div>
@@ -334,11 +334,11 @@
 				{:else if entry.category === 'wifi'}
 					<!-- WI-FI -->
 					<div>
-						<label for="networkName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Nom du réseau (SSID)</label>
+						<label for="networkName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Nom du réseau (SSID)</label>
 						<input id="networkName" type="text" bind:value={entry.networkName} placeholder="MonWiFi-5G" class={inputClass} />
 					</div>
 					<div>
-						<label for="securityType" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Type de sécurité</label>
+						<label for="securityType" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Type de sécurité</label>
 						<select id="securityType" bind:value={entry.securityType} class={inputClass}>
 							<option value="">Sélectionner...</option>
 							<option value="WPA3">WPA3</option>
@@ -353,20 +353,20 @@
 				{:else if entry.category === 'softwareLicense'}
 					<!-- SOFTWARE LICENSE -->
 					<div>
-						<label for="softwareName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Nom du logiciel</label>
+						<label for="softwareName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Nom du logiciel</label>
 						<input id="softwareName" type="text" bind:value={entry.softwareName} placeholder="Adobe Photoshop" class={inputClass} />
 					</div>
 					<div>
-						<label for="licenseKey" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Clé de licence</label>
+						<label for="licenseKey" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Clé de licence</label>
 						<input id="licenseKey" type="text" bind:value={entry.licenseKey} placeholder="XXXX-XXXX-XXXX-XXXX" class="{inputClass} font-mono" />
 					</div>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="licenseEmail" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Email associé</label>
+							<label for="licenseEmail" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Email associé</label>
 							<input id="licenseEmail" type="email" bind:value={entry.licenseEmail} placeholder="jean@email.com" class={inputClass} />
 						</div>
 						<div>
-							<label for="softwareVersion" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Version</label>
+							<label for="softwareVersion" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Version</label>
 							<input id="softwareVersion" type="text" bind:value={entry.softwareVersion} placeholder="v2.1.0" class={inputClass} />
 						</div>
 					</div>
@@ -374,24 +374,24 @@
 				{:else if entry.category === 'passport'}
 					<!-- PASSPORT -->
 					<div>
-						<label for="passportFullName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Nom complet</label>
+						<label for="passportFullName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Nom complet</label>
 						<input id="passportFullName" type="text" bind:value={entry.passportFullName} placeholder="DUPONT Jean" class={inputClass} />
 					</div>
 					<div>
-						<label for="passportNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Numéro de passeport</label>
+						<label for="passportNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Numéro de passeport</label>
 						<input id="passportNumber" type="text" bind:value={entry.passportNumber} placeholder="12AB34567" class="{inputClass} font-mono" />
 					</div>
 					<div>
-						<label for="passportCountry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Pays</label>
+						<label for="passportCountry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Pays</label>
 						<input id="passportCountry" type="text" bind:value={entry.passportCountry} placeholder="France" class={inputClass} />
 					</div>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="passportExpiry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Date d'expiration</label>
+							<label for="passportExpiry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Date d'expiration</label>
 							<input id="passportExpiry" type="date" bind:value={entry.passportExpiry} class={inputClass} />
 						</div>
 						<div>
-							<label for="passportDOB" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Date de naissance</label>
+							<label for="passportDOB" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Date de naissance</label>
 							<input id="passportDOB" type="date" bind:value={entry.passportDOB} class={inputClass} />
 						</div>
 					</div>
@@ -399,20 +399,20 @@
 				{:else if entry.category === 'bankAccount'}
 					<!-- BANK ACCOUNT -->
 					<div>
-						<label for="bankName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Nom de la banque</label>
+						<label for="bankName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Nom de la banque</label>
 						<input id="bankName" type="text" bind:value={entry.bankName} placeholder="BNP Paribas" class={inputClass} />
 					</div>
 					<div>
-						<label for="iban" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">IBAN</label>
+						<label for="iban" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">IBAN</label>
 						<input id="iban" type="text" bind:value={entry.iban} placeholder="FR76 1234 5678 9012 3456 7890 123" class="{inputClass} font-mono" />
 					</div>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="bic" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">BIC / SWIFT</label>
+							<label for="bic" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">BIC / SWIFT</label>
 							<input id="bic" type="text" bind:value={entry.bic} placeholder="BNPAFRPP" class="{inputClass} font-mono" />
 						</div>
 						<div>
-							<label for="accountNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Numéro de compte</label>
+							<label for="accountNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Numéro de compte</label>
 							<input id="accountNumber" type="text" bind:value={entry.accountNumber} placeholder="12345678901" class="{inputClass} font-mono" />
 						</div>
 					</div>
@@ -422,7 +422,7 @@
 
 				<!-- Notes (always shown) -->
 				<div>
-					<label for="notes" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Notes</label>
+					<label for="notes" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Notes</label>
 					<textarea
 						id="notes"
 						bind:value={entry.notes}
@@ -437,13 +437,13 @@
 			<div class="add-glass-card p-6 space-y-5">
 				<!-- Folder -->
 				<div>
-					<label for="folder" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Dossier</label>
+					<label for="folder" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Dossier</label>
 					<input id="folder" type="text" bind:value={entry.folder} placeholder="Ex: Travail, Personnel..." class={inputClass} />
 				</div>
 
 				<!-- Tags -->
 				<div>
-					<label class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Tags</label>
+					<label class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Tags</label>
 					<div class="flex gap-2">
 						<input
 							type="text"
@@ -492,7 +492,7 @@
 
 					{#if entry.mfaEnabled}
 						<div>
-							<label for="mfa-secret" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Secret TOTP</label>
+							<label for="mfa-secret" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Secret TOTP</label>
 							<input id="mfa-secret" type="text" bind:value={entry.mfaSecret} placeholder="JBSWY3DPEHPK3PXP" class="{inputClass} font-mono" />
 						</div>
 					{/if}
@@ -527,7 +527,7 @@
 
 {#snippet passwordField()}
 	<div>
-		<label for="password-field" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Mot de passe</label>
+		<label for="password-field" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Mot de passe</label>
 		<div class="relative">
 			<input
 				id="password-field"
