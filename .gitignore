@@ -30,3 +30,4 @@ web/build/
 *.pem
 .claude/worktrees/
 supabase/.temp/
+video/
