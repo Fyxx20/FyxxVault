@@ -22,6 +22,14 @@
 	let counterLeaks = $state(0);
 	let countersStarted = false;
 
+	// Pricing counter
+	let pricingAmount = $state('0,00');
+	let pricingCounterStarted = false;
+
+	// Easter egg
+	let konamiBuffer = '';
+	let showParticles = $state(false);
+
 	const ctaFullText = 'Pret a securiser tes comptes ?';
 
 	onMount(() => {
@@ -157,9 +165,37 @@
 			activeTestimonial = (activeTestimonial + 1) % testimonials.length;
 		}, 5000);
 
+		// Pricing counter observer
+		const pricingObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting && !pricingCounterStarted) {
+						pricingCounterStarted = true;
+						animatePricing(0, 4.99, 1600);
+					}
+				});
+			},
+			{ threshold: 0.3 }
+		);
+		const pricingEl = document.querySelector('[data-reveal="pricing"]');
+		if (pricingEl) pricingObserver.observe(pricingEl);
+
+		// Easter egg: type "vault" anywhere
+		const onKeyDown = (e: KeyboardEvent) => {
+			konamiBuffer += e.key.toLowerCase();
+			if (konamiBuffer.includes('vault')) {
+				triggerParticleBurst();
+				konamiBuffer = '';
+			}
+			if (konamiBuffer.length > 20) konamiBuffer = konamiBuffer.slice(-10);
+		};
+		window.addEventListener('keydown', onKeyDown);
+
 		return () => {
 			observer.disconnect();
+			pricingObserver.disconnect();
 			window.removeEventListener('scroll', onScroll);
+			window.removeEventListener('keydown', onKeyDown);
 			clearInterval(totpInterval);
 			clearInterval(testimonialInterval);
 		};
@@ -203,6 +239,24 @@
 	function handleCopy() {
 		demoCopied = true;
 		setTimeout(() => demoCopied = false, 2000);
+	}
+
+	function animatePricing(start: number, end: number, duration: number) {
+		const startTime = performance.now();
+		function step(now: number) {
+			const elapsed = now - startTime;
+			const progress = Math.min(elapsed / duration, 1);
+			const eased = 1 - Math.pow(1 - progress, 3);
+			const current = start + (end - start) * eased;
+			pricingAmount = current.toFixed(2).replace('.', ',');
+			if (progress < 1) requestAnimationFrame(step);
+		}
+		requestAnimationFrame(step);
+	}
+
+	function triggerParticleBurst() {
+		showParticles = true;
+		setTimeout(() => showParticles = false, 1000);
 	}
 
 	// ---- Data ----
@@ -407,8 +461,22 @@
 <!-- Mouse-following spotlight -->
 <div class="mouse-spotlight"></div>
 
-<div class="landing">
+<div class="landing landing-bg-animate">
 	<Navbar />
+
+	<!-- Easter egg particle burst -->
+	{#if showParticles}
+		<div class="particle-burst">
+			{#each Array(30) as _, i}
+				{@const angle = (i / 30) * Math.PI * 2 + (Math.random() - 0.5) * 0.5}
+				{@const dist = 80 + Math.random() * 200}
+				<div
+					class="gold-particle"
+					style="--px: {Math.cos(angle) * dist}px; --py: {Math.sin(angle) * dist}px; animation-delay: {Math.random() * 0.15}s; width: {4 + Math.random() * 5}px; height: {4 + Math.random() * 5}px;"
+				></div>
+			{/each}
+		</div>
+	{/if}
 
 	<!-- ============================================================ -->
 	<!-- HERO SECTION -->
@@ -456,19 +524,22 @@
 			</div>
 
 			<div class="hero-trust">
-				<span class="hero-trust-item">
+				<span class="hero-trust-item trust-tooltip-wrap">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 					AES-256
+					<span class="trust-tooltip">Chiffrement de grade militaire, utilisé par les gouvernements.</span>
 				</span>
 				<span class="hero-trust-sep"></span>
-				<span class="hero-trust-item">
+				<span class="hero-trust-item trust-tooltip-wrap">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 					Zero-knowledge
+					<span class="trust-tooltip">Personne, pas meme nous, ne peut lire tes données.</span>
 				</span>
 				<span class="hero-trust-sep"></span>
-				<span class="hero-trust-item">
+				<span class="hero-trust-item trust-tooltip-wrap">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 					Multi-plateforme
+					<span class="trust-tooltip">Disponible sur iOS, Web, et bientot desktop natif.</span>
 				</span>
 			</div>
 		</div>
@@ -817,7 +888,7 @@
 							<p class="pricing-card-tagline">Securite maximale</p>
 						</div>
 						<div class="pricing-card-price">
-							<span class="pricing-card-amount">4,99</span>
+							<span class="pricing-card-amount">{pricingAmount}</span>
 							<span class="pricing-card-currency">EUR</span>
 							<span class="pricing-card-period">/mois</span>
 						</div>
