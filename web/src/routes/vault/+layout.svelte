@@ -344,7 +344,7 @@
 				</div>
 			</header>
 
-			<main class="p-4 lg:px-8 lg:py-6 max-w-[1400px]">
+			<main class="p-4 lg:px-6 lg:pt-4 lg:pb-6">
 				{@render children()}
 			</main>
 		</div>
