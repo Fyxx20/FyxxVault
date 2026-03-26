@@ -10,13 +10,71 @@
 	let maintenanceLoading = $state(false);
 	let maintenanceMessage = $state('');
 
-	// We check env status by trying a simple admin request
+	// Admin management
+	let adminEmails = $state<string[]>([]);
+	let newAdminEmail = $state('');
+	let adminLoading = $state(false);
+	let adminMessage = $state('');
+
 	$effect(() => {
 		if (auth.session?.access_token) {
 			checkEnvStatus();
 			fetchMaintenanceStatus();
+			fetchAdminEmails();
 		}
 	});
+
+	async function fetchAdminEmails() {
+		try {
+			const res = await fetch('/api/admin/maintenance');
+			if (res.ok) {
+				const data = await res.json();
+				if (data.admins) adminEmails = data.admins;
+			}
+		} catch {}
+	}
+
+	async function addAdmin() {
+		const email = newAdminEmail.trim().toLowerCase();
+		if (!email || adminEmails.includes(email)) return;
+		adminLoading = true;
+		try {
+			const updated = [...adminEmails, email];
+			const res = await fetch('/api/admin/maintenance', {
+				method: 'POST',
+				headers: { Authorization: `Bearer ${auth.session?.access_token}`, 'Content-Type': 'application/json' },
+				body: JSON.stringify({ admin_emails: updated })
+			});
+			if (res.ok) {
+				adminEmails = updated;
+				newAdminEmail = '';
+				adminMessage = `${email} ajouté comme admin.`;
+			}
+		} catch {} finally {
+			adminLoading = false;
+			setTimeout(() => adminMessage = '', 3000);
+		}
+	}
+
+	async function removeAdmin(email: string) {
+		if (email === 'fyxxfn@gmail.com') return; // Can't remove owner
+		adminLoading = true;
+		try {
+			const updated = adminEmails.filter(e => e !== email);
+			const res = await fetch('/api/admin/maintenance', {
+				method: 'POST',
+				headers: { Authorization: `Bearer ${auth.session?.access_token}`, 'Content-Type': 'application/json' },
+				body: JSON.stringify({ admin_emails: updated })
+			});
+			if (res.ok) {
+				adminEmails = updated;
+				adminMessage = `${email} retiré des admins.`;
+			}
+		} catch {} finally {
+			adminLoading = false;
+			setTimeout(() => adminMessage = '', 3000);
+		}
+	}
 
 	async function fetchMaintenanceStatus() {
 		try {
@@ -280,6 +338,59 @@
 			{#if maintenanceMessage}
 				<div class="mt-3 p-3 rounded-xl bg-[var(--fv-violet)]/10 border border-[var(--fv-violet)]/20">
 					<p class="text-xs text-[var(--fv-violet-light)]">{maintenanceMessage}</p>
+				</div>
+			{/if}
+		</div>
+
+		<!-- Admin Management -->
+		<div class="fv-glass p-6 mb-6">
+			<h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-violet-light)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+				Administrateurs
+			</h2>
+
+			<div class="space-y-2 mb-4">
+				{#each adminEmails as email}
+					<div class="flex items-center justify-between p-3 rounded-xl bg-white/5">
+						<div class="flex items-center gap-3">
+							<div class="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--fv-violet)] to-[var(--fv-rose)] flex items-center justify-center text-xs font-bold text-white">
+								{email.charAt(0).toUpperCase()}
+							</div>
+							<div>
+								<p class="text-sm text-white">{email}</p>
+								{#if email === 'fyxxfn@gmail.com'}
+									<p class="text-[9px] text-[var(--fv-gold)]">Propriétaire</p>
+								{/if}
+							</div>
+						</div>
+						{#if email !== 'fyxxfn@gmail.com'}
+							<button onclick={() => removeAdmin(email)} class="text-xs text-[var(--fv-danger)] hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-[var(--fv-danger)]/10">
+								Retirer
+							</button>
+						{/if}
+					</div>
+				{/each}
+			</div>
+
+			<div class="flex gap-2">
+				<input
+					type="email"
+					bind:value={newAdminEmail}
+					placeholder="email@exemple.com"
+					class="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-[var(--fv-ash)] focus:outline-none focus:border-[var(--fv-violet)]/50"
+				/>
+				<button
+					onclick={addAdmin}
+					disabled={adminLoading || !newAdminEmail.trim()}
+					class="px-5 py-2.5 rounded-xl bg-[var(--fv-violet)] text-white text-sm font-semibold hover:bg-[var(--fv-violet)]/80 disabled:opacity-40 transition-all"
+				>
+					Ajouter
+				</button>
+			</div>
+
+			{#if adminMessage}
+				<div class="mt-3 p-2 rounded-lg bg-[var(--fv-violet)]/10">
+					<p class="text-xs text-[var(--fv-violet-light)]">{adminMessage}</p>
 				</div>
 			{/if}
 		</div>

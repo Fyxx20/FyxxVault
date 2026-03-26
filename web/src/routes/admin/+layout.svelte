@@ -14,15 +14,30 @@
 
 	const currentPath = $derived($page.url.pathname);
 
-	// Auth guard: only fyxxfn@gmail.com
+	// Auth guard: check against admin list from API
 	$effect(() => {
 		if (!auth.loading) {
-			if (!auth.isAuthenticated || auth.user?.email !== 'fyxxfn@gmail.com') {
+			if (!auth.isAuthenticated) {
 				goto('/');
 			} else {
-				authorized = true;
+				// Check admin status via maintenance API (returns admins list)
+				fetch('/api/admin/maintenance')
+					.then(r => r.json())
+					.then(data => {
+						const admins: string[] = data.admins ?? ['fyxxfn@gmail.com'];
+						if (admins.includes(auth.user?.email ?? '')) {
+							authorized = true;
+						} else {
+							goto('/');
+						}
+						checking = false;
+					})
+					.catch(() => {
+						// Fallback to owner only
+						authorized = auth.user?.email === 'fyxxfn@gmail.com';
+						checking = false;
+					});
 			}
-			checking = false;
 		}
 	});
 

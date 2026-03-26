@@ -4,10 +4,20 @@ import { env } from '$env/dynamic/private';
 import { env as pubEnv } from '$env/dynamic/public';
 import type { RequestHandler } from './$types';
 
-const ADMIN_EMAIL = 'fyxxfn@gmail.com';
-
 function getSupabaseAdmin() {
 	return createClient(pubEnv.PUBLIC_SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!);
+}
+
+async function getAdminEmails(supabaseAdmin: ReturnType<typeof createClient>): Promise<string[]> {
+	try {
+		const { data } = await supabaseAdmin
+			.from('platform_settings')
+			.select('value')
+			.eq('key', 'admin_emails')
+			.single();
+		if (data?.value) return JSON.parse(data.value);
+	} catch {}
+	return ['fyxxfn@gmail.com'];
 }
 
 async function verifyAdmin(request: Request, supabaseAdmin: ReturnType<typeof createClient>): Promise<boolean> {
@@ -16,30 +26,30 @@ async function verifyAdmin(request: Request, supabaseAdmin: ReturnType<typeof cr
 
 	const token = authHeader.slice(7);
 	const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-	if (error || !user || user.email !== ADMIN_EMAIL) return false;
+	if (error || !user?.email) return false;
 
-	return true;
+	const admins = await getAdminEmails(supabaseAdmin);
+	return admins.includes(user.email);
 }
 
 export const GET: RequestHandler = async () => {
 	const supabaseAdmin = getSupabaseAdmin();
 
-	// Allow anyone to check maintenance status (needed by vault layout)
 	try {
-		const { data, error } = await supabaseAdmin
+		const { data: maintenanceData } = await supabaseAdmin
 			.from('platform_settings')
 			.select('value')
 			.eq('key', 'maintenance_mode')
 			.single();
 
-		if (error) {
-			// Table may not exist yet — default to off
-			return json({ maintenance: false });
-		}
+		const admins = await getAdminEmails(supabaseAdmin);
 
-		return json({ maintenance: data.value === 'true' });
+		return json({
+			maintenance: maintenanceData?.value === 'true',
+			admins
+		});
 	} catch {
-		return json({ maintenance: false });
+		return json({ maintenance: false, admins: ['fyxxfn@gmail.com'] });
 	}
 };
 
@@ -52,8 +62,25 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	try {
 		const body = await request.json();
-		const enabled = body.enabled === true;
 
+		// Handle admin_emails update
+		if (body.admin_emails && Array.isArray(body.admin_emails)) {
+			// Ensure owner is always included
+			const emails = body.admin_emails as string[];
+			if (!emails.includes('fyxxfn@gmail.com')) emails.unshift('fyxxfn@gmail.com');
+
+			await supabaseAdmin
+				.from('platform_settings')
+				.upsert(
+					{ key: 'admin_emails', value: JSON.stringify(emails), updated_at: new Date().toISOString() },
+					{ onConflict: 'key' }
+				);
+
+			return json({ success: true, admins: emails });
+		}
+
+		// Handle maintenance toggle
+		const enabled = body.enabled === true;
 		const { error } = await supabaseAdmin
 			.from('platform_settings')
 			.upsert(

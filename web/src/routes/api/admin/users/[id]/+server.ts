@@ -173,9 +173,25 @@ export const PATCH: RequestHandler = async ({ request, params }) => {
 			}
 		}
 
-		const { error } = await supabaseAdmin
+		// Try update first, then insert if profile doesn't exist
+		const { data: existing } = await supabaseAdmin
 			.from('profiles')
-			.upsert({ id: userId, ...updates }, { onConflict: 'id' });
+			.select('id')
+			.eq('id', userId)
+			.single();
+
+		let error;
+		if (existing) {
+			({ error } = await supabaseAdmin
+				.from('profiles')
+				.update(updates)
+				.eq('id', userId));
+		} else {
+			// Profile doesn't exist yet - create minimal one
+			({ error } = await supabaseAdmin
+				.from('profiles')
+				.insert({ id: userId, ...updates, wrapped_vek: '', vek_salt: '', vek_rounds: 210000 }));
+		}
 
 		if (error) {
 			return json({ error: error.message }, { status: 500 });
