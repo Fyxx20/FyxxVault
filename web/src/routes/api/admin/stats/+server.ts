@@ -3,9 +3,10 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/private';
 import { env as pubEnv } from '$env/dynamic/public';
+import { checkRateLimit } from '$lib/rateLimit';
 import type { RequestHandler } from './$types';
 
-const ADMIN_EMAIL = 'fyxxfn@gmail.com';
+const ADMIN_EMAILS = (env.ADMIN_EMAILS || 'fyxxfn@gmail.com').split(',').map(e => e.trim().toLowerCase());
 
 function getAdminClients() {
 	const supabaseAdmin = createClient(pubEnv.PUBLIC_SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -13,21 +14,26 @@ function getAdminClients() {
 	return { supabaseAdmin, stripe };
 }
 
-async function verifyAdmin(request: Request, supabaseAdmin: ReturnType<typeof createClient>): Promise<boolean> {
+async function verifyAdmin(request: Request, supabaseAdmin: ReturnType<typeof createClient>): Promise<{ valid: boolean; email?: string }> {
 	const authHeader = request.headers.get('Authorization');
-	if (!authHeader?.startsWith('Bearer ')) return false;
+	if (!authHeader?.startsWith('Bearer ')) return { valid: false };
 
 	const token = authHeader.slice(7);
 	const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-	if (error || !user || user.email !== ADMIN_EMAIL) return false;
+	if (error || !user || !ADMIN_EMAILS.includes(user.email?.toLowerCase() || '')) return { valid: false };
 
-	return true;
+	return { valid: true, email: user.email || undefined };
 }
 
 export const GET: RequestHandler = async ({ request }) => {
+	const clientIP = request.headers.get('x-forwarded-for') || 'unknown';
+	if (!checkRateLimit(`admin:${clientIP}`, 100, 60000)) {
+		return json({ error: 'Too many requests' }, { status: 429 });
+	}
+
 	const { supabaseAdmin, stripe } = getAdminClients();
 
-	if (!await verifyAdmin(request, supabaseAdmin)) {
+	if (!(await verifyAdmin(request, supabaseAdmin)).valid) {
 		return json({ error: 'Non autorise' }, { status: 403 });
 	}
 

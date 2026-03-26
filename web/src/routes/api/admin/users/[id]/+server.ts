@@ -3,9 +3,11 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/private';
 import { env as pubEnv } from '$env/dynamic/public';
+import { checkRateLimit } from '$lib/rateLimit';
+import { logAdminAction } from '$lib/adminAudit';
 import type { RequestHandler } from './$types';
 
-const ADMIN_EMAIL = 'fyxxfn@gmail.com';
+const ADMIN_EMAILS = (env.ADMIN_EMAILS || 'fyxxfn@gmail.com').split(',').map(e => e.trim().toLowerCase());
 
 function getSupabaseAdmin() {
 	return createClient(pubEnv.PUBLIC_SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -15,21 +17,26 @@ function getStripe() {
 	return new Stripe(env.STRIPE_SECRET_KEY!);
 }
 
-async function verifyAdmin(request: Request, supabaseAdmin: ReturnType<typeof createClient>): Promise<boolean> {
+async function verifyAdmin(request: Request, supabaseAdmin: ReturnType<typeof createClient>): Promise<{ valid: boolean; email?: string }> {
 	const authHeader = request.headers.get('Authorization');
-	if (!authHeader?.startsWith('Bearer ')) return false;
+	if (!authHeader?.startsWith('Bearer ')) return { valid: false };
 
 	const token = authHeader.slice(7);
 	const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-	if (error || !user || user.email !== ADMIN_EMAIL) return false;
+	if (error || !user || !ADMIN_EMAILS.includes(user.email?.toLowerCase() || '')) return { valid: false };
 
-	return true;
+	return { valid: true, email: user.email || undefined };
 }
 
 export const GET: RequestHandler = async ({ request, params }) => {
+	const clientIP = request.headers.get('x-forwarded-for') || 'unknown';
+	if (!checkRateLimit(`admin:${clientIP}`, 100, 60000)) {
+		return json({ error: 'Too many requests' }, { status: 429 });
+	}
+
 	const supabaseAdmin = getSupabaseAdmin();
 
-	if (!await verifyAdmin(request, supabaseAdmin)) {
+	if (!(await verifyAdmin(request, supabaseAdmin)).valid) {
 		return json({ error: 'Non autorise' }, { status: 403 });
 	}
 
@@ -125,11 +132,18 @@ export const GET: RequestHandler = async ({ request, params }) => {
 };
 
 export const PATCH: RequestHandler = async ({ request, params }) => {
+	const clientIP = request.headers.get('x-forwarded-for') || 'unknown';
+	if (!checkRateLimit(`admin:${clientIP}`, 100, 60000)) {
+		return json({ error: 'Too many requests' }, { status: 429 });
+	}
+
 	const supabaseAdmin = getSupabaseAdmin();
 
-	if (!await verifyAdmin(request, supabaseAdmin)) {
+	const adminAuth = await verifyAdmin(request, supabaseAdmin);
+	if (!adminAuth.valid) {
 		return json({ error: 'Non autorise' }, { status: 403 });
 	}
+	const adminEmail = adminAuth.email || 'unknown';
 
 	try {
 		const userId = params.id;
@@ -152,6 +166,7 @@ export const PATCH: RequestHandler = async ({ request, params }) => {
 				return json({ error: resetError.message }, { status: 500 });
 			}
 
+			await logAdminAction(supabaseAdmin, adminEmail, 'password_reset', userId, null, clientIP);
 			return json({ success: true, message: 'Lien de recuperation genere', link: data });
 		}
 
@@ -197,6 +212,14 @@ export const PATCH: RequestHandler = async ({ request, params }) => {
 			return json({ error: error.message }, { status: 500 });
 		}
 
+		// Audit log for profile changes
+		if (typeof body.is_pro === 'boolean') {
+			await logAdminAction(supabaseAdmin, adminEmail, 'toggle_pro', userId, { new_status: body.is_pro }, clientIP);
+		}
+		if (body.plan) {
+			await logAdminAction(supabaseAdmin, adminEmail, 'change_plan', userId, { new_plan: body.plan }, clientIP);
+		}
+
 		return json({ success: true });
 	} catch (err: any) {
 		return json({ error: err.message }, { status: 500 });
@@ -204,14 +227,25 @@ export const PATCH: RequestHandler = async ({ request, params }) => {
 };
 
 export const DELETE: RequestHandler = async ({ request, params }) => {
+	const clientIP = request.headers.get('x-forwarded-for') || 'unknown';
+	if (!checkRateLimit(`admin:${clientIP}`, 100, 60000)) {
+		return json({ error: 'Too many requests' }, { status: 429 });
+	}
+
 	const supabaseAdmin = getSupabaseAdmin();
 
-	if (!await verifyAdmin(request, supabaseAdmin)) {
+	const adminAuth = await verifyAdmin(request, supabaseAdmin);
+	if (!adminAuth.valid) {
 		return json({ error: 'Non autorise' }, { status: 403 });
 	}
+	const adminEmail = adminAuth.email || 'unknown';
 
 	try {
 		const userId = params.id;
+
+		// Get user email before deletion for audit log
+		const { data: { user: targetUser } } = await supabaseAdmin.auth.admin.getUserById(userId);
+		const deletedEmail = targetUser?.email || 'unknown';
 
 		// Delete vault items
 		await supabaseAdmin.from('vault_items').delete().eq('user_id', userId);
@@ -228,6 +262,7 @@ export const DELETE: RequestHandler = async ({ request, params }) => {
 			return json({ error: error.message }, { status: 500 });
 		}
 
+		await logAdminAction(supabaseAdmin, adminEmail, 'delete_user', userId, { email: deletedEmail }, clientIP);
 		return json({ success: true });
 	} catch (err: any) {
 		return json({ error: err.message }, { status: 500 });

@@ -10,6 +10,10 @@
 	const vault = getVaultState();
 	const auth = getAuthState();
 
+	// Free user limit
+	const FREE_LIMIT = 5;
+	const canAdd = $derived(auth.isPro || vault.entries.length < FREE_LIMIT);
+
 	let showPassword = $state<Record<string, boolean>>({});
 	let copiedField = $state<string | null>(null);
 	let showDetail = $state(false);
@@ -250,12 +254,12 @@
 				</svg>
 				Importer
 			</a>
-			<a href="/vault/add" class="fv-btn fv-btn-primary !py-2.5 !px-5 text-sm inline-flex items-center gap-2 w-fit">
+			<a href={canAdd ? '/vault/add' : '/vault/settings'} class="fv-btn {canAdd ? 'fv-btn-primary' : 'fv-btn-gold'} !py-2.5 !px-5 text-sm inline-flex items-center gap-2 w-fit">
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
 					<line x1="12" y1="5" x2="12" y2="19"/>
 					<line x1="5" y1="12" x2="19" y2="12"/>
 				</svg>
-				Ajouter
+				{canAdd ? 'Ajouter' : 'Passer à Pro'}
 			</a>
 		</div>
 	</div>
@@ -782,9 +786,15 @@
 </div>
 
 <!-- FAB on mobile -->
-<a href="/vault/add" class="lg:hidden fixed bottom-20 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-r from-[var(--fv-cyan)] to-[var(--fv-violet)] flex items-center justify-center shadow-lg shadow-[var(--fv-cyan)]/30 hover:scale-105 transition-transform">
-	<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-		<line x1="12" y1="5" x2="12" y2="19"/>
-		<line x1="5" y1="12" x2="19" y2="12"/>
-	</svg>
+<a href={canAdd ? '/vault/add' : '/vault/settings'} class="lg:hidden fixed bottom-20 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-r {canAdd ? 'from-[var(--fv-cyan)] to-[var(--fv-violet)] shadow-[var(--fv-cyan)]/30' : 'from-[var(--fv-gold)] to-[var(--fv-gold-dark,#b8860b)] shadow-[var(--fv-gold)]/30'} flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+	{#if canAdd}
+		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+			<line x1="12" y1="5" x2="12" y2="19"/>
+			<line x1="5" y1="12" x2="19" y2="12"/>
+		</svg>
+	{:else}
+		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+			<path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26z"/>
+		</svg>
+	{/if}
 </a>

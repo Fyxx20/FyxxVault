@@ -543,6 +543,13 @@
 "onboarding.sync.description" = "End-to-end encrypted synchronization via the cloud";
 "onboarding.panic.title" = "Panic Mode";
 "onboarding.panic.description" = "An emergency password wipes everything instantly";
+"onboarding.aes.badge" = "MILITARY GRADE";
+"onboarding.mfa.badge" = "TOTP / 2FA";
+"onboarding.sync.badge" = "E2E ENCRYPTED";
+"onboarding.panic.badge" = "EMERGENCY";
+"onboarding.continue" = "Continue";
+"onboarding.start" = "Get Started";
+"onboarding.skip" = "Skip";
 
 /* Missing keys */
 "auth.divider.or" = "or";

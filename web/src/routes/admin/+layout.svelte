@@ -33,8 +33,8 @@
 						checking = false;
 					})
 					.catch(() => {
-						// Fallback to owner only
-						authorized = auth.user?.email === 'fyxxfn@gmail.com';
+						// Fallback: deny access if API check fails
+						authorized = false; goto('/');
 						checking = false;
 					});
 			}

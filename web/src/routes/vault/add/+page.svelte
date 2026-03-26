@@ -158,13 +158,13 @@
 	</div>
 
 	{#if !canAdd}
-		<div class="fv-glass p-10 text-center">
+		<div class="fv-glass p-10 text-center" style="border: 1px solid var(--fv-gold);">
 			<div class="w-20 h-20 rounded-full bg-[var(--fv-gold)]/10 flex items-center justify-center mx-auto mb-5">
 				<span class="text-4xl">👑</span>
 			</div>
-			<h2 class="text-xl font-bold text-white mb-2">Limite atteinte</h2>
-			<p class="text-sm text-[var(--fv-smoke)] mb-6">Tu as atteint la limite de {FREE_LIMIT} comptes du plan gratuit. Passe à Pro pour des comptes illimités.</p>
-			<a href="/vault/settings" class="fv-btn fv-btn-gold">Passer à Pro — 4,99€/mois</a>
+			<h2 class="text-xl font-bold" style="color: var(--fv-gold);">Limite atteinte (5/5)</h2>
+			<p class="text-sm text-[var(--fv-smoke)] mb-6 mt-2">Passe à FyxxVault Pro pour des comptes illimités</p>
+			<a href="/vault/settings" class="fv-btn fv-btn-gold" style="display: inline-block;">Passer à Pro — 4,99€/mois</a>
 		</div>
 	{:else if success}
 		<div class="fv-glass p-8 text-center fv-glow-cyan">

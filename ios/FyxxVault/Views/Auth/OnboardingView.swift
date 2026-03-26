@@ -11,28 +11,28 @@ struct OnboardingView: View {
             title: String(localized: "onboarding.aes.title"),
             description: String(localized: "onboarding.aes.description"),
             color: FVColor.cyan,
-            badge: "MILITARY GRADE"
+            badge: String(localized: "onboarding.aes.badge")
         ),
         (
             icon: "key.horizontal.fill",
             title: String(localized: "onboarding.mfa.title"),
             description: String(localized: "onboarding.mfa.description"),
             color: FVColor.violet,
-            badge: "TOTP / 2FA"
+            badge: String(localized: "onboarding.mfa.badge")
         ),
         (
             icon: "cloud.fill",
             title: String(localized: "onboarding.sync.title"),
             description: String(localized: "onboarding.sync.description"),
             color: FVColor.success,
-            badge: "E2E ENCRYPTED"
+            badge: String(localized: "onboarding.sync.badge")
         ),
         (
             icon: "eye.slash.fill",
             title: String(localized: "onboarding.panic.title"),
             description: String(localized: "onboarding.panic.description"),
             color: FVColor.danger,
-            badge: "EMERGENCY"
+            badge: String(localized: "onboarding.panic.badge")
         )
     ]
 
@@ -81,7 +81,7 @@ struct OnboardingView: View {
 
                 // CTA button
                 if page < features.count - 1 {
-                    FVButton(title: "Continuer", icon: "arrow.right") {
+                    FVButton(title: String(localized: "onboarding.continue"), icon: "arrow.right") {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                             page += 1
                         }
@@ -89,7 +89,7 @@ struct OnboardingView: View {
                     .padding(.horizontal, 32)
                     .transition(.asymmetric(insertion: .opacity, removal: .opacity))
                 } else {
-                    FVButton(title: "Commencer", icon: "lock.shield.fill", style: .gold) {
+                    FVButton(title: String(localized: "onboarding.start"), icon: "lock.shield.fill", style: .gold) {
                         fvHaptic(.success)
                         authManager.completeOnboarding()
                     }
@@ -107,7 +107,7 @@ struct OnboardingView: View {
                     fvHaptic(.light)
                     authManager.completeOnboarding()
                 } label: {
-                    Text("Passer")
+                    Text(String(localized: "onboarding.skip"))
                         .font(FVFont.body(13))
                         .foregroundStyle(FVColor.smoke)
                         .padding(.horizontal, 16)
