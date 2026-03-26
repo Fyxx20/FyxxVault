@@ -224,7 +224,7 @@
 			<div class="relative z-10 mx-5 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"></div>
 
 			<!-- Navigation -->
-			<nav class="relative z-10 flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
+			<nav class="relative z-10 flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-1" style="scrollbar-width: none;">
 				{#each navItems as item}
 					<a
 						href={item.path}
@@ -277,13 +277,13 @@
 
 			<!-- Upgrade Pro (hidden if already Pro) -->
 			{#if !auth.isPro}
-			<div class="relative z-10 px-3 py-3">
-				<div class="pro-upsell-card p-4 rounded-2xl">
+			<div class="relative z-10 px-3 py-2">
+				<div class="pro-upsell-card p-3 rounded-xl">
 					<div class="flex items-center gap-2 mb-2">
 						<span class="text-lg">&#128081;</span>
 						<span class="text-xs font-bold text-[var(--fv-gold)]">FyxxVault Pro</span>
 					</div>
-					<p class="text-[10px] text-[var(--fv-smoke)] mb-3 leading-relaxed">Comptes illimites, Dark Web, emails masques</p>
+					<p class="text-[10px] text-[var(--fv-smoke)] mb-2 leading-relaxed">Comptes illimites, Dark Web, emails masques</p>
 					<button
 						onclick={handleSidebarCheckout}
 						class="block w-full text-center px-3 py-2.5 rounded-xl bg-gradient-to-r from-[var(--fv-gold)] to-[var(--fv-gold-light)] text-[#1a1a2e] text-xs font-bold transition-all duration-200 hover:shadow-lg hover:shadow-[var(--fv-gold)]/20 hover:translate-y-[-1px]"
@@ -295,8 +295,8 @@
 			{/if}
 
 			<!-- User section -->
-			<div class="relative z-10 px-3 py-4">
-				<div class="user-section-card p-3 rounded-2xl mb-2">
+			<div class="relative z-10 px-3 py-2">
+				<div class="user-section-card p-2.5 rounded-xl mb-1">
 					<div class="flex items-center gap-3">
 						<div class="user-avatar w-9 h-9 rounded-full bg-gradient-to-br from-[var(--fv-cyan)] to-[var(--fv-violet)] flex items-center justify-center text-xs font-bold text-white">
 							{auth.user?.email?.charAt(0).toUpperCase() ?? '?'}
@@ -344,7 +344,7 @@
 				</div>
 			</header>
 
-			<main class="p-4 lg:p-8 max-w-[1400px] mx-auto">
+			<main class="p-4 lg:px-8 lg:py-6 max-w-[1400px]">
 				{@render children()}
 			</main>
 		</div>
