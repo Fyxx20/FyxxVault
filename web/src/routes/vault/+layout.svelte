@@ -185,7 +185,7 @@
 {:else if !auth.isUnlocked}
 	{@render children()}
 {:else}
-	<div class="min-h-screen bg-[var(--fv-abyss)] flex">
+	<div class="min-h-screen bg-[var(--fv-abyss)]">
 		<!-- Mobile sidebar overlay -->
 		{#if sidebarOpen}
 			<button
@@ -323,7 +323,7 @@
 		</aside>
 
 		<!-- Main content -->
-		<div class="flex-1 min-h-screen lg:ml-[260px] pb-16 lg:pb-0">
+		<div class="min-h-screen lg:ml-[260px] pb-16 lg:pb-0">
 			<!-- Mobile header -->
 			<header class="lg:hidden sticky top-0 z-30 bg-[var(--fv-abyss)]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 py-3 flex items-center gap-3">
 				<button onclick={() => sidebarOpen = true} class="p-2 rounded-lg hover:bg-white/5 text-white transition-colors duration-200">
@@ -344,7 +344,7 @@
 				</div>
 			</header>
 
-			<main class="p-4 lg:p-8">
+			<main class="p-4 lg:p-8 max-w-[1400px] mx-auto">
 				{@render children()}
 			</main>
 		</div>
