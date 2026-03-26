@@ -533,3 +533,17 @@
 "vault.warning.duplicate.short" = "Mot de passe réutilisé";
 "vault.warning.insecure.url" = "⚠️ Cette URL utilise HTTP. Préfère HTTPS pour une connexion sécurisée.";
 "vault.warning.reused.password" = "Mot de passe réutilisé détecté";
+
+/* Onboarding */
+"onboarding.aes.title" = "Chiffrement AES-256";
+"onboarding.aes.description" = "Tes données sont chiffrées localement avec un standard militaire";
+"onboarding.mfa.title" = "Authentification MFA";
+"onboarding.mfa.description" = "Double protection avec codes TOTP pour chaque compte";
+"onboarding.sync.title" = "Sync Zero-Knowledge";
+"onboarding.sync.description" = "Synchronisation chiffrée de bout en bout via le cloud";
+"onboarding.panic.title" = "Mode Panic";
+"onboarding.panic.description" = "Un mot de passe d'urgence efface tout instantanément";
+
+/* Missing keys */
+"auth.divider.or" = "ou";
+"vault.bulk.count %lld" = "%lld entrée(s)";

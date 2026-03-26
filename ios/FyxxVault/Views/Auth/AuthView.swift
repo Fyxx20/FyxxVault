@@ -195,7 +195,7 @@ struct AuthView: View {
             // Subtle divider
             HStack(spacing: 12) {
                 Rectangle().fill(Color.white.opacity(0.06)).frame(height: 1)
-                Text("ou")
+                Text(String(localized: "auth.divider.or"))
                     .font(FVFont.caption(10))
                     .foregroundStyle(FVColor.smoke)
                 Rectangle().fill(Color.white.opacity(0.06)).frame(height: 1)

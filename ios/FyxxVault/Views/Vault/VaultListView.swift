@@ -147,7 +147,7 @@ struct VaultListView: View {
                                 query = ""
                                 isSearchFocused = false
                             } label: {
-                                Text("Annuler")
+                                Text(String(localized: "vault.action.cancel"))
                                     .font(FVFont.caption(12))
                                     .foregroundStyle(FVColor.cyan)
                             }
@@ -370,7 +370,7 @@ struct VaultListView: View {
         }
         .sheet(isPresented: $showBulkDeleteConfirm) {
             FVDeleteConfirmSheet(
-                title: "\(selectedEntryIDs.count) entrée(s)",
+                title: String(format: NSLocalizedString("vault.bulk.count %lld", comment: ""), selectedEntryIDs.count),
                 icon: "trash.fill",
                 message: String(localized: "vault.dialog.bulk.delete.message"),
                 onCancel: { showBulkDeleteConfirm = false },

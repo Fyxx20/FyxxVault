@@ -8,29 +8,29 @@ struct OnboardingView: View {
     private let features: [(icon: String, title: String, description: String, color: Color, badge: String)] = [
         (
             icon: "shield.lefthalf.filled",
-            title: "Chiffrement AES-256",
-            description: "Tes données sont chiffrées localement avec un standard militaire",
+            title: String(localized: "onboarding.aes.title"),
+            description: String(localized: "onboarding.aes.description"),
             color: FVColor.cyan,
             badge: "MILITARY GRADE"
         ),
         (
             icon: "key.horizontal.fill",
-            title: "Authentification MFA",
-            description: "Double protection avec codes TOTP pour chaque compte",
+            title: String(localized: "onboarding.mfa.title"),
+            description: String(localized: "onboarding.mfa.description"),
             color: FVColor.violet,
             badge: "TOTP / 2FA"
         ),
         (
             icon: "cloud.fill",
-            title: "Sync Zero-Knowledge",
-            description: "Synchronisation chiffrée de bout en bout via le cloud",
+            title: String(localized: "onboarding.sync.title"),
+            description: String(localized: "onboarding.sync.description"),
             color: FVColor.success,
             badge: "E2E ENCRYPTED"
         ),
         (
             icon: "eye.slash.fill",
-            title: "Mode Panic",
-            description: "Un mot de passe d'urgence efface tout instantanément",
+            title: String(localized: "onboarding.panic.title"),
+            description: String(localized: "onboarding.panic.description"),
             color: FVColor.danger,
             badge: "EMERGENCY"
         )
