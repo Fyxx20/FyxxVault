@@ -115,6 +115,20 @@
 				{/each}
 			</nav>
 
+			<!-- Upgrade Pro -->
+			<div class="px-3 pb-3">
+				<div class="p-4 rounded-2xl bg-gradient-to-br from-[var(--fv-gold)]/10 to-[var(--fv-gold)]/5 border border-[var(--fv-gold)]/20">
+					<div class="flex items-center gap-2 mb-2">
+						<span class="text-lg">👑</span>
+						<span class="text-xs font-bold text-[var(--fv-gold)]">FyxxVault Pro</span>
+					</div>
+					<p class="text-[10px] text-[var(--fv-smoke)] mb-3 leading-relaxed">Comptes illimités, Dark Web, emails masqués</p>
+					<a href="/vault/settings" class="block w-full text-center px-3 py-2 rounded-xl bg-gradient-to-r from-[var(--fv-gold)] to-[var(--fv-gold-light)] text-[#1a1a2e] text-xs font-bold hover:shadow-lg hover:shadow-[var(--fv-gold)]/20 transition-all">
+						4,99€/mois — Essai gratuit
+					</a>
+				</div>
+			</div>
+
 			<!-- User section -->
 			<div class="px-4 py-4 border-t border-white/5">
 				<div class="flex items-center gap-3 px-2 mb-3">
