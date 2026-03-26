@@ -88,19 +88,7 @@
 	</div>
 {/if}
 
-<!-- Custom Cursor -->
-{#if isDesktop}
-	<div
-		class="custom-cursor-dot"
-		style="left: {cursorX}px; top: {cursorY}px; opacity: {cursorVisible ? 1 : 0}"
-	></div>
-	<div
-		class="custom-cursor-ring"
-		class:cursor-hover={cursorHover}
-		class:cursor-cta={cursorCta}
-		style="left: {ringX}px; top: {ringY}px; opacity: {cursorVisible ? 1 : 0}"
-	></div>
-{/if}
+<!-- Custom cursor removed -->
 
 <!-- Page content with route transition -->
 {#key $page.url.pathname}
