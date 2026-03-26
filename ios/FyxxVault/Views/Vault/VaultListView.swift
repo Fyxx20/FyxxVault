@@ -358,14 +358,24 @@ struct VaultListView: View {
         .sheet(isPresented: $showAddSheet) { AddVaultEntryView(vaultStore: vaultStore) }
         .sheet(isPresented: $showPaywall) { PaywallView(subscriptionService: subscriptionService) }
         .sheet(item: $editingEntry) { entry in EditVaultEntryView(vaultStore: vaultStore, entry: entry) }
-        .confirmationDialog(String(localized: "vault.dialog.delete.title"), isPresented: Binding(get: { pendingDeleteEntry != nil }, set: { if !$0 { pendingDeleteEntry = nil } }), titleVisibility: .visible) {
-            Button(String(localized: "vault.action.delete"), role: .destructive) { if let e = pendingDeleteEntry { delete(entry: e) }; pendingDeleteEntry = nil }
-            Button(String(localized: "vault.action.cancel"), role: .cancel) { pendingDeleteEntry = nil }
-        } message: { Text(String(localized: "vault.dialog.delete.message")) }
-        .confirmationDialog(String(localized: "vault.dialog.bulk.delete.title"), isPresented: $showBulkDeleteConfirm, titleVisibility: .visible) {
-            Button(String(localized: "vault.action.delete"), role: .destructive) { vaultStore.bulkMoveToTrash(entryIDs: selectedEntryIDs); selectedEntryIDs.removeAll(); selectionMode = false }
-            Button(String(localized: "vault.action.cancel"), role: .cancel) {}
-        } message: { Text(String(localized: "vault.dialog.bulk.delete.message")) }
+        .sheet(isPresented: Binding(get: { pendingDeleteEntry != nil }, set: { if !$0 { pendingDeleteEntry = nil } })) {
+            FVDeleteConfirmSheet(
+                title: pendingDeleteEntry?.title ?? "",
+                icon: pendingDeleteEntry?.category.iconName ?? "trash",
+                message: String(localized: "vault.dialog.delete.message"),
+                onCancel: { pendingDeleteEntry = nil },
+                onConfirm: { if let e = pendingDeleteEntry { delete(entry: e) }; pendingDeleteEntry = nil }
+            )
+        }
+        .sheet(isPresented: $showBulkDeleteConfirm) {
+            FVDeleteConfirmSheet(
+                title: "\(selectedEntryIDs.count) entrée(s)",
+                icon: "trash.fill",
+                message: String(localized: "vault.dialog.bulk.delete.message"),
+                onCancel: { showBulkDeleteConfirm = false },
+                onConfirm: { vaultStore.bulkMoveToTrash(entryIDs: selectedEntryIDs); selectedEntryIDs.removeAll(); selectionMode = false; showBulkDeleteConfirm = false }
+            )
+        }
         .alert(String(localized: "vault.dialog.tag.title"), isPresented: $showBulkTagPrompt) {
             TextField(String(localized: "vault.dialog.tag.placeholder"), text: $bulkTagText)
             Button(String(localized: "vault.action.apply")) { vaultStore.bulkApplyTag(entryIDs: selectedEntryIDs, tag: bulkTagText); bulkTagText = "" }
