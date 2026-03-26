@@ -147,7 +147,6 @@ struct VaultSettingsView: View {
                         title: String(localized: "settings.section.cloud_sync"),
                         icon: "cloud.fill",
                         color: FVColor.violet,
-                        showProBadge: true,
                         isExpanded: $cloudSyncExpanded
                     ) { cloudSyncContent }
 
@@ -436,11 +435,7 @@ struct VaultSettingsView: View {
                 .foregroundStyle(FVColor.cyan.opacity(0.8))
         }
         Button(String(localized: "settings.cloud.configure")) {
-            if subscriptionService.isProUser {
-                showCloudSync = true
-            } else {
-                showPaywall = true
-            }
+            showCloudSync = true
         }
         .buttonStyle(FVSettingsButton(tint: FVColor.cyan))
 
