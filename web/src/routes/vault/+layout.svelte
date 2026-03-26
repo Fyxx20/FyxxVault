@@ -9,12 +9,39 @@
 	const auth = getAuthState();
 	let sidebarOpen = $state(false);
 	let lastActivity = $state(Date.now());
+	let maintenanceMode = $state(false);
+	let maintenanceChecked = $state(false);
+
+	const ADMIN_EMAIL = 'fyxxfn@gmail.com';
 
 	// Initialize auth listener
 	initAuth();
 
+	// Check maintenance mode
+	$effect(() => {
+		if (auth.isAuthenticated) {
+			checkMaintenance();
+		}
+	});
+
+	async function checkMaintenance() {
+		try {
+			const res = await fetch('/api/admin/maintenance');
+			if (res.ok) {
+				const data = await res.json();
+				maintenanceMode = data.maintenance === true;
+			}
+		} catch {
+			maintenanceMode = false;
+		} finally {
+			maintenanceChecked = true;
+		}
+	}
+
 	// Current path (reactive via store auto-subscription)
 	const currentPath = $derived($page.url.pathname);
+	const isAdmin = $derived(auth.user?.email === ADMIN_EMAIL);
+	const showMaintenance = $derived(maintenanceMode && !isAdmin && maintenanceChecked);
 
 	// Auth guards
 	$effect(() => {
@@ -114,6 +141,32 @@
 {#if auth.loading}
 	<div class="min-h-screen bg-[var(--fv-abyss)] flex items-center justify-center">
 		<div class="w-10 h-10 border-2 border-[var(--fv-cyan)]/30 border-t-[var(--fv-cyan)] rounded-full animate-spin"></div>
+	</div>
+{:else if showMaintenance}
+	<div class="min-h-screen bg-[var(--fv-abyss)] flex items-center justify-center p-6">
+		<div class="max-w-md w-full text-center">
+			<div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-[var(--fv-warning)]/10 border border-[var(--fv-warning)]/20 flex items-center justify-center">
+				<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--fv-warning)" stroke-width="1.5">
+					<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+				</svg>
+			</div>
+			<h1 class="text-2xl font-extrabold text-white mb-3">Maintenance en cours</h1>
+			<p class="text-sm text-[var(--fv-smoke)] mb-6 leading-relaxed">
+				FyxxVault est temporairement indisponible pour des operations de maintenance.
+				Vos donnees sont en securite. Veuillez reessayer dans quelques instants.
+			</p>
+			<div class="fv-glass p-4 rounded-2xl">
+				<p class="text-xs text-[var(--fv-ash)]">
+					Si le probleme persiste, contactez l'administrateur.
+				</p>
+			</div>
+			<button
+				onclick={() => window.location.reload()}
+				class="mt-6 px-6 py-3 rounded-xl bg-[var(--fv-violet)] text-white text-sm font-bold hover:bg-[var(--fv-violet-light)] transition-all"
+			>
+				Reessayer
+			</button>
+		</div>
 	</div>
 {:else if !auth.isUnlocked}
 	{@render children()}

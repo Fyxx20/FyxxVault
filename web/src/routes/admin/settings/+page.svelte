@@ -7,13 +7,59 @@
 	let envStatus = $state<Record<string, boolean>>({});
 	let loading = $state(true);
 	let maintenanceMode = $state(false);
+	let maintenanceLoading = $state(false);
+	let maintenanceMessage = $state('');
 
 	// We check env status by trying a simple admin request
 	$effect(() => {
 		if (auth.session?.access_token) {
 			checkEnvStatus();
+			fetchMaintenanceStatus();
 		}
 	});
+
+	async function fetchMaintenanceStatus() {
+		try {
+			const res = await fetch('/api/admin/maintenance', {
+				headers: { Authorization: `Bearer ${auth.session?.access_token}` }
+			});
+			if (res.ok) {
+				const data = await res.json();
+				maintenanceMode = data.maintenance === true;
+			}
+		} catch {
+			// ignore
+		}
+	}
+
+	async function toggleMaintenance() {
+		maintenanceLoading = true;
+		maintenanceMessage = '';
+		const newValue = !maintenanceMode;
+		try {
+			const res = await fetch('/api/admin/maintenance', {
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${auth.session?.access_token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ enabled: newValue })
+			});
+			if (res.ok) {
+				maintenanceMode = newValue;
+				maintenanceMessage = newValue
+					? 'Mode maintenance active. Les utilisateurs ne peuvent plus acceder a la plateforme.'
+					: 'Mode maintenance desactive. La plateforme est accessible.';
+			} else {
+				maintenanceMessage = 'Erreur lors de la mise a jour du mode maintenance.';
+			}
+		} catch {
+			maintenanceMessage = 'Erreur reseau.';
+		} finally {
+			maintenanceLoading = false;
+			setTimeout(() => { maintenanceMessage = ''; }, 5000);
+		}
+	}
 
 	async function checkEnvStatus() {
 		loading = true;
@@ -217,17 +263,23 @@
 					<p class="text-xs text-[var(--fv-ash)]">Desactive temporairement l'acces a la plateforme pour les utilisateurs</p>
 				</div>
 				<button
-					onclick={() => maintenanceMode = !maintenanceMode}
-					class="relative w-12 h-7 rounded-full transition-all {maintenanceMode ? 'bg-[var(--fv-danger)]' : 'bg-[var(--fv-ash)]'}"
+					onclick={toggleMaintenance}
+					disabled={maintenanceLoading}
+					class="relative w-12 h-7 rounded-full transition-all {maintenanceMode ? 'bg-[var(--fv-danger)]' : 'bg-[var(--fv-ash)]'} {maintenanceLoading ? 'opacity-50 cursor-not-allowed' : ''}"
 				>
 					<span class="absolute top-1 transition-all w-5 h-5 rounded-full bg-white {maintenanceMode ? 'left-6' : 'left-1'}"></span>
 				</button>
 			</div>
 			{#if maintenanceMode}
-				<div class="mt-3 p-3 rounded-xl bg-[var(--fv-warning)]/10 border border-[var(--fv-warning)]/20">
-					<p class="text-xs text-[var(--fv-warning)]">
-						Le mode maintenance n'est pas encore implemente cote serveur. Ce toggle est un placeholder pour une future fonctionnalite.
+				<div class="mt-3 p-3 rounded-xl bg-[var(--fv-danger)]/10 border border-[var(--fv-danger)]/20">
+					<p class="text-xs text-[var(--fv-danger)] font-medium">
+						Mode maintenance actif — Seul l'administrateur (fyxxfn@gmail.com) peut acceder a la plateforme.
 					</p>
+				</div>
+			{/if}
+			{#if maintenanceMessage}
+				<div class="mt-3 p-3 rounded-xl bg-[var(--fv-violet)]/10 border border-[var(--fv-violet)]/20">
+					<p class="text-xs text-[var(--fv-violet-light)]">{maintenanceMessage}</p>
 				</div>
 			{/if}
 		</div>
