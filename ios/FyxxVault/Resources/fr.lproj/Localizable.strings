@@ -189,6 +189,13 @@
 "masked.email.delete.alias.message" = "Cet alias ne redirigera plus les emails.";
 "masked.email.delete.alias.title" = "Supprimer cet alias ?";
 "masked.email.description" = "Protège ta vraie adresse email";
+/* Logout */
+"logout.title" = "Déconnexion";
+"logout.message" = "Tu devras te reconnecter avec ton mot de passe maître.";
+"logout.data.safe" = "Tes données restent chiffrées et sécurisées.";
+"logout.button.confirm" = "Se déconnecter";
+"logout.button.cancel" = "Annuler";
+
 "masked.email.disconnect" = "Déconnecter addy.io";
 "masked.email.empty.subtitle" = "Crée ton premier alias email";
 "masked.email.empty.title" = "Aucun alias";
