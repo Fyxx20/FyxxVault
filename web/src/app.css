@@ -266,11 +266,11 @@ body {
 
 /* Hover lift for cards */
 .fv-hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
 }
 .fv-hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
 /* Crossfade for category transitions */
@@ -283,10 +283,15 @@ body {
   transition: opacity 0.3s ease;
 }
 
-/* Active nav gradient */
+/* Active nav gradient (legacy — kept for compat) */
 .fv-nav-active {
   background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(138, 92, 246, 0.05)) !important;
   border-left: 3px solid var(--fv-cyan);
+}
+
+/* Premium spring easing utility */
+.fv-spring {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Avatar glow ring */

@@ -273,12 +273,17 @@
 
 <div class="max-w-7xl mx-auto">
 	<!-- Header -->
-	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
 		<div>
-			<h1 class="text-2xl font-bold text-white">Coffre-fort</h1>
-			<p class="text-sm text-[var(--fv-smoke)]">{vault.entries.length} élément{vault.entries.length !== 1 ? 's' : ''}</p>
+			<h1 class="vault-title text-3xl font-extrabold text-white tracking-tight">Coffre-fort</h1>
+			<div class="flex items-center gap-3 mt-2">
+				<span class="vault-count-pill">{vault.entries.length} element{vault.entries.length !== 1 ? 's' : ''}</span>
+				{#if !auth.isPro}
+					<span class="text-[10px] text-[var(--fv-ash)]">{vault.entries.length}/{FREE_LIMIT} gratuit</span>
+				{/if}
+			</div>
 		</div>
-		<div class="flex gap-2">
+		<div class="flex gap-3">
 			<a href="/vault/import" class="fv-btn fv-btn-ghost !py-2.5 !px-4 text-sm inline-flex items-center gap-2 w-fit">
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -292,14 +297,14 @@
 					<line x1="12" y1="5" x2="12" y2="19"/>
 					<line x1="5" y1="12" x2="19" y2="12"/>
 				</svg>
-				{canAdd ? 'Ajouter' : 'Passer à Pro'}
+				{canAdd ? 'Ajouter' : 'Passer a Pro'}
 			</a>
 		</div>
 	</div>
 
 	<!-- Search bar -->
-	<div class="relative mb-4">
-		<svg class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--fv-ash)]" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	<div class="relative mb-5">
+		<svg class="absolute left-4 top-1/2 -translate-y-1/2 search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 			<circle cx="11" cy="11" r="8"/>
 			<line x1="21" y1="21" x2="16.65" y2="16.65"/>
 		</svg>
@@ -307,25 +312,25 @@
 			type="text"
 			placeholder="Rechercher par titre, identifiant, site..."
 			bind:value={vault.searchQuery}
-			class="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none focus:border-[var(--fv-cyan)]/50 focus:ring-1 focus:ring-[var(--fv-cyan)]/30 transition-all"
+			class="vault-search-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none transition-all duration-300"
 		/>
 	</div>
 
 	<!-- Filter chips -->
-	<div class="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-1">
+	<div class="flex flex-wrap gap-2.5 mb-8 overflow-x-auto pb-1">
 		{#each filters as filter}
 			<button
 				onclick={() => vault.activeFilter = filter.key}
-				class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all
+				class="filter-chip px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-250
 					{vault.activeFilter === filter.key
-						? 'bg-[var(--fv-cyan)]/15 text-[var(--fv-cyan)] border border-[var(--fv-cyan)]/30'
-						: 'bg-white/5 text-[var(--fv-smoke)] border border-white/5 hover:bg-white/10 hover:text-white'}"
+						? 'filter-chip-active'
+						: 'filter-chip-inactive'}"
 			>
 				{#if filter.key !== 'all' && filter.key !== 'favorites' && CATEGORY_META[filter.key as VaultCategory]}
-					<span class="mr-1">{CATEGORY_META[filter.key as VaultCategory].icon}</span>
+					<span class="mr-1.5">{CATEGORY_META[filter.key as VaultCategory].icon}</span>
 				{/if}
 				{#if filter.key === 'favorites'}
-					<span class="mr-1">&#9733;</span>
+					<span class="mr-1.5">&#9733;</span>
 				{/if}
 				{filter.label}
 			</button>
@@ -350,31 +355,31 @@
 					{/each}
 				</div>
 			{:else if vault.filteredEntries.length === 0}
-				<div class="fv-glass p-16 text-center fv-animate-in">
-					<div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-[var(--fv-cyan)]/10 to-[var(--fv-violet)]/10 border border-white/5 flex items-center justify-center mx-auto mb-6">
+				<div class="empty-state-card p-16 text-center fv-animate-in">
+					<div class="empty-state-icon w-28 h-28 rounded-3xl flex items-center justify-center mx-auto mb-8">
 						{#if vault.searchQuery}
-							<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--fv-smoke)" stroke-width="1.5" stroke-linecap="round">
+							<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--fv-smoke)" stroke-width="1.5" stroke-linecap="round">
 								<circle cx="11" cy="11" r="8"/>
 								<line x1="21" y1="21" x2="16.65" y2="16.65"/>
 								<line x1="8" y1="11" x2="14" y2="11"/>
 							</svg>
 						{:else}
-							<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
-								<rect x="3" y="11" width="18" height="11" rx="2" stroke="var(--fv-cyan)" stroke-width="1.5" opacity="0.7"/>
-								<path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="var(--fv-violet)" stroke-width="1.5" opacity="0.7"/>
-								<circle cx="12" cy="16" r="1" fill="var(--fv-cyan)" opacity="0.5"/>
+							<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+								<rect x="3" y="11" width="18" height="11" rx="2" stroke="var(--fv-cyan)" stroke-width="1.5" opacity="0.8"/>
+								<path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="var(--fv-violet)" stroke-width="1.5" opacity="0.8"/>
+								<circle cx="12" cy="16" r="1" fill="var(--fv-cyan)" opacity="0.6"/>
 							</svg>
 						{/if}
 					</div>
 					{#if vault.searchQuery}
-						<h2 class="text-lg font-bold text-white mb-2">Aucun résultat</h2>
-						<p class="text-sm text-[var(--fv-smoke)] max-w-xs mx-auto">Aucun élément ne correspond à "{vault.searchQuery}". Essaie un autre terme.</p>
+						<h2 class="text-xl font-extrabold text-white mb-3">Aucun resultat</h2>
+						<p class="text-sm text-[var(--fv-smoke)] max-w-xs mx-auto leading-relaxed">Aucun element ne correspond a "{vault.searchQuery}". Essaie un autre terme.</p>
 					{:else}
-						<h2 class="text-lg font-bold text-white mb-2">Ton coffre est vide</h2>
-						<p class="text-sm text-[var(--fv-smoke)] max-w-xs mx-auto mb-6">Ajoute ton premier mot de passe, ta carte bancaire ou toute autre donnée sensible en toute sécurité.</p>
-						<a href="/vault/add" class="fv-btn fv-btn-primary text-sm !py-3 !px-6">
+						<h2 class="text-xl font-extrabold text-white mb-3">Ton coffre est vide</h2>
+						<p class="text-sm text-[var(--fv-smoke)] max-w-sm mx-auto mb-8 leading-relaxed">Ajoute ton premier mot de passe, ta carte bancaire ou toute autre donnee sensible en toute securite.</p>
+						<a href="/vault/add" class="fv-btn fv-btn-primary text-sm !py-3.5 !px-8">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-							Ajouter un premier élément
+							Ajouter un premier element
 						</a>
 					{/if}
 				</div>
@@ -383,20 +388,23 @@
 					{#each vault.filteredEntries as entry, idx (entry.id)}
 						<button
 							onclick={() => selectEntry(entry)}
-							class="w-full text-left fv-glass p-4 flex items-center gap-4 fv-hover-lift fv-animate-in group
-								{vault.selectedEntryId === entry.id ? 'border-[var(--fv-cyan)]/30 bg-[var(--fv-cyan)]/5' : 'hover:border-[var(--fv-cyan)]/20'}"
-							style="animation-delay: {Math.min(idx * 50, 400)}ms;"
+							class="entry-card w-full text-left p-4 flex items-center gap-4 fv-animate-in group
+								{vault.selectedEntryId === entry.id ? 'entry-card-selected' : ''}"
+							style="animation-delay: {Math.min(idx * 50, 400)}ms; --cat-color: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'};"
 						>
-							<!-- Category icon -->
-							<div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 transition-transform duration-200 group-hover:scale-110"
+							<!-- Colored left border -->
+							<div class="entry-card-border" style="background: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'};"></div>
+
+							<!-- Category icon in colored square -->
+							<div class="entry-icon w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0 transition-all duration-250 group-hover:scale-110"
 								style="background: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'}15;">
-								{CATEGORY_META[entry.category]?.icon ?? '📦'}
+								{CATEGORY_META[entry.category]?.icon ?? '&#128230;'}
 							</div>
 
 							<!-- Info -->
 							<div class="flex-1 min-w-0">
 								<div class="flex items-center gap-2">
-									<p class="text-sm font-semibold text-white truncate">{entry.title || 'Sans titre'}</p>
+									<p class="text-[15px] font-bold text-white truncate">{entry.title || 'Sans titre'}</p>
 									{#if entry.isFavorite}
 										<span class="text-[var(--fv-gold)] text-xs">&#9733;</span>
 									{/if}
@@ -431,8 +439,8 @@
 		{#if showDetail && vault.selectedEntry}
 			{@const entry = vault.selectedEntry}
 			{@const fields = getCategoryFields(entry)}
-			<div class="hidden lg:block w-[350px] shrink-0 fv-slide-in-right">
-				<div class="fv-glass p-6 sticky top-8 max-h-[calc(100vh-6rem)] overflow-y-auto">
+			<div class="hidden lg:block w-[370px] shrink-0 detail-panel-animate">
+				<div class="detail-panel-card p-6 sticky top-8 max-h-[calc(100vh-6rem)] overflow-y-auto">
 					<!-- Header -->
 					<div class="flex items-center justify-between mb-5">
 						<div class="flex items-center gap-3">
@@ -853,7 +861,7 @@
 {/if}
 
 <!-- FAB on mobile -->
-<a href={canAdd ? '/vault/add' : '/vault/settings'} class="lg:hidden fixed bottom-20 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-r {canAdd ? 'from-[var(--fv-cyan)] to-[var(--fv-violet)] shadow-[var(--fv-cyan)]/30' : 'from-[var(--fv-gold)] to-[var(--fv-gold-dark,#b8860b)] shadow-[var(--fv-gold)]/30'} flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+<a href={canAdd ? '/vault/add' : '/vault/settings'} class="fab-button lg:hidden fixed bottom-20 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-r {canAdd ? 'from-[var(--fv-cyan)] to-[var(--fv-violet)]' : 'from-[var(--fv-gold)] to-[var(--fv-gold-dark,#b8860b)]'} flex items-center justify-center">
 	{#if canAdd}
 		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
 			<line x1="12" y1="5" x2="12" y2="19"/>
@@ -865,3 +873,163 @@
 		</svg>
 	{/if}
 </a>
+
+<style>
+	/* Gradient title */
+	.vault-title {
+		background: linear-gradient(135deg, #ffffff 0%, var(--fv-mist) 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+
+	/* Count pill badge */
+	.vault-count-pill {
+		display: inline-flex;
+		align-items: center;
+		padding: 3px 12px;
+		border-radius: 99px;
+		background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(138,92,246,0.06));
+		border: 1px solid rgba(0,212,255,0.15);
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--fv-cyan);
+	}
+
+	/* Search bar premium */
+	.vault-search-input {
+		background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+		border: 1px solid rgba(255,255,255,0.08);
+		backdrop-filter: blur(12px);
+	}
+	.vault-search-input:focus {
+		border-color: rgba(0, 212, 255, 0.4);
+		box-shadow: 0 0 0 3px rgba(0,212,255,0.1), 0 0 24px rgba(0,212,255,0.08) inset;
+		background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+	}
+
+	.search-icon {
+		color: var(--fv-ash);
+		transition: color 0.2s ease;
+	}
+	.vault-search-input:focus ~ .search-icon,
+	.vault-search-input:focus + .search-icon {
+		color: var(--fv-cyan);
+	}
+	/* Parent-based focus detection */
+	:global(.relative:focus-within) .search-icon {
+		color: var(--fv-cyan);
+	}
+
+	/* Filter chips */
+	.filter-chip {
+		border: 1px solid transparent;
+		transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+	.filter-chip-active {
+		background: rgba(0, 212, 255, 0.12);
+		color: var(--fv-cyan);
+		border-color: rgba(0, 212, 255, 0.25);
+		box-shadow: 0 0 12px rgba(0, 212, 255, 0.1);
+	}
+	.filter-chip-inactive {
+		background: rgba(255,255,255,0.04);
+		color: var(--fv-smoke);
+		border-color: rgba(255,255,255,0.06);
+	}
+	.filter-chip-inactive:hover {
+		background: rgba(255,255,255,0.08);
+		color: white;
+		border-color: rgba(255,255,255,0.1);
+	}
+
+	/* Entry cards premium */
+	.entry-card {
+		position: relative;
+		background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012));
+		border: 1px solid rgba(255,255,255,0.06);
+		border-radius: 16px;
+		overflow: hidden;
+		transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+	.entry-card:hover {
+		transform: translateY(-2px);
+		border-color: rgba(255,255,255,0.12);
+		box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.04);
+		background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+	}
+	.entry-card-selected {
+		border-color: rgba(0, 212, 255, 0.25) !important;
+		background: linear-gradient(135deg, rgba(0, 212, 255, 0.06), rgba(138, 92, 246, 0.03)) !important;
+		box-shadow: 0 0 20px rgba(0, 212, 255, 0.08);
+	}
+
+	/* Colored left border on cards */
+	.entry-card-border {
+		position: absolute;
+		left: 0;
+		top: 8px;
+		bottom: 8px;
+		width: 2px;
+		border-radius: 0 2px 2px 0;
+		opacity: 0.5;
+		transition: opacity 0.25s ease;
+	}
+	.entry-card:hover .entry-card-border {
+		opacity: 1;
+	}
+
+	/* Icon square */
+	.entry-icon {
+		border: 1px solid rgba(255,255,255,0.04);
+	}
+
+	/* Empty state */
+	.empty-state-card {
+		background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012));
+		border: 1px solid rgba(255,255,255,0.06);
+		border-radius: 24px;
+	}
+	.empty-state-icon {
+		background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(138,92,246,0.1));
+		border: 1px solid rgba(255,255,255,0.06);
+		box-shadow: 0 0 40px rgba(0,212,255,0.08), 0 0 80px rgba(138,92,246,0.05);
+		animation: emptyGlow 3s ease-in-out infinite;
+	}
+	@keyframes emptyGlow {
+		0%, 100% { box-shadow: 0 0 40px rgba(0,212,255,0.08), 0 0 80px rgba(138,92,246,0.05); }
+		50% { box-shadow: 0 0 50px rgba(0,212,255,0.15), 0 0 100px rgba(138,92,246,0.1); }
+	}
+
+	/* Detail panel */
+	.detail-panel-animate {
+		animation: detailSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+	}
+	@keyframes detailSlideIn {
+		from { opacity: 0; transform: translateX(24px); }
+		to { opacity: 1; transform: translateX(0); }
+	}
+	.detail-panel-card {
+		background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1px solid rgba(255,255,255,0.08);
+		border-radius: 20px;
+	}
+
+	/* FAB button premium */
+	.fab-button {
+		box-shadow: 0 4px 24px rgba(0, 212, 255, 0.3), 0 0 0 0 rgba(0, 212, 255, 0.2);
+		animation: fabPulse 3s ease-in-out infinite;
+		transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+	}
+	.fab-button:hover {
+		transform: scale(1.1);
+		box-shadow: 0 6px 32px rgba(0, 212, 255, 0.4);
+		animation: none;
+	}
+	@keyframes fabPulse {
+		0%, 100% { box-shadow: 0 4px 24px rgba(0, 212, 255, 0.25), 0 0 0 0 rgba(0, 212, 255, 0.15); }
+		50% { box-shadow: 0 4px 24px rgba(0, 212, 255, 0.35), 0 0 0 8px rgba(0, 212, 255, 0.05); }
+	}
+</style>

@@ -30,7 +30,7 @@
 	async function handleUnlock() {
 		error = '';
 		if (!masterPassword) {
-			error = 'Mot de passe maître requis.';
+			error = 'Mot de passe maitre requis.';
 			errorKey++;
 			return;
 		}
@@ -43,14 +43,14 @@
 				unlockSuccess = true;
 				setTimeout(() => goto('/vault'), 800);
 			} else {
-				error = result.error || 'Échec du déverrouillage.';
+				error = result.error || 'Echec du deverrouillage.';
 				errorKey++;
 			}
 		} catch (e: any) {
 			if (e?.message?.includes('Web Crypto API')) {
 				error = 'Web Crypto API non disponible. Utilise HTTPS ou localhost.';
 			} else if (e?.name === 'OperationError' || e?.message?.includes('decrypt') || e?.message?.includes('importKey')) {
-				error = 'Mot de passe incorrect ou erreur de déchiffrement.';
+				error = 'Mot de passe incorrect ou erreur de dechiffrement.';
 			} else {
 				error = e.message || 'Erreur inconnue.';
 			}
@@ -62,49 +62,52 @@
 </script>
 
 <svelte:head>
-	<title>Déverrouiller — FyxxVault</title>
+	<title>Deverrouiller — FyxxVault</title>
 </svelte:head>
 
-<div class="min-h-screen bg-[var(--fv-abyss)] flex items-center justify-center px-6 py-20">
+<div class="unlock-page min-h-screen flex items-center justify-center px-6 py-20">
+	<!-- Animated gradient mesh background -->
+	<div class="unlock-bg-mesh"></div>
+
 	<!-- Background orbs -->
 	<div class="fixed inset-0 overflow-hidden pointer-events-none">
-		<div class="absolute top-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-[var(--fv-cyan)] opacity-[0.05] blur-[120px]"></div>
-		<div class="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] rounded-full bg-[var(--fv-violet)] opacity-[0.05] blur-[120px]"></div>
+		<div class="unlock-orb unlock-orb-1"></div>
+		<div class="unlock-orb unlock-orb-2"></div>
 	</div>
 
-	<div class="relative z-10 w-full max-w-md">
+	<div class="relative z-10 w-full max-w-[440px]">
 		<!-- Logo -->
 		<div class="text-center mb-8 fv-animate-in">
 			<div class="inline-flex items-center gap-3 mb-6">
-				<div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--fv-cyan)] to-[var(--fv-violet)] flex items-center justify-center shadow-lg shadow-[var(--fv-cyan)]/20 fv-shield-pulse">
-					<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+				<div class="unlock-logo-icon w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--fv-cyan)] to-[var(--fv-violet)] flex items-center justify-center">
+					<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
 						<rect x="3" y="11" width="18" height="11" rx="2"/>
 						<path d="M7 11V7a5 5 0 0 1 10 0v4"/>
 					</svg>
 				</div>
 			</div>
-			<h1 class="text-2xl font-bold text-white">Déverrouiller ton coffre</h1>
+			<h1 class="text-2xl font-extrabold text-white tracking-tight">Deverrouiller ton coffre</h1>
 			<p class="text-sm text-[var(--fv-smoke)] mt-2">
-				Connecté en tant que <span class="text-[var(--fv-cyan)]">{auth.user?.email ?? ''}</span>
+				Connecte en tant que <span class="text-[var(--fv-cyan)]">{auth.user?.email ?? ''}</span>
 			</p>
 		</div>
 
 		{#if unlockSuccess}
 			<!-- Success animation -->
-			<div class="fv-glass p-8 text-center fv-glow-cyan fv-animate-in">
+			<div class="unlock-card p-8 text-center fv-glow-cyan fv-animate-in">
 				<div class="w-20 h-20 rounded-full bg-[var(--fv-success)]/15 flex items-center justify-center mx-auto mb-4">
 					<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12" class="fv-check-draw"/></svg>
 				</div>
-				<p class="text-white font-semibold text-lg">Coffre déverrouillé</p>
+				<p class="text-white font-semibold text-lg">Coffre deverrouille</p>
 				<p class="text-sm text-[var(--fv-smoke)] mt-1">Redirection en cours...</p>
 			</div>
 		{:else}
 			<!-- Unlock form -->
-			<div class="fv-glass p-8 fv-animate-in" style="animation-delay: 100ms;">
+			<div class="unlock-card p-8 fv-animate-in" style="animation-delay: 100ms;">
 				<form onsubmit={(e: SubmitEvent) => { e.preventDefault(); handleUnlock(); }} class="space-y-5">
-					<!-- Lock icon -->
-					<div class="flex justify-center mb-2">
-						<div class="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center fv-lock-bounce">
+					<!-- Lock icon with animated glow ring -->
+					<div class="flex justify-center mb-4">
+						<div class="unlock-lock-icon w-20 h-20 rounded-full flex items-center justify-center">
 							<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 								<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
 								<path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -115,14 +118,14 @@
 
 					<!-- Master password -->
 					<div>
-						<label for="master-password" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Mot de passe maître</label>
+						<label for="master-password" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Mot de passe maitre</label>
 						<input
 							id="master-password"
 							type="password"
 							bind:value={masterPassword}
 							placeholder="••••••••••••"
 							autofocus
-							class="w-full px-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none fv-input-glow transition-all duration-300"
+							class="unlock-input w-full px-4 py-4 rounded-2xl text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none transition-all duration-300"
 						/>
 					</div>
 
@@ -139,19 +142,19 @@
 					{/if}
 
 					<!-- Submit -->
-					<button type="submit" disabled={loading} class="fv-btn fv-btn-primary w-full !py-4 {loading ? 'opacity-60 cursor-not-allowed' : ''}">
+					<button type="submit" disabled={loading} class="unlock-submit-btn w-full py-4 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all duration-250 {loading ? 'opacity-60 cursor-not-allowed' : ''}">
 						{#if loading}
 							<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-							Déverrouillage...
+							Deverrouillage...
 						{:else}
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-							Déverrouiller
+							Deverrouiller
 						{/if}
 					</button>
 				</form>
 
 				<p class="text-center text-xs text-[var(--fv-ash)] mt-5">
-					Le déchiffrement se fait localement. Ton mot de passe ne quitte jamais cet appareil.
+					Le dechiffrement se fait localement. Ton mot de passe ne quitte jamais cet appareil.
 				</p>
 			</div>
 		{/if}
@@ -163,3 +166,124 @@
 		</p>
 	</div>
 </div>
+
+<style>
+	/* Page background */
+	.unlock-page {
+		position: relative;
+		background: var(--fv-abyss);
+		overflow: hidden;
+	}
+
+	/* Animated gradient mesh */
+	.unlock-bg-mesh {
+		position: fixed;
+		inset: 0;
+		background:
+			radial-gradient(ellipse 80% 60% at 30% 20%, rgba(0,212,255,0.05), transparent 50%),
+			radial-gradient(ellipse 60% 80% at 70% 80%, rgba(138,92,246,0.05), transparent 50%);
+		background-size: 200% 200%;
+		animation: meshShift 15s ease-in-out infinite alternate;
+		pointer-events: none;
+	}
+	@keyframes meshShift {
+		0% { background-position: 0% 0%, 100% 100%; }
+		100% { background-position: 100% 100%, 0% 0%; }
+	}
+
+	/* Background orbs */
+	.unlock-orb {
+		position: absolute;
+		border-radius: 50%;
+		filter: blur(120px);
+		pointer-events: none;
+	}
+	.unlock-orb-1 {
+		top: 25%;
+		left: 20%;
+		width: 400px;
+		height: 400px;
+		background: var(--fv-cyan);
+		opacity: 0.06;
+		animation: orbFloat 20s ease-in-out infinite alternate;
+	}
+	.unlock-orb-2 {
+		bottom: 25%;
+		right: 20%;
+		width: 400px;
+		height: 400px;
+		background: var(--fv-violet);
+		opacity: 0.06;
+		animation: orbFloat 20s ease-in-out infinite alternate-reverse;
+	}
+	@keyframes orbFloat {
+		0% { transform: translate(0, 0); }
+		100% { transform: translate(30px, -20px); }
+	}
+
+	/* Logo icon with glow */
+	.unlock-logo-icon {
+		box-shadow: 0 0 30px rgba(0, 212, 255, 0.25), 0 0 60px rgba(138, 92, 246, 0.15);
+		animation: logoGlow 3s ease-in-out infinite;
+	}
+	@keyframes logoGlow {
+		0%, 100% { box-shadow: 0 0 30px rgba(0, 212, 255, 0.25), 0 0 60px rgba(138, 92, 246, 0.15); transform: scale(1); }
+		50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.35), 0 0 80px rgba(138, 92, 246, 0.2); transform: scale(1.03); }
+	}
+
+	/* Unlock card glass */
+	.unlock-card {
+		background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+		backdrop-filter: blur(24px);
+		-webkit-backdrop-filter: blur(24px);
+		border: 1px solid rgba(255,255,255,0.08);
+		border-radius: 24px;
+		box-shadow: 0 16px 64px rgba(0,0,0,0.3);
+	}
+
+	/* Lock icon with pulse glow ring */
+	.unlock-lock-icon {
+		background: rgba(255,255,255,0.04);
+		border: 1px solid rgba(255,255,255,0.08);
+		box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.2);
+		animation: lockPulseRing 3s ease-in-out infinite;
+	}
+	@keyframes lockPulseRing {
+		0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.15), 0 0 20px rgba(0, 212, 255, 0.05); }
+		50% { box-shadow: 0 0 0 12px rgba(0, 212, 255, 0.05), 0 0 30px rgba(0, 212, 255, 0.1); }
+	}
+
+	/* Input with cyan glow on focus */
+	.unlock-input {
+		background: rgba(255,255,255,0.04);
+		border: 1px solid rgba(255,255,255,0.1);
+	}
+	.unlock-input:focus {
+		border-color: rgba(0, 212, 255, 0.5);
+		box-shadow: 0 0 0 3px rgba(0,212,255,0.15), 0 0 24px rgba(0,212,255,0.08);
+		background: rgba(255,255,255,0.06);
+	}
+
+	/* Submit button: gradient with shimmer */
+	.unlock-submit-btn {
+		background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet));
+		position: relative;
+		overflow: hidden;
+	}
+	.unlock-submit-btn::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%);
+		background-size: 200% 100%;
+		animation: shimmer 3s ease-in-out infinite;
+	}
+	@keyframes shimmer {
+		0% { background-position: 200% 0; }
+		100% { background-position: -200% 0; }
+	}
+	.unlock-submit-btn:hover:not(:disabled) {
+		transform: translateY(-2px);
+		box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3);
+	}
+</style>

@@ -189,7 +189,7 @@
 	}
 
 	// Input field component helper
-	const inputClass = "w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none focus:border-[var(--fv-cyan)]/50 focus:ring-1 focus:ring-[var(--fv-cyan)]/30 transition-all";
+	const inputClass = "add-form-input w-full px-4 py-3.5 rounded-2xl text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none transition-all duration-250";
 </script>
 
 <svelte:head>
@@ -198,14 +198,14 @@
 
 <div class="max-w-2xl mx-auto">
 	<!-- Header -->
-	<div class="flex items-center gap-4 mb-6">
-		<button onclick={() => { if (!editId && !entry.title.trim()) clearDraft(); goto('/vault'); }} class="p-2 rounded-lg hover:bg-white/5 text-[var(--fv-smoke)] transition-colors duration-200">
+	<div class="flex items-center gap-4 mb-8">
+		<button onclick={() => { if (!editId && !entry.title.trim()) clearDraft(); goto('/vault'); }} class="p-2 rounded-xl hover:bg-white/5 text-[var(--fv-smoke)] transition-all duration-200">
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 				<line x1="19" y1="12" x2="5" y2="12"/>
 				<polyline points="12 19 5 12 12 5"/>
 			</svg>
 		</button>
-		<h1 class="text-xl font-bold text-white">{editId ? 'Modifier l\'élément' : 'Nouvel élément'}</h1>
+		<h1 class="text-xl font-extrabold text-white tracking-tight">{editId ? 'Modifier l\'element' : 'Nouvel element'}</h1>
 	</div>
 
 	{#if !canAdd}
@@ -225,21 +225,21 @@
 			<p class="text-white font-semibold">{editId ? 'Élément modifié' : 'Élément ajouté'} !</p>
 		</div>
 	{:else}
-		<form onsubmit={(e: SubmitEvent) => { e.preventDefault(); handleSubmit(); }} class="space-y-6">
+		<form onsubmit={(e: SubmitEvent) => { e.preventDefault(); handleSubmit(); }} class="add-form-wrapper space-y-6">
 			<!-- Category selector -->
-			<div class="fv-glass p-5">
-				<label class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Catégorie</label>
+			<div class="add-glass-card p-6">
+				<label class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-4">Categorie</label>
 				<div class="grid grid-cols-5 sm:grid-cols-10 gap-2">
 					{#each categories as [key, meta]}
 						<button
 							type="button"
 							onclick={() => onCategoryChange(key)}
-							class="flex flex-col items-center gap-1.5 p-2.5 rounded-xl transition-all
+							class="category-card flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-250
 								{entry.category === key
-									? 'bg-[var(--fv-cyan)]/10 border border-[var(--fv-cyan)]/30'
-									: 'bg-white/5 border border-transparent hover:bg-white/10'}"
+									? 'category-card-selected'
+									: 'category-card-default'}"
 						>
-							<span class="text-lg">{meta.icon}</span>
+							<span class="text-lg transition-transform duration-200" class:scale-110={entry.category === key}>{meta.icon}</span>
 							<span class="text-[8px] text-[var(--fv-smoke)] font-medium leading-tight text-center">{meta.label}</span>
 						</button>
 					{/each}
@@ -247,7 +247,7 @@
 			</div>
 
 			<!-- Category-specific fields -->
-			<div class="fv-glass p-5 space-y-4">
+			<div class="add-glass-card p-6 space-y-5">
 				<!-- Title (always shown) -->
 				<div>
 					<label for="title" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Titre *</label>
@@ -434,7 +434,7 @@
 			</div>
 
 			<!-- Extra options -->
-			<div class="fv-glass p-5 space-y-4">
+			<div class="add-glass-card p-6 space-y-5">
 				<!-- Folder -->
 				<div>
 					<label for="folder" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Dossier</label>
@@ -511,8 +511,8 @@
 
 			<!-- Submit -->
 			<div class="flex gap-3">
-				<button type="button" onclick={() => goto('/vault')} class="fv-btn fv-btn-ghost flex-1 !py-3.5">Annuler</button>
-				<button type="submit" disabled={loading} class="fv-btn fv-btn-primary flex-1 !py-3.5 {loading ? 'opacity-60 cursor-not-allowed' : ''}">
+				<button type="button" onclick={() => goto('/vault')} class="fv-btn fv-btn-ghost flex-1 !py-3.5 !rounded-2xl">Annuler</button>
+				<button type="submit" disabled={loading} class="add-submit-btn flex-1 py-3.5 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all duration-250 {loading ? 'opacity-60 cursor-not-allowed' : ''}">
 					{#if loading}
 						<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
 						Sauvegarde...
@@ -555,11 +555,11 @@
 
 		<!-- Strength bar -->
 		{#if entry.password}
-			<div class="mt-2 flex items-center gap-2">
-				<div class="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
-					<div class="h-full rounded-full" style="width: {strength.score}%; background: {strength.color}; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;"></div>
+			<div class="mt-3 flex items-center gap-3">
+				<div class="flex-1 h-2.5 rounded-full bg-white/5 overflow-hidden">
+					<div class="h-full rounded-full" style="width: {strength.score}%; background: linear-gradient(90deg, {strength.color}, {strength.color}dd); transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;"></div>
 				</div>
-				<span class="text-[10px] font-semibold transition-colors duration-300" style="color: {strength.color};">{strength.label}</span>
+				<span class="text-xs font-bold transition-colors duration-300 min-w-[60px] text-right" style="color: {strength.color};">{strength.label}</span>
 			</div>
 		{/if}
 
@@ -632,3 +632,77 @@
 		{/if}
 	</div>
 {/snippet}
+
+<style>
+	/* Form wrapper max-width */
+	.add-form-wrapper {
+		max-width: 640px;
+		margin: 0 auto;
+	}
+
+	/* Glass card for form sections */
+	.add-glass-card {
+		background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1px solid rgba(255,255,255,0.06);
+		border-radius: 20px;
+	}
+
+	/* Form inputs premium */
+	:global(.add-form-input) {
+		background: rgba(255,255,255,0.04) !important;
+		border: 1px solid rgba(255,255,255,0.08) !important;
+	}
+	:global(.add-form-input:focus) {
+		border-color: rgba(0, 212, 255, 0.4) !important;
+		box-shadow: 0 0 0 3px rgba(0,212,255,0.12) !important;
+		background: rgba(255,255,255,0.06) !important;
+	}
+
+	/* Category cards */
+	.category-card {
+		cursor: pointer;
+		border: 1px solid transparent;
+	}
+	.category-card-default {
+		background: rgba(255,255,255,0.04);
+		border-color: rgba(255,255,255,0.04);
+	}
+	.category-card-default:hover {
+		background: rgba(255,255,255,0.08);
+		border-color: rgba(255,255,255,0.08);
+		transform: scale(1.03);
+	}
+	.category-card-selected {
+		background: rgba(0, 212, 255, 0.08);
+		border-color: rgba(0, 212, 255, 0.3);
+		box-shadow: 0 0 16px rgba(0, 212, 255, 0.08);
+		transform: scale(1.05);
+	}
+
+	/* Submit button gradient with shimmer */
+	.add-submit-btn {
+		background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet));
+		position: relative;
+		overflow: hidden;
+		border: none;
+		cursor: pointer;
+	}
+	.add-submit-btn::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+		background-size: 200% 100%;
+		animation: addShimmer 3s ease-in-out infinite;
+	}
+	@keyframes addShimmer {
+		0% { background-position: 200% 0; }
+		100% { background-position: -200% 0; }
+	}
+	.add-submit-btn:hover:not(:disabled) {
+		transform: translateY(-2px);
+		box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3);
+	}
+</style>
