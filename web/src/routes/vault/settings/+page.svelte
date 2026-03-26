@@ -168,65 +168,7 @@
 		</div>
 	</div>
 
-	<!-- Upgrade to Pro -->
-	{#if !auth.isPro}
-	<div class="fv-glass p-5 mb-4 border-[var(--fv-gold)]/20 fv-glow-gold relative overflow-hidden">
-		<div class="absolute top-0 right-0 px-3 py-1 bg-gradient-to-r from-[var(--fv-gold)] to-[var(--fv-gold-light)] text-[#1a1a2e] text-[9px] font-extrabold uppercase tracking-wider rounded-bl-xl">
-			Recommandé
-		</div>
-		<div class="flex items-center gap-3 mb-4">
-			<span class="text-2xl">👑</span>
-			<div>
-				<h2 class="text-sm font-bold text-white">Passer à FyxxVault Pro</h2>
-				<p class="text-[10px] text-[var(--fv-smoke)]">Débloque toutes les fonctionnalités</p>
-			</div>
-		</div>
-
-		<ul class="space-y-2 mb-5">
-			{#each proFeatures as f}
-				<li class="flex items-center gap-2 text-xs text-[var(--fv-mist)]">
-					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-gold)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-					{f}
-				</li>
-			{/each}
-		</ul>
-
-		<div class="grid grid-cols-2 gap-3 mb-4">
-			<button
-				onclick={() => selectedPlan = 'monthly'}
-				class="p-3 rounded-xl text-center transition-all border
-					{selectedPlan === 'monthly'
-						? 'bg-[var(--fv-gold)]/10 border-[var(--fv-gold)]/40'
-						: 'bg-white/5 border-white/10 hover:bg-white/10'}"
-			>
-				<p class="text-sm font-bold text-white">4,99€</p>
-				<p class="text-[10px] text-[var(--fv-smoke)]">par mois</p>
-			</button>
-			<button
-				onclick={() => selectedPlan = 'yearly'}
-				class="p-3 rounded-xl text-center transition-all border relative
-					{selectedPlan === 'yearly'
-						? 'bg-[var(--fv-gold)]/10 border-[var(--fv-gold)]/40'
-						: 'bg-white/5 border-white/10 hover:bg-white/10'}"
-			>
-				<span class="absolute -top-2 right-2 px-2 py-0.5 rounded-full bg-[var(--fv-gold)] text-[8px] font-bold text-[#1a1a2e]">-30%</span>
-				<p class="text-sm font-bold text-white">41,99€</p>
-				<p class="text-[10px] text-[var(--fv-smoke)]">par an</p>
-			</button>
-		</div>
-
-		<button onclick={handleCheckout} disabled={checkoutLoading} class="fv-btn fv-btn-gold w-full text-sm !py-3 {checkoutLoading ? 'opacity-60 cursor-not-allowed' : ''}">
-			{#if checkoutLoading}
-				<div class="w-4 h-4 border-2 border-[#1a1a2e]/30 border-t-[#1a1a2e] rounded-full animate-spin"></div>
-				Redirection...
-			{:else}
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-				Essai gratuit 14 jours
-			{/if}
-		</button>
-		<p class="text-[9px] text-[var(--fv-ash)] text-center mt-2">Paiement sécurisé par Stripe. Annule à tout moment.</p>
-	</div>
-	{/if}
+	<!-- Upgrade to Pro — only in sidebar now -->
 
 	<!-- Security -->
 	<div class="fv-glass p-5 mb-4">

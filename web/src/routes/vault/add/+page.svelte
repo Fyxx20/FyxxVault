@@ -207,7 +207,7 @@
 					<!-- LOGIN / SERVER / OTHER -->
 					<div>
 						<label for="website" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Site web</label>
-						<input id="website" type="url" bind:value={entry.website} placeholder="https://example.com" class={inputClass} />
+						<input id="website" type="text" bind:value={entry.website} placeholder="example.com" class={inputClass} />
 					</div>
 					<div>
 						<label for="username" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Identifiant / Email</label>
