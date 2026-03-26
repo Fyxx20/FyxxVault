@@ -6,7 +6,7 @@ import Foundation
 @MainActor
 final class SubscriptionService: ObservableObject {
     @Published var isProUser: Bool = false
-    @Published var currentSubscription: Product.SubscriptionInfo.Status? = nil
+    @Published var currentSubscriptionID: String? = nil
     @Published var availableProducts: [Product] = []
     @Published var purchaseInProgress: Bool = false
     @Published var errorMessage: String? = nil
@@ -136,10 +136,15 @@ final class SubscriptionService: ObservableObject {
 
         do {
             let statuses = try await subscription.status
-            currentSubscription = statuses.first { status in
+            let activeStatus = statuses.first { status in
                 guard case .verified(let renewalInfo) = status.renewalInfo,
                       case .verified(_) = status.transaction else { return false }
                 return Self.proProductIDs.contains(renewalInfo.currentProductID)
+            }
+            if case .verified(let renewalInfo) = activeStatus?.renewalInfo {
+                currentSubscriptionID = renewalInfo.currentProductID
+            } else {
+                currentSubscriptionID = nil
             }
         } catch {
             // Subscription status unavailable
