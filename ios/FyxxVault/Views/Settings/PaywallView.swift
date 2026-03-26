@@ -133,9 +133,10 @@ struct PaywallView: View {
 
     private var featuresSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            featureRow(icon: "cloud.fill", text: String(localized: "paywall.feature.cloud"), color: FVColor.cyan)
-            featureRow(icon: "envelope.badge.shield.half.filled", text: String(localized: "paywall.feature.masked"), color: FVColor.violet)
-            featureRow(icon: "eye.trianglebadge.exclamationmark", text: String(localized: "paywall.feature.darkweb"), color: FVColor.rose)
+            featureRow(icon: "infinity", text: String(localized: "paywall.feature.unlimited"), color: FVColor.cyan)
+            featureRow(icon: "cloud.fill", text: String(localized: "paywall.feature.cloud"), color: FVColor.violet)
+            featureRow(icon: "envelope.badge.shield.half.filled", text: String(localized: "paywall.feature.masked"), color: FVColor.rose)
+            featureRow(icon: "eye.trianglebadge.exclamationmark", text: String(localized: "paywall.feature.darkweb"), color: FVColor.warning)
             featureRow(icon: "person.2.fill", text: String(localized: "paywall.feature.sharing"), color: FVColor.success)
             featureRow(icon: "headset.circle.fill", text: String(localized: "paywall.feature.support"), color: FVColor.gold)
         }

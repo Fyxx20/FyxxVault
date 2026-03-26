@@ -496,6 +496,7 @@
 /* Paywall */
 "paywall.title" = "FyxxVault Pro";
 "paywall.subtitle" = "Unlock the full security suite";
+"paywall.feature.unlimited" = "Unlimited accounts";
 "paywall.feature.cloud" = "Cloud Sync across devices";
 "paywall.feature.masked" = "Masked Emails";
 "paywall.feature.darkweb" = "Dark Web Monitoring";
