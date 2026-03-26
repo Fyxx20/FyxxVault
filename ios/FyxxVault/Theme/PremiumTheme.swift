@@ -748,10 +748,10 @@ struct FVTabBar: View {
         ZStack {
             // Background capsule
             Capsule(style: .continuous)
-                .fill(.ultraThinMaterial.opacity(0.5))
+                .fill(FVColor.abyss.opacity(0.92))
                 .overlay(
                     Capsule(style: .continuous)
-                        .fill(Color.white.opacity(0.05))
+                        .fill(.ultraThinMaterial.opacity(0.3))
                 )
                 .overlay(
                     Capsule(style: .continuous)
