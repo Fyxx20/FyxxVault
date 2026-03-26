@@ -81,7 +81,7 @@ struct VaultDashboardView: View {
                 // Subtle parallax offset
                 .offset(x: selectedTab == 0 ? 0 : -30)
             case 1:
-                VaultListView(vaultStore: vaultStore, quickAction: $pendingQuickAction)
+                VaultListView(vaultStore: vaultStore, subscriptionService: subscriptionService, quickAction: $pendingQuickAction)
                     .transition(.asymmetric(
                         insertion: .move(edge: slidesFromRight ? .trailing : .leading).combined(with: .opacity),
                         removal: .move(edge: slidesFromRight ? .leading : .trailing).combined(with: .opacity)

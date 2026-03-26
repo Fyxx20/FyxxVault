@@ -2,9 +2,11 @@ import SwiftUI
 
 struct VaultListView: View {
     @ObservedObject var vaultStore: VaultStore
+    @ObservedObject var subscriptionService: SubscriptionService
     @Binding var quickAction: VaultQuickAction?
 
     @State private var showAddSheet = false
+    @State private var showPaywall = false
     @State private var query = ""
     @State private var pendingDeleteEntry: VaultEntry?
     @State private var editingEntry: VaultEntry?
@@ -81,10 +83,17 @@ struct VaultListView: View {
                         Spacer(minLength: 8)
 
                         VStack(spacing: 2) {
-                            Text("\(vaultStore.entries.count)")
-                                .font(FVFont.display(28))
-                                .foregroundStyle(.white)
-                                .contentTransition(.numericText())
+                            if subscriptionService.isProUser {
+                                Text("\(vaultStore.entries.count)")
+                                    .font(FVFont.display(28))
+                                    .foregroundStyle(.white)
+                                    .contentTransition(.numericText())
+                            } else {
+                                Text("\(vaultStore.entries.count)/5")
+                                    .font(FVFont.display(28))
+                                    .foregroundStyle(vaultStore.entries.count >= 5 ? FVColor.warning : .white)
+                                    .contentTransition(.numericText())
+                            }
                             Text(String(localized: "vault.header.accounts"))
                                 .font(FVFont.caption(10))
                                 .kerning(1.8)
@@ -320,7 +329,11 @@ struct VaultListView: View {
             // FAB — Floating Action Button
             Button {
                 fvHaptic(.medium)
-                showAddSheet = true
+                if !subscriptionService.isProUser && vaultStore.entries.count >= 5 {
+                    showPaywall = true
+                } else {
+                    showAddSheet = true
+                }
             } label: {
                 ZStack {
                     Circle()
@@ -343,6 +356,7 @@ struct VaultListView: View {
             .padding(.bottom, 68)
         }
         .sheet(isPresented: $showAddSheet) { AddVaultEntryView(vaultStore: vaultStore) }
+        .sheet(isPresented: $showPaywall) { PaywallView(subscriptionService: subscriptionService) }
         .sheet(item: $editingEntry) { entry in EditVaultEntryView(vaultStore: vaultStore, entry: entry) }
         .confirmationDialog(String(localized: "vault.dialog.delete.title"), isPresented: Binding(get: { pendingDeleteEntry != nil }, set: { if !$0 { pendingDeleteEntry = nil } }), titleVisibility: .visible) {
             Button(String(localized: "vault.action.delete"), role: .destructive) { if let e = pendingDeleteEntry { delete(entry: e) }; pendingDeleteEntry = nil }
