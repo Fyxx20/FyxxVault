@@ -565,69 +565,92 @@
 
 		<!-- Password generator -->
 		{#if showGenerator}
-			<div class="mt-3 p-4 rounded-xl bg-[var(--fv-abyss)]/60 border border-white/5 space-y-3">
-				<!-- Mode tabs -->
-				<div class="flex bg-white/5 rounded-lg p-0.5">
-					<button
-						type="button"
-						onclick={() => genMode = 'password'}
-						class="flex-1 text-xs py-2 rounded-md transition-all {genMode === 'password' ? 'bg-[var(--fv-cyan)]/15 text-[var(--fv-cyan)] font-semibold' : 'text-[var(--fv-smoke)]'}"
-					>Mot de passe</button>
-					<button
-						type="button"
-						onclick={() => genMode = 'passphrase'}
-						class="flex-1 text-xs py-2 rounded-md transition-all {genMode === 'passphrase' ? 'bg-[var(--fv-cyan)]/15 text-[var(--fv-cyan)] font-semibold' : 'text-[var(--fv-smoke)]'}"
+			<div class="mt-4 p-5 rounded-2xl border border-white/8 space-y-4" style="background: rgba(255,255,255,0.03);">
+				<div class="flex items-center gap-2 mb-1">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+					<span class="text-xs font-semibold text-white/80 uppercase tracking-wider">Générateur</span>
+				</div>
+
+				<!-- Mode toggle -->
+				<div class="flex rounded-xl p-1" style="background: rgba(255,255,255,0.05);">
+					<button type="button" onclick={() => genMode = 'password'}
+						class="flex-1 text-xs py-2.5 rounded-lg font-medium transition-all duration-200"
+						style="{genMode === 'password' ? 'background: var(--fv-cyan); color: var(--fv-abyss); font-weight: 700;' : 'color: var(--fv-smoke);'}"
+					>Aléatoire</button>
+					<button type="button" onclick={() => genMode = 'passphrase'}
+						class="flex-1 text-xs py-2.5 rounded-lg font-medium transition-all duration-200"
+						style="{genMode === 'passphrase' ? 'background: var(--fv-cyan); color: var(--fv-abyss); font-weight: 700;' : 'color: var(--fv-smoke);'}"
 					>Phrase secrète</button>
 				</div>
 
 				{#if genMode === 'password'}
-					<div class="flex items-center justify-between">
-						<span class="text-xs text-[var(--fv-smoke)]">Longueur: {genLength}</span>
-						<input type="range" min="8" max="64" bind:value={genLength} class="w-32 accent-[var(--fv-cyan)]" />
+					<!-- Length slider -->
+					<div>
+						<div class="flex items-center justify-between mb-2">
+							<span class="text-xs text-white/60">Longueur</span>
+							<span class="text-sm font-bold text-white tabular-nums" style="min-width: 28px; text-align: right;">{genLength}</span>
+						</div>
+						<input type="range" min="8" max="64" bind:value={genLength} class="w-full h-1.5 rounded-full appearance-none cursor-pointer" style="background: linear-gradient(to right, var(--fv-cyan) {((genLength - 8) / 56) * 100}%, rgba(255,255,255,0.1) {((genLength - 8) / 56) * 100}%); accent-color: var(--fv-cyan);" />
 					</div>
-					<div class="flex flex-wrap gap-3">
-						<label class="flex items-center gap-2 text-xs text-[var(--fv-smoke)] cursor-pointer">
-							<input type="checkbox" bind:checked={genUppercase} class="accent-[var(--fv-cyan)]" /> Majuscules
-						</label>
-						<label class="flex items-center gap-2 text-xs text-[var(--fv-smoke)] cursor-pointer">
-							<input type="checkbox" bind:checked={genLowercase} class="accent-[var(--fv-cyan)]" /> Minuscules
-						</label>
-						<label class="flex items-center gap-2 text-xs text-[var(--fv-smoke)] cursor-pointer">
-							<input type="checkbox" bind:checked={genDigits} class="accent-[var(--fv-cyan)]" /> Chiffres
-						</label>
-						<label class="flex items-center gap-2 text-xs text-[var(--fv-smoke)] cursor-pointer">
-							<input type="checkbox" bind:checked={genSymbols} class="accent-[var(--fv-cyan)]" /> Symboles
-						</label>
+
+					<!-- Character options as pills -->
+					<div class="flex flex-wrap gap-2">
+						{#each [
+							{ label: 'ABC', desc: 'Majuscules', checked: genUppercase, toggle: () => genUppercase = !genUppercase },
+							{ label: 'abc', desc: 'Minuscules', checked: genLowercase, toggle: () => genLowercase = !genLowercase },
+							{ label: '123', desc: 'Chiffres', checked: genDigits, toggle: () => genDigits = !genDigits },
+							{ label: '#$&', desc: 'Symboles', checked: genSymbols, toggle: () => genSymbols = !genSymbols }
+						] as opt}
+							<button type="button" onclick={opt.toggle}
+								class="px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 border"
+								style="{opt.checked
+									? 'background: rgba(0,212,255,0.12); border-color: var(--fv-cyan); color: var(--fv-cyan);'
+									: 'background: transparent; border-color: rgba(255,255,255,0.08); color: var(--fv-smoke);'}"
+							>
+								<span class="font-bold">{opt.label}</span>
+								<span class="ml-1 opacity-70">{opt.desc}</span>
+							</button>
+						{/each}
 					</div>
 				{:else}
-					<div class="flex items-center justify-between">
-						<span class="text-xs text-[var(--fv-smoke)]">Mots: {genWordCount}</span>
-						<input type="range" min="3" max="10" bind:value={genWordCount} class="w-32 accent-[var(--fv-cyan)]" />
+					<!-- Passphrase options -->
+					<div>
+						<div class="flex items-center justify-between mb-2">
+							<span class="text-xs text-white/60">Nombre de mots</span>
+							<span class="text-sm font-bold text-white">{genWordCount}</span>
+						</div>
+						<input type="range" min="3" max="10" bind:value={genWordCount} class="w-full h-1.5 rounded-full appearance-none cursor-pointer" style="background: linear-gradient(to right, var(--fv-cyan) {((genWordCount - 3) / 7) * 100}%, rgba(255,255,255,0.1) {((genWordCount - 3) / 7) * 100}%); accent-color: var(--fv-cyan);" />
 					</div>
 					<div class="flex gap-3">
 						<div class="flex-1">
-							<label class="block text-[10px] text-[var(--fv-smoke)] mb-1">Séparateur</label>
-							<select bind:value={genSeparator} class="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none">
-								<option value="-">Tiret (-)</option>
-								<option value=".">Point (.)</option>
-								<option value="_">Underscore (_)</option>
-								<option value=" ">Espace</option>
-							</select>
+							<span class="block text-[10px] text-white/50 mb-1.5 uppercase tracking-wider">Séparateur</span>
+							<div class="flex gap-1.5">
+								{#each [{v: '-', l: '—'}, {v: '.', l: '·'}, {v: '_', l: '_'}, {v: ' ', l: '␣'}] as sep}
+									<button type="button" onclick={() => genSeparator = sep.v}
+										class="w-9 h-9 rounded-lg text-sm font-mono flex items-center justify-center transition-all border"
+										style="{genSeparator === sep.v
+											? 'background: rgba(0,212,255,0.12); border-color: var(--fv-cyan); color: var(--fv-cyan);'
+											: 'background: transparent; border-color: rgba(255,255,255,0.08); color: var(--fv-smoke);'}"
+									>{sep.l}</button>
+								{/each}
+							</div>
 						</div>
-						<label class="flex items-center gap-2 text-xs text-[var(--fv-smoke)] cursor-pointer self-end pb-2">
-							<input type="checkbox" bind:checked={genCapitalize} class="accent-[var(--fv-cyan)]" /> Majuscule initiale
-						</label>
+						<button type="button" onclick={() => genCapitalize = !genCapitalize}
+							class="self-end mb-0.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border"
+							style="{genCapitalize
+								? 'background: rgba(0,212,255,0.12); border-color: var(--fv-cyan); color: var(--fv-cyan);'
+								: 'background: transparent; border-color: rgba(255,255,255,0.08); color: var(--fv-smoke);'}"
+						>Aa Majuscule</button>
 					</div>
 				{/if}
 
-				<div class="flex gap-2">
-					<button type="button" onclick={handleGeneratePassword} class="fv-btn fv-btn-primary text-xs !py-2 flex-1">
-						Générer
-					</button>
-					<button type="button" onclick={() => { regenSpin = false; requestAnimationFrame(() => { regenSpin = true; }); handleGeneratePassword(); }} class="fv-btn fv-btn-ghost text-xs !py-2 !px-3" title="Régénérer">
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="{regenSpin ? 'fv-spin-once' : ''}"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-					</button>
-				</div>
+				<!-- Generate button -->
+				<button type="button" onclick={handleGeneratePassword}
+					class="w-full py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
+					style="background: var(--fv-cyan); color: var(--fv-abyss);"
+				>
+					Générer un mot de passe
+				</button>
 			</div>
 		{/if}
 	</div>
