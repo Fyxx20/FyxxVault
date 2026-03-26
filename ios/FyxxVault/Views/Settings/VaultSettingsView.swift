@@ -360,20 +360,23 @@ struct VaultSettingsView: View {
         switch syncService.state {
         case .syncing:
             Image(systemName: "arrow.triangle.2.circlepath.icloud.fill")
-                .font(.system(size: 12))
+                .font(.system(size: 14))
                 .foregroundStyle(FVColor.cyan)
-                .rotationEffect(.degrees(syncService.state == .syncing ? 360 : 0))
+                .rotationEffect(.degrees(360))
                 .animation(.linear(duration: 1.5).repeatForever(autoreverses: false), value: syncService.state)
         case .error:
             Image(systemName: "exclamationmark.icloud.fill")
-                .font(.system(size: 12))
+                .font(.system(size: 14))
                 .foregroundStyle(FVColor.warning)
         case .idle where syncService.isCloudAuthenticated:
             Image(systemName: "checkmark.icloud.fill")
-                .font(.system(size: 12))
+                .font(.system(size: 14))
                 .foregroundStyle(FVColor.success)
         default:
-            EmptyView()
+            // Not connected yet — show gray cloud
+            Image(systemName: "icloud.fill")
+                .font(.system(size: 14))
+                .foregroundStyle(FVColor.smoke.opacity(0.5))
         }
     }
 
