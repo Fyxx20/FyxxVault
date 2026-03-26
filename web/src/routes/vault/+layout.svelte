@@ -200,7 +200,7 @@
 		<aside class="
 			fixed lg:sticky top-0 left-0 z-50 h-screen w-[260px]
 			bg-[var(--fv-obsidian)] border-r border-white/[0.06]
-			flex flex-col transition-transform duration-300
+			flex flex-col overflow-hidden transition-transform duration-300
 			{sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
 			sidebar-premium
 		">
@@ -224,7 +224,7 @@
 			<div class="relative z-10 mx-5 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"></div>
 
 			<!-- Navigation -->
-			<nav class="relative z-10 flex-1 px-3 py-4 space-y-1">
+			<nav class="relative z-10 flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
 				{#each navItems as item}
 					<a
 						href={item.path}
@@ -271,7 +271,8 @@
 				{/each}
 			</nav>
 
-			<!-- Separator -->
+			<!-- Bottom section (fixed) -->
+			<div class="flex-shrink-0">
 			<div class="relative z-10 mx-5 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"></div>
 
 			<!-- Upgrade Pro (hidden if already Pro) -->
@@ -318,6 +319,7 @@
 					Deconnexion
 				</button>
 			</div>
+			</div><!-- end bottom section -->
 		</aside>
 
 		<!-- Main content -->
