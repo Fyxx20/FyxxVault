@@ -64,7 +64,7 @@ struct VaultListView: View {
                     // Header
                     HStack(alignment: .top, spacing: 12) {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("\(timeGreeting), Coffre")
+                            Text(String(localized: "vault.title"))
                                 .font(FVFont.display(32))
                                 .foregroundStyle(.white)
                                 .lineLimit(1)

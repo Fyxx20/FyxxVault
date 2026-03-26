@@ -490,6 +490,7 @@
 "vault.greeting.evening" = "Bonsoir";
 
 /* Vault General */
+"vault.title" = "Mon Coffre";
 "vault.subtitle" = "Stockage chiffré local • accès MFA par entrée";
 
 /* Paywall */
