@@ -206,7 +206,7 @@
 </svelte:head>
 
 {#if !auth.isPro}
-<div class="max-w-2xl mx-auto">
+<div class="max-w-2xl mx-auto flex items-center justify-center" style="min-height: calc(100vh - 120px);">
 	<div class="fv-glass p-10 text-center">
 		<div class="w-20 h-20 rounded-full bg-[var(--fv-gold)]/10 flex items-center justify-center mx-auto mb-5">
 			<span class="text-4xl">👑</span>
