@@ -31,6 +31,20 @@
 		}
 	});
 
+	async function handleSidebarCheckout() {
+		try {
+			const res = await fetch('/api/checkout', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ plan: 'monthly', email: auth.user?.email })
+			});
+			const data = await res.json();
+			if (data.url) window.location.href = data.url;
+		} catch (e) {
+			console.error('Checkout error:', e);
+		}
+	}
+
 	async function handleLogout() {
 		resetVault();
 		await logout();
@@ -123,9 +137,12 @@
 						<span class="text-xs font-bold text-[var(--fv-gold)]">FyxxVault Pro</span>
 					</div>
 					<p class="text-[10px] text-[var(--fv-smoke)] mb-3 leading-relaxed">Comptes illimités, Dark Web, emails masqués</p>
-					<a href="/vault/settings" class="block w-full text-center px-3 py-2 rounded-xl bg-gradient-to-r from-[var(--fv-gold)] to-[var(--fv-gold-light)] text-[#1a1a2e] text-xs font-bold hover:shadow-lg hover:shadow-[var(--fv-gold)]/20 transition-all">
+					<button
+						onclick={handleSidebarCheckout}
+						class="block w-full text-center px-3 py-2 rounded-xl bg-gradient-to-r from-[var(--fv-gold)] to-[var(--fv-gold-light)] text-[#1a1a2e] text-xs font-bold hover:shadow-lg hover:shadow-[var(--fv-gold)]/20 transition-all"
+					>
 						4,99€/mois — Essai gratuit
-					</a>
+					</button>
 				</div>
 			</div>
 

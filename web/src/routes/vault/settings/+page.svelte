@@ -20,6 +20,7 @@
 
 	// Subscription
 	let selectedPlan = $state<'monthly' | 'yearly'>('yearly');
+	let checkoutLoading = $state(false);
 	const proFeatures = [
 		'Comptes illimités',
 		'Surveillance Dark Web',
@@ -27,6 +28,27 @@
 		'Partage sécurisé',
 		'Support prioritaire'
 	];
+
+	async function handleCheckout() {
+		checkoutLoading = true;
+		try {
+			const res = await fetch('/api/checkout', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ plan: selectedPlan, email: auth.user?.email })
+			});
+			const data = await res.json();
+			if (data.url) {
+				window.location.href = data.url;
+			} else {
+				alert(data.error || 'Erreur lors de la création du paiement.');
+			}
+		} catch (e: any) {
+			alert(e.message || 'Erreur réseau.');
+		} finally {
+			checkoutLoading = false;
+		}
+	}
 
 	async function handleChangePassword() {
 		changeError = '';
@@ -157,9 +179,14 @@
 			</button>
 		</div>
 
-		<button class="fv-btn fv-btn-gold w-full text-sm !py-3">
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-			Essai gratuit 14 jours
+		<button onclick={handleCheckout} disabled={checkoutLoading} class="fv-btn fv-btn-gold w-full text-sm !py-3 {checkoutLoading ? 'opacity-60 cursor-not-allowed' : ''}">
+			{#if checkoutLoading}
+				<div class="w-4 h-4 border-2 border-[#1a1a2e]/30 border-t-[#1a1a2e] rounded-full animate-spin"></div>
+				Redirection...
+			{:else}
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+				Essai gratuit 14 jours
+			{/if}
 		</button>
 		<p class="text-[9px] text-[var(--fv-ash)] text-center mt-2">Paiement sécurisé par Stripe. Annule à tout moment.</p>
 	</div>
