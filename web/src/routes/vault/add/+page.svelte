@@ -36,6 +36,55 @@
 	let genSeparator = $state('-');
 	let genCapitalize = $state(true);
 	let copiedGenerated = $state(false);
+	let regenSpin = $state(false);
+	let categoryKey = $state(0);
+
+	// Validation state
+	let titleTouched = $state(false);
+	const titleValid = $derived(entry.title.trim().length > 0);
+
+	// Auto-save draft to localStorage
+	const DRAFT_KEY = 'fv_draft_entry';
+
+	function saveDraft() {
+		if (editId) return; // Don't save drafts when editing
+		try {
+			localStorage.setItem(DRAFT_KEY, JSON.stringify(entry));
+		} catch {}
+	}
+
+	function loadDraft() {
+		if (editId) return;
+		try {
+			const raw = localStorage.getItem(DRAFT_KEY);
+			if (raw) {
+				const draft = JSON.parse(raw);
+				if (draft && draft.title) {
+					entry = { ...entry, ...draft };
+				}
+			}
+		} catch {}
+	}
+
+	function clearDraft() {
+		try { localStorage.removeItem(DRAFT_KEY); } catch {}
+	}
+
+	// Load draft on mount (only for new entries)
+	$effect(() => {
+		if (!editId) {
+			loadDraft();
+		}
+	});
+
+	// Auto-save draft on changes (debounced)
+	let draftTimeout: ReturnType<typeof setTimeout> | null = null;
+	$effect(() => {
+		// Track entry changes
+		const _ = JSON.stringify(entry);
+		if (draftTimeout) clearTimeout(draftTimeout);
+		draftTimeout = setTimeout(saveDraft, 1000);
+	});
 
 	// Load existing entry if editing
 	$effect(() => {
@@ -84,6 +133,7 @@
 
 	function onCategoryChange(cat: VaultCategory) {
 		entry.category = cat;
+		categoryKey++; // trigger crossfade
 		// Set default title hints based on category
 		if (!entry.title) {
 			const hints: Partial<Record<VaultCategory, string>> = {
@@ -126,6 +176,7 @@
 
 			if (result.success) {
 				success = true;
+				clearDraft();
 				setTimeout(() => goto('/vault'), 800);
 			} else {
 				error = result.error || 'Erreur lors de la sauvegarde.';
@@ -148,7 +199,7 @@
 <div class="max-w-2xl mx-auto">
 	<!-- Header -->
 	<div class="flex items-center gap-4 mb-6">
-		<button onclick={() => goto('/vault')} class="p-2 rounded-lg hover:bg-white/5 text-[var(--fv-smoke)]">
+		<button onclick={() => { if (!editId && !entry.title.trim()) clearDraft(); goto('/vault'); }} class="p-2 rounded-lg hover:bg-white/5 text-[var(--fv-smoke)] transition-colors duration-200">
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 				<line x1="19" y1="12" x2="5" y2="12"/>
 				<polyline points="12 19 5 12 12 5"/>
@@ -200,10 +251,19 @@
 				<!-- Title (always shown) -->
 				<div>
 					<label for="title" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Titre *</label>
-					<input id="title" type="text" bind:value={entry.title} placeholder="Ex: Gmail, Netflix, Banque..." class={inputClass} />
+					<div class="relative">
+						<input id="title" type="text" bind:value={entry.title} oninput={() => titleTouched = true} placeholder="Ex: Gmail, Netflix, Banque..." class="{inputClass} {titleTouched && titleValid ? '!border-[var(--fv-success)]/40' : ''}" />
+						{#if titleTouched && titleValid}
+							<div class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fv-success)] transition-opacity duration-200">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" class="fv-check-draw"/></svg>
+							</div>
+						{/if}
+					</div>
 				</div>
 
-				{#if entry.category === 'login' || entry.category === 'server' || entry.category === 'other'}
+				{#key categoryKey}
+			<div class="fv-crossfade-enter">
+			{#if entry.category === 'login' || entry.category === 'server' || entry.category === 'other'}
 					<!-- LOGIN / SERVER / OTHER -->
 					<div>
 						<label for="website" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Site web</label>
@@ -357,6 +417,8 @@
 						</div>
 					</div>
 				{/if}
+			</div>
+			{/key}
 
 				<!-- Notes (always shown) -->
 				<div>
@@ -439,8 +501,11 @@
 
 			<!-- Error -->
 			{#if error}
-				<div class="p-3 rounded-xl bg-[var(--fv-danger)]/10 border border-[var(--fv-danger)]/20">
-					<p class="text-sm text-[var(--fv-danger)]">{error}</p>
+				<div class="p-3 rounded-xl bg-[var(--fv-danger)]/10 border border-[var(--fv-danger)]/20 fv-shake">
+					<p class="text-sm text-[var(--fv-danger)] flex items-center gap-2">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+						{error}
+					</p>
 				</div>
 			{/if}
 
@@ -491,10 +556,10 @@
 		<!-- Strength bar -->
 		{#if entry.password}
 			<div class="mt-2 flex items-center gap-2">
-				<div class="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
-					<div class="h-full rounded-full transition-all duration-300" style="width: {strength.score}%; background: {strength.color};"></div>
+				<div class="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
+					<div class="h-full rounded-full" style="width: {strength.score}%; background: {strength.color}; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;"></div>
 				</div>
-				<span class="text-[10px] font-semibold" style="color: {strength.color};">{strength.label}</span>
+				<span class="text-[10px] font-semibold transition-colors duration-300" style="color: {strength.color};">{strength.label}</span>
 			</div>
 		{/if}
 
@@ -559,8 +624,8 @@
 					<button type="button" onclick={handleGeneratePassword} class="fv-btn fv-btn-primary text-xs !py-2 flex-1">
 						Générer
 					</button>
-					<button type="button" onclick={() => { handleGeneratePassword(); }} class="fv-btn fv-btn-ghost text-xs !py-2 !px-3" title="Régénérer">
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+					<button type="button" onclick={() => { regenSpin = false; requestAnimationFrame(() => { regenSpin = true; }); handleGeneratePassword(); }} class="fv-btn fv-btn-ghost text-xs !py-2 !px-3" title="Régénérer">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="{regenSpin ? 'fv-spin-once' : ''}"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
 					</button>
 				</div>
 			</div>

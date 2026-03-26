@@ -115,6 +115,48 @@
 	function getBreachedEntries() {
 		return vault.entries.filter(e => hibpResults.has(e.id));
 	}
+
+	// Animated stat counters
+	let displayWeak = $state(0);
+	let displayReused = $state(0);
+	let displayNoMfa = $state(0);
+	let displayExpired = $state(0);
+	let statsAnimated = $state(false);
+
+	$effect(() => {
+		if (statsAnimated) return;
+		if (vault.entries.length > 0 || stats.score > 0) {
+			statsAnimated = true;
+			animateCounter((v) => displayWeak = v, stats.weak, 600);
+			animateCounter((v) => displayReused = v, stats.reused, 700);
+			animateCounter((v) => displayNoMfa = v, stats.noMfa, 800);
+			animateCounter((v) => displayExpired = v, stats.expired, 900);
+		}
+	});
+
+	function animateCounter(setter: (v: number) => void, target: number, duration: number) {
+		if (target === 0) { setter(0); return; }
+		const start = performance.now();
+		function tick(now: number) {
+			const elapsed = now - start;
+			const progress = Math.min(elapsed / duration, 1);
+			const eased = 1 - Math.pow(1 - progress, 3);
+			setter(Math.round(eased * target));
+			if (progress < 1) requestAnimationFrame(tick);
+		}
+		requestAnimationFrame(tick);
+	}
+
+	// Last scan timestamp
+	let lastScanTime = $state('');
+	$effect(() => {
+		if (hibpDone) {
+			lastScanTime = new Date().toLocaleString('fr-FR', {
+				day: '2-digit', month: 'short', year: 'numeric',
+				hour: '2-digit', minute: '2-digit'
+			});
+		}
+	});
 </script>
 
 <svelte:head>
@@ -125,7 +167,7 @@
 	<h1 class="text-2xl font-bold text-white mb-6">Tableau de sécurité</h1>
 
 	<!-- Score gauge -->
-	<div class="fv-glass p-8 mb-6 flex flex-col items-center">
+	<div class="fv-glass p-8 mb-6 flex flex-col items-center fv-animate-in">
 		<div class="relative w-[180px] h-[180px] mb-4">
 			<svg width="180" height="180" viewBox="0 0 180 180" class="-rotate-90">
 				<!-- Background circle -->
@@ -144,13 +186,13 @@
 					stroke-linecap="round"
 					stroke-dasharray={circumference}
 					stroke-dashoffset={offset}
-					class="transition-all duration-300"
+					style="transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease;"
 				/>
 			</svg>
 			<!-- Score text -->
 			<div class="absolute inset-0 flex flex-col items-center justify-center">
-				<span class="text-4xl font-extrabold text-white">{displayScore}</span>
-				<span class="text-xs font-semibold mt-1" style="color: {scoreColor(displayScore)};">{scoreLabel(displayScore)}</span>
+				<span class="text-4xl font-extrabold text-white fv-count-up">{displayScore}</span>
+				<span class="text-xs font-semibold mt-1 transition-colors duration-300" style="color: {scoreColor(displayScore)};">{scoreLabel(displayScore)}</span>
 			</div>
 		</div>
 		<p class="text-sm text-[var(--fv-smoke)]">Score de sécurité global</p>
@@ -158,20 +200,20 @@
 
 	<!-- Stats grid -->
 	<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-		<div class="fv-glass p-4 text-center">
-			<p class="text-2xl font-bold" style="color: {stats.weak > 0 ? 'var(--fv-danger)' : 'var(--fv-success)'};">{stats.weak}</p>
+		<div class="fv-glass p-4 text-center fv-animate-in" style="animation-delay: 100ms;">
+			<p class="text-2xl font-bold tabular-nums" style="color: {stats.weak > 0 ? 'var(--fv-danger)' : 'var(--fv-success)'};">{displayWeak}</p>
 			<p class="text-[10px] text-[var(--fv-smoke)] uppercase tracking-wider mt-1">Faibles</p>
 		</div>
-		<div class="fv-glass p-4 text-center">
-			<p class="text-2xl font-bold" style="color: {stats.reused > 0 ? 'var(--fv-danger)' : 'var(--fv-success)'};">{stats.reused}</p>
+		<div class="fv-glass p-4 text-center fv-animate-in" style="animation-delay: 150ms;">
+			<p class="text-2xl font-bold tabular-nums" style="color: {stats.reused > 0 ? 'var(--fv-danger)' : 'var(--fv-success)'};">{displayReused}</p>
 			<p class="text-[10px] text-[var(--fv-smoke)] uppercase tracking-wider mt-1">Réutilisés</p>
 		</div>
-		<div class="fv-glass p-4 text-center">
-			<p class="text-2xl font-bold" style="color: {stats.noMfa > 0 ? 'var(--fv-gold)' : 'var(--fv-success)'};">{stats.noMfa}</p>
+		<div class="fv-glass p-4 text-center fv-animate-in" style="animation-delay: 200ms;">
+			<p class="text-2xl font-bold tabular-nums" style="color: {stats.noMfa > 0 ? 'var(--fv-gold)' : 'var(--fv-success)'};">{displayNoMfa}</p>
 			<p class="text-[10px] text-[var(--fv-smoke)] uppercase tracking-wider mt-1">Sans MFA</p>
 		</div>
-		<div class="fv-glass p-4 text-center">
-			<p class="text-2xl font-bold" style="color: {stats.expired > 0 ? 'var(--fv-gold)' : 'var(--fv-success)'};">{stats.expired}</p>
+		<div class="fv-glass p-4 text-center fv-animate-in" style="animation-delay: 250ms;">
+			<p class="text-2xl font-bold tabular-nums" style="color: {stats.expired > 0 ? 'var(--fv-gold)' : 'var(--fv-success)'};">{displayExpired}</p>
 			<p class="text-[10px] text-[var(--fv-smoke)] uppercase tracking-wider mt-1">Expirés</p>
 		</div>
 	</div>
@@ -245,9 +287,12 @@
 						<p class="text-xs text-[var(--fv-danger)] font-semibold">{hibpResults.size} mot{hibpResults.size > 1 ? 's' : ''} de passe compromis</p>
 						<p class="text-[10px] text-[var(--fv-smoke)] mt-0.5">Ces mots de passe apparaissent dans des fuites de données. Change-les immédiatement.</p>
 					</div>
-					{#each getBreachedEntries() as entry}
+					{#if lastScanTime}
+					<p class="text-[10px] text-[var(--fv-ash)] mb-3">Dernière analyse : {lastScanTime}</p>
+				{/if}
+				{#each getBreachedEntries() as entry}
 						{@const count = hibpResults.get(entry.id) ?? 0}
-						<a href="/vault/add?edit={entry.id}" class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+						<a href="/vault/add?edit={entry.id}" class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors fv-pulse-danger">
 							<span class="text-base">{CATEGORY_META[entry.category]?.icon ?? '📦'}</span>
 							<div class="flex-1 min-w-0">
 								<p class="text-sm text-white truncate">{entry.title}</p>
@@ -267,16 +312,32 @@
 	{/if}
 
 	<!-- Recommendations -->
-	<div class="fv-glass p-5 mb-6">
+	<div class="fv-glass p-5 mb-6 fv-animate-in" style="animation-delay: 300ms;">
 		<h2 class="text-sm font-bold text-white mb-4">Recommandations</h2>
 		<div class="space-y-3">
-			{#each recommendations() as rec}
-				<div class="flex items-start gap-3 p-3 rounded-xl
+			{#each recommendations() as rec, idx}
+				<div class="flex items-start gap-3 p-3 rounded-xl transition-all duration-200 hover:translate-x-1 fv-animate-in
 					{rec.severity === 'danger' ? 'bg-[var(--fv-danger)]/5 border border-[var(--fv-danger)]/10' :
 					 rec.severity === 'warning' ? 'bg-[var(--fv-gold)]/5 border border-[var(--fv-gold)]/10' :
-					 'bg-white/5 border border-white/5'}">
-					<span class="text-base shrink-0">{rec.icon}</span>
-					<p class="text-xs text-[var(--fv-mist)] leading-relaxed">{rec.text}</p>
+					 'bg-white/5 border border-white/5'}"
+					style="animation-delay: {350 + idx * 80}ms;"
+				>
+					<div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0
+						{rec.severity === 'danger' ? 'bg-[var(--fv-danger)]/15' :
+						 rec.severity === 'warning' ? 'bg-[var(--fv-gold)]/15' :
+						 'bg-[var(--fv-success)]/15'}">
+						<span class="text-sm">{rec.icon}</span>
+					</div>
+					<div class="flex-1">
+						<p class="text-xs text-[var(--fv-mist)] leading-relaxed">{rec.text}</p>
+					</div>
+					{#if rec.severity === 'danger'}
+						<span class="text-[9px] px-2 py-0.5 rounded-full bg-[var(--fv-danger)]/15 text-[var(--fv-danger)] font-bold shrink-0 uppercase">Critique</span>
+					{:else if rec.severity === 'warning'}
+						<span class="text-[9px] px-2 py-0.5 rounded-full bg-[var(--fv-gold)]/15 text-[var(--fv-gold)] font-bold shrink-0 uppercase">Moyen</span>
+					{:else}
+						<span class="text-[9px] px-2 py-0.5 rounded-full bg-[var(--fv-success)]/15 text-[var(--fv-success)] font-bold shrink-0 uppercase">Info</span>
+					{/if}
 				</div>
 			{/each}
 		</div>

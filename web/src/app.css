@@ -105,3 +105,190 @@ body {
 .fv-btn-ghost:hover {
   background: rgba(255,255,255,0.1);
 }
+
+/* Focus-visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--fv-cyan);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* === Premium Animations === */
+
+/* Staggered fade-in for list items */
+@keyframes fv-fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fv-animate-in {
+  animation: fv-fade-in-up 0.4s ease both;
+}
+
+/* Slide-in from right for detail panel */
+@keyframes fv-slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.fv-slide-in-right {
+  animation: fv-slide-in-right 0.3s ease both;
+}
+
+/* Slide-in from left for sidebar */
+@keyframes fv-slide-in-left {
+  from { opacity: 0; transform: translateX(-100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Shake animation for errors */
+@keyframes fv-shake {
+  0%, 100% { transform: translateX(0); }
+  15%, 45%, 75% { transform: translateX(-6px); }
+  30%, 60%, 90% { transform: translateX(6px); }
+}
+.fv-shake {
+  animation: fv-shake 0.5s ease;
+}
+
+/* Pulse for breached items */
+@keyframes fv-pulse-danger {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  50% { box-shadow: 0 0 12px 2px rgba(239, 68, 68, 0.15); }
+}
+.fv-pulse-danger {
+  animation: fv-pulse-danger 2s ease-in-out infinite;
+}
+
+/* Lock bounce animation */
+@keyframes fv-lock-bounce {
+  0%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-8px); }
+  40% { transform: translateY(-4px); }
+  60% { transform: translateY(-6px); }
+  80% { transform: translateY(-2px); }
+}
+.fv-lock-bounce {
+  animation: fv-lock-bounce 2s ease-in-out infinite;
+}
+
+/* Shield pulse for auth pages */
+@keyframes fv-shield-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.2); }
+  50% { transform: scale(1.03); box-shadow: 0 0 24px 6px rgba(0, 212, 255, 0.12); }
+}
+.fv-shield-pulse {
+  animation: fv-shield-pulse 3s ease-in-out infinite;
+}
+
+/* Checkmark draw animation */
+@keyframes fv-check-draw {
+  from { stroke-dashoffset: 30; }
+  to { stroke-dashoffset: 0; }
+}
+.fv-check-draw {
+  stroke-dasharray: 30;
+  animation: fv-check-draw 0.4s ease 0.1s both;
+}
+
+/* Spin once for regenerate */
+@keyframes fv-spin-once {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.fv-spin-once {
+  animation: fv-spin-once 0.4s ease;
+}
+
+/* Fade transition for password reveal */
+.fv-fade-text {
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+/* Toast notification */
+@keyframes fv-toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fv-toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-8px) scale(0.95); }
+}
+.fv-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: var(--fv-obsidian);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--fv-success);
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+  animation: fv-toast-in 0.25s ease both;
+}
+.fv-toast.fv-toast-exit {
+  animation: fv-toast-out 0.2s ease both;
+}
+
+/* Skeleton loading shimmer */
+@keyframes fv-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.fv-skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: fv-shimmer 1.5s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+/* Counting animation helper */
+@keyframes fv-count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fv-count-up {
+  animation: fv-count-up 0.5s ease both;
+}
+
+/* Cyan glow input on focus */
+.fv-input-glow:focus {
+  border-color: rgba(0, 212, 255, 0.5) !important;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.15), 0 0 0 1px rgba(0, 212, 255, 0.3) !important;
+}
+
+/* Hover lift for cards */
+.fv-hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.fv-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Crossfade for category transitions */
+.fv-crossfade-enter {
+  animation: fv-fade-in-up 0.3s ease both;
+}
+
+/* Sidebar overlay */
+.fv-overlay {
+  transition: opacity 0.3s ease;
+}
+
+/* Active nav gradient */
+.fv-nav-active {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(138, 92, 246, 0.05)) !important;
+  border-left: 3px solid var(--fv-cyan);
+}
+
+/* Avatar glow ring */
+.fv-avatar-glow {
+  box-shadow: 0 0 0 2px var(--fv-abyss), 0 0 0 4px rgba(0, 212, 255, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+.fv-avatar-glow:hover {
+  box-shadow: 0 0 0 2px var(--fv-abyss), 0 0 0 4px rgba(0, 212, 255, 0.5), 0 0 16px rgba(0, 212, 255, 0.15);
+}

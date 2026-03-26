@@ -105,6 +105,7 @@
 		try {
 			await navigator.clipboard.writeText(text);
 			copiedField = fieldId;
+			showToast('Copié !');
 			setTimeout(() => { copiedField = null; }, 2000);
 
 			// Auto-clear clipboard after 30s for sensitive fields
@@ -131,6 +132,19 @@
 		return { color: s.color };
 	}
 
+	// Toast state
+	let toastMessage = $state('');
+	let toastVisible = $state(false);
+	let toastExiting = $state(false);
+
+	function showToast(msg: string) {
+		toastMessage = msg;
+		toastVisible = true;
+		toastExiting = false;
+		setTimeout(() => { toastExiting = true; }, 1600);
+		setTimeout(() => { toastVisible = false; toastExiting = false; }, 1850);
+	}
+
 	function formatDate(dateStr: string): string {
 		try {
 			return new Date(dateStr).toLocaleDateString('fr-FR', {
@@ -138,6 +152,25 @@
 			});
 		} catch {
 			return dateStr;
+		}
+	}
+
+	function formatRelativeTime(dateStr: string): string {
+		try {
+			const now = Date.now();
+			const date = new Date(dateStr).getTime();
+			const diff = now - date;
+			const minutes = Math.floor(diff / 60000);
+			const hours = Math.floor(diff / 3600000);
+			const days = Math.floor(diff / 86400000);
+			if (minutes < 1) return "à l'instant";
+			if (minutes < 60) return `il y a ${minutes} min`;
+			if (hours < 24) return `il y a ${hours}h`;
+			if (days < 7) return `il y a ${days}j`;
+			if (days < 30) return `il y a ${Math.floor(days / 7)} sem.`;
+			return formatDate(dateStr);
+		} catch {
+			return formatDate(dateStr);
 		}
 	}
 
@@ -304,34 +337,58 @@
 		<!-- Entry list -->
 		<div class="flex-1 min-w-0">
 			{#if vault.loading}
-				<div class="flex items-center justify-center py-20">
-					<div class="w-8 h-8 border-2 border-[var(--fv-cyan)]/30 border-t-[var(--fv-cyan)] rounded-full animate-spin"></div>
+				<div class="space-y-2">
+					{#each Array(5) as _, i}
+						<div class="fv-glass p-4 flex items-center gap-4" style="animation-delay: {i * 80}ms;">
+							<div class="w-10 h-10 rounded-xl fv-skeleton shrink-0"></div>
+							<div class="flex-1 space-y-2">
+								<div class="h-4 w-2/5 fv-skeleton rounded-lg"></div>
+								<div class="h-3 w-3/5 fv-skeleton rounded-lg"></div>
+							</div>
+							<div class="w-16 h-3 fv-skeleton rounded-lg hidden sm:block"></div>
+						</div>
+					{/each}
 				</div>
 			{:else if vault.filteredEntries.length === 0}
-				<div class="fv-glass p-12 text-center">
-					<div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-						<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="1.5">
-							<rect x="3" y="11" width="18" height="11" rx="2"/>
-							<path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-						</svg>
+				<div class="fv-glass p-16 text-center fv-animate-in">
+					<div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-[var(--fv-cyan)]/10 to-[var(--fv-violet)]/10 border border-white/5 flex items-center justify-center mx-auto mb-6">
+						{#if vault.searchQuery}
+							<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--fv-smoke)" stroke-width="1.5" stroke-linecap="round">
+								<circle cx="11" cy="11" r="8"/>
+								<line x1="21" y1="21" x2="16.65" y2="16.65"/>
+								<line x1="8" y1="11" x2="14" y2="11"/>
+							</svg>
+						{:else}
+							<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+								<rect x="3" y="11" width="18" height="11" rx="2" stroke="var(--fv-cyan)" stroke-width="1.5" opacity="0.7"/>
+								<path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="var(--fv-violet)" stroke-width="1.5" opacity="0.7"/>
+								<circle cx="12" cy="16" r="1" fill="var(--fv-cyan)" opacity="0.5"/>
+							</svg>
+						{/if}
 					</div>
 					{#if vault.searchQuery}
-						<p class="text-[var(--fv-smoke)] text-sm">Aucun résultat pour "{vault.searchQuery}"</p>
+						<h2 class="text-lg font-bold text-white mb-2">Aucun résultat</h2>
+						<p class="text-sm text-[var(--fv-smoke)] max-w-xs mx-auto">Aucun élément ne correspond à "{vault.searchQuery}". Essaie un autre terme.</p>
 					{:else}
-						<p class="text-[var(--fv-smoke)] text-sm mb-4">Ton coffre est vide</p>
-						<a href="/vault/add" class="fv-btn fv-btn-primary text-sm !py-2.5 !px-5">Ajouter un premier élément</a>
+						<h2 class="text-lg font-bold text-white mb-2">Ton coffre est vide</h2>
+						<p class="text-sm text-[var(--fv-smoke)] max-w-xs mx-auto mb-6">Ajoute ton premier mot de passe, ta carte bancaire ou toute autre donnée sensible en toute sécurité.</p>
+						<a href="/vault/add" class="fv-btn fv-btn-primary text-sm !py-3 !px-6">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+							Ajouter un premier élément
+						</a>
 					{/if}
 				</div>
 			{:else}
 				<div class="space-y-2">
-					{#each vault.filteredEntries as entry (entry.id)}
+					{#each vault.filteredEntries as entry, idx (entry.id)}
 						<button
 							onclick={() => selectEntry(entry)}
-							class="w-full text-left fv-glass p-4 flex items-center gap-4 hover:border-[var(--fv-cyan)]/20 transition-all group
-								{vault.selectedEntryId === entry.id ? 'border-[var(--fv-cyan)]/30 bg-[var(--fv-cyan)]/5' : ''}"
+							class="w-full text-left fv-glass p-4 flex items-center gap-4 fv-hover-lift fv-animate-in group
+								{vault.selectedEntryId === entry.id ? 'border-[var(--fv-cyan)]/30 bg-[var(--fv-cyan)]/5' : 'hover:border-[var(--fv-cyan)]/20'}"
+							style="animation-delay: {Math.min(idx * 50, 400)}ms;"
 						>
 							<!-- Category icon -->
-							<div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
+							<div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 transition-transform duration-200 group-hover:scale-110"
 								style="background: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'}15;">
 								{CATEGORY_META[entry.category]?.icon ?? '📦'}
 							</div>
@@ -359,11 +416,11 @@
 
 							<!-- Strength dot -->
 							{#if entry.password}
-								<div class="w-2.5 h-2.5 rounded-full shrink-0" style="background: {getStrengthDot(entry.password).color};"></div>
+								<div class="w-2.5 h-2.5 rounded-full shrink-0 transition-transform duration-200 group-hover:scale-125" style="background: {getStrengthDot(entry.password).color};"></div>
 							{/if}
 
-							<!-- Date -->
-							<span class="text-[10px] text-[var(--fv-ash)] hidden sm:block shrink-0">{formatDate(entry.lastModifiedAt)}</span>
+							<!-- Relative time -->
+							<span class="text-[10px] text-[var(--fv-ash)] hidden sm:block shrink-0 whitespace-nowrap">{formatRelativeTime(entry.lastModifiedAt)}</span>
 						</button>
 					{/each}
 				</div>
@@ -374,7 +431,7 @@
 		{#if showDetail && vault.selectedEntry}
 			{@const entry = vault.selectedEntry}
 			{@const fields = getCategoryFields(entry)}
-			<div class="hidden lg:block w-[400px] shrink-0">
+			<div class="hidden lg:block w-[350px] shrink-0 fv-slide-in-right">
 				<div class="fv-glass p-6 sticky top-8 max-h-[calc(100vh-6rem)] overflow-y-auto">
 					<!-- Header -->
 					<div class="flex items-center justify-between mb-5">
@@ -784,6 +841,16 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Toast notification -->
+{#if toastVisible}
+	<div class="fv-toast {toastExiting ? 'fv-toast-exit' : ''}">
+		<span class="flex items-center gap-2">
+			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+			{toastMessage}
+		</span>
+	</div>
+{/if}
 
 <!-- FAB on mobile -->
 <a href={canAdd ? '/vault/add' : '/vault/settings'} class="lg:hidden fixed bottom-20 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-r {canAdd ? 'from-[var(--fv-cyan)] to-[var(--fv-violet)] shadow-[var(--fv-cyan)]/30' : 'from-[var(--fv-gold)] to-[var(--fv-gold-dark,#b8860b)] shadow-[var(--fv-gold)]/30'} flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
