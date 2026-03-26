@@ -18,6 +18,16 @@
 	// Export state
 	let exportLoading = $state(false);
 
+	// Subscription
+	let selectedPlan = $state<'monthly' | 'yearly'>('yearly');
+	const proFeatures = [
+		'Comptes illimités',
+		'Surveillance Dark Web',
+		'Emails masqués',
+		'Partage sécurisé',
+		'Support prioritaire'
+	];
+
 	async function handleChangePassword() {
 		changeError = '';
 
@@ -88,7 +98,7 @@
 			</div>
 			<div class="flex items-center justify-between">
 				<span class="text-sm text-[var(--fv-smoke)]">Plan</span>
-				<span class="px-3 py-1 rounded-full bg-gradient-to-r from-[var(--fv-cyan)]/20 to-[var(--fv-violet)]/20 text-xs font-bold text-[var(--fv-cyan)]">Pro</span>
+				<span class="px-3 py-1 rounded-full bg-white/10 text-xs font-bold text-[var(--fv-smoke)]">Gratuit</span>
 			</div>
 			<div class="flex items-center justify-between">
 				<span class="text-sm text-[var(--fv-smoke)]">Éléments</span>
@@ -99,6 +109,59 @@
 				<span class="px-3 py-1 rounded-full bg-[var(--fv-success)]/10 text-xs font-bold text-[var(--fv-success)]">AES-256-GCM</span>
 			</div>
 		</div>
+	</div>
+
+	<!-- Upgrade to Pro -->
+	<div class="fv-glass p-5 mb-4 border-[var(--fv-gold)]/20 fv-glow-gold relative overflow-hidden">
+		<div class="absolute top-0 right-0 px-3 py-1 bg-gradient-to-r from-[var(--fv-gold)] to-[var(--fv-gold-light)] text-[#1a1a2e] text-[9px] font-extrabold uppercase tracking-wider rounded-bl-xl">
+			Recommandé
+		</div>
+		<div class="flex items-center gap-3 mb-4">
+			<span class="text-2xl">👑</span>
+			<div>
+				<h2 class="text-sm font-bold text-white">Passer à FyxxVault Pro</h2>
+				<p class="text-[10px] text-[var(--fv-smoke)]">Débloque toutes les fonctionnalités</p>
+			</div>
+		</div>
+
+		<ul class="space-y-2 mb-5">
+			{#each proFeatures as f}
+				<li class="flex items-center gap-2 text-xs text-[var(--fv-mist)]">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-gold)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+					{f}
+				</li>
+			{/each}
+		</ul>
+
+		<div class="grid grid-cols-2 gap-3 mb-4">
+			<button
+				onclick={() => selectedPlan = 'monthly'}
+				class="p-3 rounded-xl text-center transition-all border
+					{selectedPlan === 'monthly'
+						? 'bg-[var(--fv-gold)]/10 border-[var(--fv-gold)]/40'
+						: 'bg-white/5 border-white/10 hover:bg-white/10'}"
+			>
+				<p class="text-sm font-bold text-white">4,99€</p>
+				<p class="text-[10px] text-[var(--fv-smoke)]">par mois</p>
+			</button>
+			<button
+				onclick={() => selectedPlan = 'yearly'}
+				class="p-3 rounded-xl text-center transition-all border relative
+					{selectedPlan === 'yearly'
+						? 'bg-[var(--fv-gold)]/10 border-[var(--fv-gold)]/40'
+						: 'bg-white/5 border-white/10 hover:bg-white/10'}"
+			>
+				<span class="absolute -top-2 right-2 px-2 py-0.5 rounded-full bg-[var(--fv-gold)] text-[8px] font-bold text-[#1a1a2e]">-30%</span>
+				<p class="text-sm font-bold text-white">41,99€</p>
+				<p class="text-[10px] text-[var(--fv-smoke)]">par an</p>
+			</button>
+		</div>
+
+		<button class="fv-btn fv-btn-gold w-full text-sm !py-3">
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+			Essai gratuit 14 jours
+		</button>
+		<p class="text-[9px] text-[var(--fv-ash)] text-center mt-2">Paiement sécurisé par Stripe. Annule à tout moment.</p>
 	</div>
 
 	<!-- Security -->
