@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* FyxxVault Design System */
+:root {
+  --fv-abyss: #0a101e;
+  --fv-obsidian: #10182a;
+  --fv-void: #161e32;
+  --fv-carbon: #1a223a;
+  --fv-deep-slate: #1e2842;
+  --fv-night-purple: #28224e;
+  --fv-cyan: #00d4ff;
+  --fv-cyan-light: #78ebff;
+  --fv-violet: #8a5cf6;
+  --fv-violet-light: #ac8cff;
+  --fv-gold: #ffc837;
+  --fv-gold-light: #ffe182;
+  --fv-rose: #ff3782;
+  --fv-success: #34d399;
+  --fv-warning: #fbbf24;
+  --fv-danger: #ef4444;
+  --fv-silver: #dce4f0;
+  --fv-mist: #b4c3d7;
+  --fv-smoke: #788aa0;
+  --fv-ash: #465264;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fv-abyss);
+  color: var(--fv-silver);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--fv-ash); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--fv-smoke); }
+
+/* Glass card effect */
+.fv-glass {
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+}
+
+/* Gradient text */
+.fv-gradient-text {
+  background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow effects */
+.fv-glow-cyan { box-shadow: 0 0 30px rgba(0, 212, 255, 0.15); }
+.fv-glow-violet { box-shadow: 0 0 30px rgba(138, 92, 246, 0.15); }
+.fv-glow-gold { box-shadow: 0 0 30px rgba(255, 200, 55, 0.15); }
+
+/* Button styles */
+.fv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fv-btn-primary {
+  background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet));
+  color: white;
+}
+.fv-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3);
+}
+
+.fv-btn-gold {
+  background: linear-gradient(135deg, var(--fv-gold), var(--fv-gold-light));
+  color: #1a1a2e;
+}
+.fv-btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255, 200, 55, 0.3);
+}
+
+.fv-btn-ghost {
+  background: rgba(255,255,255,0.05);
+  color: var(--fv-silver);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.fv-btn-ghost:hover {
+  background: rgba(255,255,255,0.1);
+}
