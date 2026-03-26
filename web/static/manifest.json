@@ -1,0 +1,25 @@
+{
+  "name": "FyxxVault",
+  "short_name": "FyxxVault",
+  "description": "Gestionnaire de mots de passe chiffré — zero-knowledge",
+  "start_url": "/vault",
+  "display": "standalone",
+  "background_color": "#0A101E",
+  "theme_color": "#00D4FF",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["security", "productivity", "utilities"],
+  "lang": "fr",
+  "dir": "ltr"
+}

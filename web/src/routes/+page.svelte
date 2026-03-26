@@ -128,7 +128,7 @@
 		{ name: 'Prix mensuel', fyxx: '0-4,99 EUR', one: '2,99 USD', bit: '0-3 USD', last: '3 USD' },
 		{ name: 'Chiffrement AES-256', fyxx: true, one: true, bit: true, last: true },
 		{ name: 'Zero-knowledge', fyxx: true, one: true, bit: true, last: false },
-		{ name: 'Open source', fyxx: true, one: false, bit: true, last: false },
+		{ name: 'App desktop (Mac/Win/Linux)', fyxx: true, one: true, bit: true, last: true },
 		{ name: '2FA/TOTP integre', fyxx: true, one: true, bit: true, last: true },
 		{ name: 'Dark Web monitoring', fyxx: true, one: true, bit: false, last: true },
 		{ name: 'AutoFill iOS natif', fyxx: true, one: true, bit: true, last: true },
@@ -209,8 +209,8 @@
 			a: 'Oui, tu peux exporter l\'integralite de ton coffre en format chiffre ou en CSV. Tes donnees t\'appartiennent.',
 		},
 		{
-			q: 'FyxxVault est-il open source ?',
-			a: 'Oui. Notre code est auditable et transparent. L\'architecture de securite est documentee publiquement.',
+			q: 'FyxxVault fonctionne sur quelles plateformes ?',
+			a: 'iOS (iPhone + iPad), Web (fyxxvault.com), et desktop (Mac, Windows, Linux) via l\'app web installable. Une app native macOS est prevue.',
 		},
 	];
 
@@ -284,7 +284,7 @@
 				<span class="fv-hero__trust-sep"></span>
 				<span class="fv-hero__trust-item">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-					Open source
+					Multi-plateforme
 				</span>
 			</div>
 
