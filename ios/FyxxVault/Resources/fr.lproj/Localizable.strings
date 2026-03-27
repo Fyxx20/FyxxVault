@@ -403,6 +403,7 @@
 "vault.action.save" = "Sauvegarder";
 "vault.action.save.changes" = "Enregistrer les modifications";
 "vault.action.share" = "Partager";
+"vault.action.edit" = "Modifier";
 
 /* Vault Add */
 "vault.add.category" = "Catégorie";

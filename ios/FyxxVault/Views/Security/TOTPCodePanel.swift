@@ -11,7 +11,12 @@ struct TOTPCodePanel: View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
             let snapshot = TOTPService.snapshot(secretInput: secretInput, at: timeline.date)
             VStack(alignment: .leading, spacing: 8) {
-                Text(String(localized: "totp.title")).font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(.white.opacity(0.68))
+                HStack(spacing: 6) {
+                    FVPulsingDot(color: FVColor.cyan, size: 5)
+                    Text(String(localized: "totp.title"))
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(FVColor.smoke)
+                }
                 if let snapshot {
                     HStack {
                         Text(formatted(snapshot.code))
@@ -20,25 +25,77 @@ struct TOTPCodePanel: View {
                             .privacySensitive()
                         Button {
                             ClipboardService.copy(snapshot.code); onCopy?()
-                            fvHaptic(.light)
+                            fvHaptic(.success)
                             didCopyCode = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { didCopyCode = false }
-                        } label: { Image(systemName: didCopyCode ? "checkmark.circle.fill" : "doc.on.doc") }
-                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(didCopyCode ? FVColor.cyan : .white.opacity(0.82))
+                        } label: {
+                            Image(systemName: didCopyCode ? "checkmark.circle.fill" : "doc.on.doc")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(didCopyCode ? FVColor.success : .white.opacity(0.82))
+                        }
                         Spacer()
-                        Text("\(snapshot.remainingSeconds)s").font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(.white.opacity(0.78))
+
+                        // Circular countdown timer
+                        ZStack {
+                            Circle()
+                                .stroke(Color.white.opacity(0.08), lineWidth: 3)
+                                .frame(width: 28, height: 28)
+                            Circle()
+                                .trim(from: 0, to: Double(snapshot.remainingSeconds) / 30.0)
+                                .stroke(
+                                    snapshot.remainingSeconds <= 5 ? FVColor.danger : FVColor.cyan,
+                                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                )
+                                .frame(width: 28, height: 28)
+                                .rotationEffect(.degrees(-90))
+                                .animation(.linear(duration: 1), value: snapshot.remainingSeconds)
+
+                            Text("\(snapshot.remainingSeconds)")
+                                .font(.system(size: 9, weight: .bold, design: .rounded))
+                                .foregroundStyle(snapshot.remainingSeconds <= 5 ? FVColor.danger : .white.opacity(0.8))
+                        }
                     }
+
+                    // Progress bar
                     GeometryReader { geo in
                         let progress = Double(snapshot.remainingSeconds) / 30.0
-                        Capsule().fill(Color.white.opacity(0.14))
-                            .overlay(alignment: .leading) { Capsule().fill(FVColor.cyan).frame(width: geo.size.width * progress) }
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color.white.opacity(0.08))
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: snapshot.remainingSeconds <= 5
+                                            ? [FVColor.danger, FVColor.rose]
+                                            : [FVColor.cyan, FVColor.violet],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: geo.size.width * progress)
+                                .shadow(color: (snapshot.remainingSeconds <= 5 ? FVColor.danger : FVColor.cyan).opacity(0.3), radius: 4, y: 1)
+                        }
                     }
-                    .frame(height: 6)
+                    .frame(height: 5)
+                    .clipShape(Capsule())
                 } else {
-                    Text(String(localized: "totp.invalid.key")).font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.danger.opacity(0.9))
+                    Text(String(localized: "totp.invalid.key"))
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(FVColor.danger.opacity(0.9))
                 }
             }
-            .padding(10).background(Color.white.opacity(0.04)).clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(12)
+            .background(
+                LinearGradient(
+                    colors: [Color.white.opacity(0.06), Color.white.opacity(0.02)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(FVColor.cyan.opacity(0.15), lineWidth: 1)
+            )
         }
     }
 

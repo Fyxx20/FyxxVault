@@ -22,6 +22,8 @@ struct VaultListView: View {
     @State private var sortMode: VaultSortMode = .recent
     @State private var filterMode: VaultFilterMode = .all
     @State private var selectedCategory: VaultCategory? = nil
+    @State private var fabPressed = false
+    @State private var fabRotation: Double = 0
     @AppStorage("fyxxvault.compact.cards") private var compactCards = false
     @AppStorage("fyxxvault.accent.mode") private var accentMode = 0
     @FocusState private var isSearchFocused: Bool
@@ -64,14 +66,18 @@ struct VaultListView: View {
         ZStack(alignment: .bottomTrailing) {
             ScrollView {
                 VStack(spacing: 16) {
-                    // Header
+                    // MARK: - Premium Header
                     HStack(alignment: .top, spacing: 12) {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(String(localized: "vault.title"))
-                                .font(FVFont.display(32))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.85)
+                            HStack(spacing: 10) {
+                                Text(String(localized: "vault.title"))
+                                    .font(FVFont.display(32))
+                                    .fvAnimatedGradient()
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
+
+                                FVCountBadge(count: vaultStore.entries.count)
+                            }
 
                             Text(String(localized: "vault.subtitle"))
                                 .font(FVFont.caption(11))
@@ -134,10 +140,12 @@ struct VaultListView: View {
                         .fvGlass()
                     }
 
+                    // MARK: - Search Bar with Glow
                     HStack(spacing: 8) {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(isSearchFocused ? FVColor.cyan : FVColor.mist.opacity(0.75))
-                            .animation(.easeOut(duration: 0.2), value: isSearchFocused)
+                            .scaleEffect(isSearchFocused ? 1.1 : 1.0)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSearchFocused)
                         TextField(String(localized: "vault.list.search"), text: $query)
                             .fvPlatformTextEntry()
                             .foregroundStyle(.white)
@@ -154,7 +162,7 @@ struct VaultListView: View {
                             .transition(.move(edge: .trailing).combined(with: .opacity))
                         }
                     }
-                    .animation(.easeOut(duration: 0.2), value: isSearchFocused)
+                    .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isSearchFocused)
                     .padding(.horizontal, 16).padding(.vertical, 14)
                     .background(Color.white.opacity(0.05))
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -162,7 +170,7 @@ struct VaultListView: View {
                         RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(
                             LinearGradient(
                                 colors: [
-                                    isSearchFocused ? FVColor.cyan.opacity(0.4) : Color.white.opacity(0.14),
+                                    isSearchFocused ? FVColor.cyan.opacity(0.5) : Color.white.opacity(0.14),
                                     FVColor.violet.opacity(0.28)
                                 ],
                                 startPoint: .topLeading,
@@ -171,12 +179,17 @@ struct VaultListView: View {
                             lineWidth: isSearchFocused ? 1.5 : 1
                         )
                     )
+                    .shadow(color: isSearchFocused ? FVColor.cyan.opacity(0.15) : .clear, radius: 12, y: 4)
                     .fvGlass(cornerRadius: 18, padding: 0)
 
+                    // MARK: - Filter Chips
                     HStack(spacing: 10) {
                         Menu {
                             ForEach(VaultFilterMode.allCases) { f in
-                                Button(f.rawValue) { filterMode = f }
+                                Button(f.rawValue) {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { filterMode = f }
+                                    fvHaptic(.light)
+                                }
                             }
                         } label: {
                             HStack(spacing: 6) {
@@ -184,17 +197,30 @@ struct VaultListView: View {
                                 Text(filterMode.rawValue)
                             }
                             .font(FVFont.caption(12))
-                            .foregroundStyle(FVColor.cyan)
+                            .foregroundStyle(filterMode != .all ? .white : FVColor.cyan)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 9)
-                            .background(FVColor.cyan.opacity(0.08))
+                            .background(
+                                Group {
+                                    if filterMode != .all {
+                                        FVGradient.cyanToViolet.opacity(0.5)
+                                    } else {
+                                        FVColor.cyan.opacity(0.08)
+                                    }
+                                }
+                            )
                             .clipShape(Capsule())
-                            .overlay(Capsule().strokeBorder(FVColor.cyan.opacity(0.15)))
+                            .overlay(Capsule().strokeBorder(filterMode != .all ? FVColor.cyan.opacity(0.4) : FVColor.cyan.opacity(0.15)))
+                            .scaleEffect(filterMode != .all ? 1.02 : 1.0)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: filterMode)
                         }
 
                         Menu {
                             ForEach(VaultSortMode.allCases) { m in
-                                Button(m.rawValue) { sortMode = m }
+                                Button(m.rawValue) {
+                                    sortMode = m
+                                    fvHaptic(.light)
+                                }
                             }
                         } label: {
                             HStack(spacing: 6) {
@@ -213,6 +239,7 @@ struct VaultListView: View {
                         Button(selectionMode ? String(localized: "vault.list.done") : String(localized: "vault.list.select")) {
                             selectionMode.toggle()
                             if !selectionMode { selectedEntryIDs.removeAll() }
+                            fvHaptic(.light)
                         }
                         .font(FVFont.caption(11))
                         .foregroundStyle(FVColor.cyan)
@@ -224,12 +251,16 @@ struct VaultListView: View {
                     }
                     .fvGlass(cornerRadius: 14, padding: 12)
 
+                    // MARK: - Category Chips (horizontal scroll with snap)
                     if filterMode == .byCategory {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
                                 ForEach(VaultCategory.allCases) { cat in
                                     Button {
-                                        selectedCategory = (selectedCategory == cat) ? nil : cat
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                            selectedCategory = (selectedCategory == cat) ? nil : cat
+                                        }
+                                        fvHaptic(.light)
                                     } label: {
                                         HStack(spacing: 5) {
                                             Image(systemName: cat.iconName).font(.system(size: 10))
@@ -237,16 +268,32 @@ struct VaultListView: View {
                                         }
                                         .foregroundStyle(selectedCategory == cat ? .white : FVColor.mist)
                                         .padding(.horizontal, 10).padding(.vertical, 7)
-                                        .background(selectedCategory == cat ? cat.iconColor.opacity(0.25) : Color.white.opacity(0.05))
+                                        .background(
+                                            Group {
+                                                if selectedCategory == cat {
+                                                    LinearGradient(
+                                                        colors: [cat.iconColor.opacity(0.4), FVColor.violet.opacity(0.3)],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    )
+                                                } else {
+                                                    Color.white.opacity(0.05)
+                                                }
+                                            }
+                                        )
                                         .clipShape(Capsule())
                                         .overlay(Capsule().strokeBorder(selectedCategory == cat ? cat.iconColor.opacity(0.4) : Color.white.opacity(0.08)))
+                                        .scaleEffect(selectedCategory == cat ? 1.05 : 1.0)
+                                        .animation(.spring(response: 0.25, dampingFraction: 0.6), value: selectedCategory)
                                     }
                                 }
                             }
                         }
                         .fvGlass(cornerRadius: 14, padding: 10)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
+                    // MARK: - Bulk Selection Bar
                     if selectionMode {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 16) {
@@ -263,6 +310,7 @@ struct VaultListView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .fvGlass(cornerRadius: 14, padding: 12)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
                     if !vaultStore.integrityWarning.isEmpty {
@@ -273,8 +321,68 @@ struct VaultListView: View {
                             .fvGlass()
                     }
 
+                    // MARK: - Entry List or Empty State
                     if filteredEntries.isEmpty {
-                        FVEmptyState(icon: "lock.rectangle.stack", title: String(localized: "vault.list.empty.title"), subtitle: String(localized: "vault.list.empty.subtitle"))
+                        // Premium Empty State
+                        VStack(spacing: 20) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        RadialGradient(
+                                            colors: [FVColor.cyan.opacity(0.12), FVColor.violet.opacity(0.06), .clear],
+                                            center: .center,
+                                            startRadius: 10,
+                                            endRadius: 80
+                                        )
+                                    )
+                                    .frame(width: 160, height: 160)
+
+                                Image(systemName: "lock.rectangle.stack")
+                                    .font(.system(size: 52, weight: .light))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [FVColor.cyan.opacity(0.6), FVColor.violet.opacity(0.4)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                            }
+
+                            Text("Ton coffre est vide")
+                                .font(FVFont.heading(20))
+                                .foregroundStyle(FVColor.silver)
+
+                            Text(String(localized: "vault.list.empty.subtitle"))
+                                .font(FVFont.body(14))
+                                .foregroundStyle(FVColor.smoke)
+                                .multilineTextAlignment(.center)
+
+                            Button {
+                                fvHaptic(.medium)
+                                if !subscriptionService.isProUser && vaultStore.entries.count >= 5 {
+                                    showPaywall = true
+                                } else {
+                                    showAddSheet = true
+                                }
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.system(size: 16, weight: .bold))
+                                    Text("Ajouter ton premier mot de passe")
+                                        .font(FVFont.label(14))
+                                }
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 14)
+                                .background(FVGradient.cyanToViolet)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .shadow(color: FVColor.cyan.opacity(0.3), radius: 12, y: 4)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 48)
+                        .fvPremiumCard()
                     } else {
                         LazyVStack(spacing: 12) {
                             ForEach(Array(filteredEntries.enumerated()), id: \.element.id) { index, entry in
@@ -309,6 +417,7 @@ struct VaultListView: View {
             }
             .scrollIndicators(.hidden)
 
+            // MARK: - Undo Toast
             if showUndoDeleteToast {
                 HStack {
                     Text(String(localized: "vault.list.toast.deleted")).font(FVFont.caption(13)).foregroundStyle(.white)
@@ -325,11 +434,15 @@ struct VaultListView: View {
                 .background(Color.black.opacity(0.55))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .padding(.horizontal, 16).padding(.bottom, 96)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
 
-            // FAB — Floating Action Button
+            // MARK: - FAB with Premium Effects
             Button {
                 fvHaptic(.medium)
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
+                    fabRotation += 90
+                }
                 if !subscriptionService.isProUser && vaultStore.entries.count >= 5 {
                     showPaywall = true
                 } else {
@@ -346,12 +459,21 @@ struct VaultListView: View {
                         .frame(width: 54, height: 54)
                         .overlay(Circle().strokeBorder(Color.white.opacity(0.25), lineWidth: 1.2))
                         .shadow(color: FVColor.cyan.opacity(0.4), radius: 14, y: 4)
-                        .shadow(color: .black.opacity(0.2), radius: 8, y: 6)
+                        .shadow(color: FVColor.violet.opacity(0.2), radius: 8, y: 6)
+                        .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
 
                     Image(systemName: "plus")
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(.white)
+                        .rotationEffect(.degrees(fabRotation))
                 }
+                .scaleEffect(fabPressed ? 0.9 : 1.0)
+            }
+            .buttonStyle(.plain)
+            .pressEvents {
+                withAnimation(.easeOut(duration: 0.1)) { fabPressed = true }
+            } onRelease: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) { fabPressed = false }
             }
             .padding(.trailing, 20)
             .padding(.bottom, 68)

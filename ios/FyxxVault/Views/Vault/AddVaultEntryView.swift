@@ -21,6 +21,7 @@ struct AddVaultEntryView: View {
     @State private var expirationPolicy: PasswordExpirationPolicy = .none
     @State private var policy = PasswordPolicy()
     @State private var category: VaultCategory = .login
+    @State private var showSaveSuccess = false
 
     private var isReusedPassword: Bool { vaultStore.isPasswordReused(password) }
     private var hasInsecureHTTPURL: Bool { website.lowercased().hasPrefix("http://") }
@@ -33,79 +34,129 @@ struct AddVaultEntryView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 18) {
-                    // Category picker
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "vault.add.category")).font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+                VStack(spacing: 24) {
+                    // MARK: - Category Picker (horizontal scroll, larger icons)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(String(localized: "vault.add.category"))
+                            .font(FVFont.caption(11))
+                            .kerning(1.2)
+                            .foregroundStyle(FVColor.smoke)
                         ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
+                            HStack(spacing: 10) {
                                 ForEach(VaultCategory.allCases) { cat in
                                     Button {
-                                        category = cat
-                                        // Reset custom fields to match new category
-                                        customFields = cat.suggestedFieldKeys.map { VaultCustomField(key: $0, value: "") }
-                                    } label: {
-                                        HStack(spacing: 6) {
-                                            Image(systemName: cat.iconName).font(.system(size: 11))
-                                            Text(cat.label).font(.system(size: 12, weight: .medium, design: .rounded))
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                            category = cat
                                         }
-                                        .foregroundStyle(category == cat ? .white : FVColor.mist)
-                                        .padding(.horizontal, 12).padding(.vertical, 8)
-                                        .background(category == cat ? cat.iconColor.opacity(0.3) : Color.white.opacity(0.05))
-                                        .clipShape(Capsule())
-                                        .overlay(Capsule().strokeBorder(category == cat ? cat.iconColor.opacity(0.5) : Color.white.opacity(0.1)))
+                                        customFields = cat.suggestedFieldKeys.map { VaultCustomField(key: $0, value: "") }
+                                        fvHaptic(.light)
+                                    } label: {
+                                        VStack(spacing: 6) {
+                                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                .fill(
+                                                    category == cat
+                                                        ? LinearGradient(colors: [cat.iconColor.opacity(0.4), FVColor.violet.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                                        : LinearGradient(colors: [Color.white.opacity(0.06), Color.white.opacity(0.03)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                                )
+                                                .frame(width: 50, height: 50)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                        .strokeBorder(
+                                                            category == cat ? cat.iconColor.opacity(0.5) : Color.white.opacity(0.1),
+                                                            lineWidth: category == cat ? 1.5 : 1
+                                                        )
+                                                )
+                                                .overlay {
+                                                    Image(systemName: cat.iconName)
+                                                        .font(.system(size: 18, weight: .medium))
+                                                        .foregroundStyle(category == cat ? .white : FVColor.mist)
+                                                }
+                                                .scaleEffect(category == cat ? 1.08 : 1.0)
+
+                                            Text(cat.label)
+                                                .font(FVFont.caption(9))
+                                                .foregroundStyle(category == cat ? .white : FVColor.smoke)
+                                                .lineLimit(1)
+                                        }
                                     }
+                                    .buttonStyle(.plain)
+                                    .animation(.spring(response: 0.25, dampingFraction: 0.6), value: category)
                                 }
                             }
+                            .padding(.horizontal, 4)
                         }
-                    }.fvGlass()
+                    }
+                    .fvGlass()
 
-                    // Category-specific fields
+                    // MARK: - Category-specific fields
                     categoryFields
 
                     // Notes (always shown)
                     FVTextField(title: String(localized: "vault.field.notes"), text: $notes)
 
-                    Toggle(String(localized: "vault.add.mark.favorite"), isOn: $isFavorite).toggleStyle(.switch).fvGlass()
+                    Toggle(String(localized: "vault.add.mark.favorite"), isOn: $isFavorite)
+                        .toggleStyle(.switch)
+                        .fvGlass()
 
-                    // Warnings (only for categories with passwords)
+                    // MARK: - Warnings
                     if category == .login || category == .wifiPassword || category == .softwareLicense,
                        isReusedPassword && !password.isEmpty {
-                        Text(String(localized: "vault.warning.reused.password"))
-                            .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(.orange)
-                            .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                            Text(String(localized: "vault.warning.reused.password"))
+                                .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(.orange)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                     if let pwnedCount, pwnedCount > 0 {
-                        Text(String(format: NSLocalizedString("vault.warning.breached %lld", comment: ""), pwnedCount))
-                            .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.danger.opacity(0.9))
-                            .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.shield.fill")
+                                .foregroundStyle(FVColor.danger)
+                            Text(String(format: NSLocalizedString("vault.warning.breached %lld", comment: ""), pwnedCount))
+                                .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.danger.opacity(0.9))
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                     if hasInsecureHTTPURL {
-                        Text(String(localized: "vault.warning.insecure.url"))
-                            .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.danger.opacity(0.9))
-                            .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+                        HStack(spacing: 8) {
+                            Image(systemName: "lock.open.trianglebadge.exclamationmark.fill")
+                                .foregroundStyle(FVColor.danger)
+                            Text(String(localized: "vault.warning.insecure.url"))
+                                .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.danger.opacity(0.9))
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
                     }
                     if isDuplicateEntry {
-                        Text(String(localized: "vault.warning.duplicate"))
-                            .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(.orange)
-                            .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
+                        HStack(spacing: 8) {
+                            Image(systemName: "doc.on.doc.fill")
+                                .foregroundStyle(.orange)
+                            Text(String(localized: "vault.warning.duplicate"))
+                                .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(.orange)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading).fvGlass()
                     }
 
-                    // MFA (only for login accounts)
+                    // MARK: - MFA Section
                     if category == .login {
                         VStack(alignment: .leading, spacing: 10) {
                             Toggle(String(localized: "vault.add.enable.mfa"), isOn: $mfaEnabled).toggleStyle(.switch)
                             if mfaEnabled {
                                 FVTextField(title: String(localized: "vault.field.mfa.secret"), text: $mfaSecret, secure: true)
-                                Button(String(localized: "vault.add.scan.qr")) { showScanner = true }
-                                    .font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.cyan)
+                                Button(String(localized: "vault.add.scan.qr")) {
+                                    showScanner = true
+                                    fvHaptic(.light)
+                                }
+                                .font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(FVColor.cyan)
                             }
                         }.fvGlass()
                     }
 
-                    // Custom fields
+                    // MARK: - Custom Fields
                     VStack(alignment: .leading, spacing: 10) {
-                        Text(String(localized: "vault.add.custom.fields")).font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+                        Text(String(localized: "vault.add.custom.fields")).font(FVFont.caption(11)).kerning(1.2).foregroundStyle(FVColor.smoke)
                         FVTextField(title: String(localized: "vault.field.custom.key"), text: $newFieldKey)
                         FVTextField(title: String(localized: "vault.field.custom.value"), text: $newFieldValue)
                         Button(String(localized: "vault.add.custom.field.add")) {
@@ -114,6 +165,7 @@ struct AddVaultEntryView: View {
                             guard !k.isEmpty, !v.isEmpty else { return }
                             customFields.append(VaultCustomField(key: k, value: v))
                             newFieldKey = ""; newFieldValue = ""
+                            fvHaptic(.light)
                         }.foregroundStyle(FVColor.cyan)
                         ForEach(customFields) { f in
                             HStack { Text(f.key).foregroundStyle(.white.opacity(0.9)); Spacer(); Text(f.value).foregroundStyle(.white.opacity(0.65)) }
@@ -121,11 +173,14 @@ struct AddVaultEntryView: View {
                         }
                     }.fvGlass()
 
-                    FVButton(title: String(localized: "vault.action.save")) {
+                    // MARK: - Save Button (full-width gradient)
+                    Button {
                         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
                         let effectivePassword = category == .secureNote ? " " : password
                         guard !cleanTitle.isEmpty, !effectivePassword.trimmingCharacters(in: .whitespaces).isEmpty || category == .secureNote, !isDuplicateEntry else { return }
                         guard !mfaEnabled || !mfaSecret.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+                        fvHaptic(.success)
+                        showSaveSuccess = true
                         vaultStore.addEntry(VaultEntry(
                             title: cleanTitle,
                             username: username.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -140,8 +195,37 @@ struct AddVaultEntryView: View {
                             expirationPolicy: expirationPolicy,
                             category: category
                         ))
-                        dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            dismiss()
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            if showSaveSuccess {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .transition(.scale.combined(with: .opacity))
+                            } else {
+                                Image(systemName: "square.and.arrow.down.fill")
+                                    .font(.system(size: 15, weight: .bold))
+                                Text(String(localized: "vault.action.save"))
+                                    .font(FVFont.label(15))
+                            }
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(FVGradient.cyanToViolet)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                        .shadow(color: FVColor.cyan.opacity(0.3), radius: 16, y: 6)
+                        .shadow(color: FVColor.violet.opacity(0.15), radius: 8, y: 3)
                     }
+                    .buttonStyle(.plain)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: showSaveSuccess)
                 }
                 .padding(.top, 10).padding(.horizontal, 20).padding(.bottom, 30)
             }
@@ -180,10 +264,15 @@ struct AddVaultEntryView: View {
             FVTextField(title: String(localized: "vault.field.website"), text: $website)
             FVTextField(title: String(localized: "vault.field.username"), text: $username)
             FVTextField(title: String(localized: "vault.field.password"), text: $password)
+
+            // Premium Strength indicator with animated bar
             PasswordStrengthView(password: password)
+
+            // Password generator in a premium card
             PasswordGeneratorView(policy: $policy) { password = PasswordToolkit.generate(policy: policy) }
+
             VStack(alignment: .leading, spacing: 8) {
-                Text(String(localized: "vault.field.password.expiration")).font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+                Text(String(localized: "vault.field.password.expiration")).font(FVFont.caption(11)).kerning(1.2).foregroundStyle(FVColor.smoke)
                 Picker(String(localized: "vault.field.expiration"), selection: $expirationPolicy) {
                     ForEach(PasswordExpirationPolicy.allCases) { p in Text(p.label).tag(p) }
                 }.pickerStyle(.menu).foregroundStyle(FVColor.cyan)

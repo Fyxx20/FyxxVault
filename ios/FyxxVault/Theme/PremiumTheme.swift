@@ -1087,3 +1087,193 @@ struct FVProBadge: View {
             .shadow(color: FVColor.gold.opacity(0.3), radius: 4, y: 1)
     }
 }
+
+// MARK: - Premium Card with Animated Gradient Border
+
+struct FVPremiumCard: ViewModifier {
+    var cornerRadius: CGFloat = 24
+    var padding: CGFloat = 20
+    var borderColors: [Color] = [FVColor.cyan, FVColor.violet, FVColor.rose, FVColor.gold, FVColor.cyan]
+    @State private var rotation: Double = 0
+
+    func body(content: Content) -> some View {
+        content
+            .padding(padding)
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(.ultraThinMaterial.opacity(0.35))
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(FVGradient.cardGlass.opacity(0.9))
+                    // Inner glow on edges
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .stroke(
+                            RadialGradient(
+                                colors: [Color.white.opacity(0.08), .clear],
+                                center: .topLeading,
+                                startRadius: 0,
+                                endRadius: 200
+                            ),
+                            lineWidth: 1.5
+                        )
+                        .blur(radius: 2)
+                }
+            )
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(
+                        AngularGradient(
+                            colors: borderColors,
+                            center: .center,
+                            startAngle: .degrees(rotation),
+                            endAngle: .degrees(rotation + 360)
+                        ),
+                        lineWidth: 1.5
+                    )
+                    .opacity(0.6)
+            )
+            // 3-layer depth shadows
+            .shadow(color: FVColor.cyan.opacity(0.06), radius: 4, y: 2)
+            .shadow(color: FVColor.violet.opacity(0.05), radius: 12, y: 6)
+            .shadow(color: .black.opacity(0.25), radius: 24, y: 12)
+            .onAppear {
+                withAnimation(.linear(duration: 6).repeatForever(autoreverses: false)) {
+                    rotation = 360
+                }
+            }
+    }
+}
+
+extension View {
+    func fvPremiumCard(cornerRadius: CGFloat = 24, padding: CGFloat = 20) -> some View {
+        modifier(FVPremiumCard(cornerRadius: cornerRadius, padding: padding))
+    }
+}
+
+// MARK: - Animated Gradient Text
+
+struct FVAnimatedGradientTextModifier: ViewModifier {
+    @State private var phase: CGFloat = 0
+    var colors: [Color] = [FVColor.cyan, FVColor.violet, FVColor.gold, FVColor.cyan]
+    var speed: Double = 3.0
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                LinearGradient(
+                    colors: colors,
+                    startPoint: UnitPoint(x: phase, y: 0),
+                    endPoint: UnitPoint(x: phase + 1, y: 1)
+                )
+                .mask(content)
+            )
+            .onAppear {
+                withAnimation(.easeInOut(duration: speed).repeatForever(autoreverses: true)) {
+                    phase = 1
+                }
+            }
+    }
+}
+
+extension View {
+    func fvAnimatedGradient(colors: [Color] = [FVColor.cyan, FVColor.violet, FVColor.gold, FVColor.cyan], speed: Double = 3.0) -> some View {
+        modifier(FVAnimatedGradientTextModifier(colors: colors, speed: speed))
+    }
+}
+
+// MARK: - Pulsing Status Dot
+
+struct FVPulsingDot: View {
+    var color: Color = FVColor.success
+    var size: CGFloat = 8
+    @State private var pulse = false
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(color.opacity(0.3))
+                .frame(width: size * 2, height: size * 2)
+                .scaleEffect(pulse ? 1.3 : 0.8)
+                .opacity(pulse ? 0 : 0.6)
+
+            Circle()
+                .fill(color)
+                .frame(width: size, height: size)
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: false)) {
+                pulse = true
+            }
+        }
+    }
+}
+
+// MARK: - Animated Count Badge
+
+struct FVCountBadge: View {
+    let count: Int
+    var color: Color = FVColor.cyan
+    @State private var scale: CGFloat = 1.0
+    @State private var previousCount: Int = 0
+
+    var body: some View {
+        Text("\(count)")
+            .font(.system(size: 11, weight: .bold, design: .rounded))
+            .foregroundStyle(.white)
+            .padding(.horizontal, count > 99 ? 6 : 5)
+            .padding(.vertical, 3)
+            .background(
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [color, FVColor.violet],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .clipShape(Capsule())
+            .scaleEffect(scale)
+            .onChange(of: count) { _, _ in
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.4)) {
+                    scale = 1.3
+                }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.5).delay(0.15)) {
+                    scale = 1.0
+                }
+            }
+    }
+}
+
+// MARK: - Skeleton Loading View
+
+struct FVSkeletonView: View {
+    var height: CGFloat = 44
+    var cornerRadius: CGFloat = 12
+    @State private var shimmerOffset: CGFloat = -300
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .fill(Color.white.opacity(0.06))
+            .frame(height: height)
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [.clear, Color.white.opacity(0.08), .clear],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .offset(x: shimmerOffset)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .onAppear {
+                withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: false)) {
+                    shimmerOffset = 300
+                }
+            }
+    }
+}
+

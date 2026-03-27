@@ -11,6 +11,8 @@ struct AuthView: View {
     @State private var recoveryKeyInput = ""
     @State private var recoveryError = ""
     @State private var shieldPulse = false
+    @State private var errorShake = false
+    @State private var isLoading = false
 
     enum AuthMode: String, CaseIterable, Identifiable {
         case login = "Connexion"
@@ -42,25 +44,41 @@ struct AuthView: View {
         .animation(.easeInOut(duration: 0.25), value: password.isEmpty)
     }
 
-    // MARK: - Shield Header
+    // MARK: - Shield Header with Pulsing Glow
 
     private var shieldHeader: some View {
         ZStack {
+            // Outer pulsing glow
             Circle()
                 .fill(RadialGradient(
-                    colors: [FVColor.cyan.opacity(0.15), FVColor.violet.opacity(0.05), .clear],
+                    colors: [FVColor.cyan.opacity(0.2), FVColor.violet.opacity(0.08), .clear],
                     center: .center,
                     startRadius: 20,
-                    endRadius: 70
+                    endRadius: 80
                 ))
-                .frame(width: 140, height: 140)
-                .scaleEffect(shieldPulse ? 1.08 : 1.0)
+                .frame(width: 160, height: 160)
+                .scaleEffect(shieldPulse ? 1.12 : 0.95)
+                .opacity(shieldPulse ? 0.8 : 0.4)
+
+            // Inner glow ring
+            Circle()
+                .stroke(
+                    RadialGradient(
+                        colors: [FVColor.cyan.opacity(0.3), .clear],
+                        center: .center,
+                        startRadius: 25,
+                        endRadius: 45
+                    ),
+                    lineWidth: 2
+                )
+                .frame(width: 80, height: 80)
+                .scaleEffect(shieldPulse ? 1.05 : 1.0)
 
             Circle()
                 .fill(FVGradient.cyanToViolet)
                 .frame(width: 64, height: 64)
                 .overlay(Circle().strokeBorder(Color.white.opacity(0.2), lineWidth: 1.2))
-                .shadow(color: FVColor.cyan.opacity(0.35), radius: 20, y: 4)
+                .shadow(color: FVColor.cyan.opacity(0.4), radius: 24, y: 4)
 
             Image(systemName: "lock.shield.fill")
                 .font(.system(size: 28, weight: .bold))
@@ -105,6 +123,7 @@ struct AuthView: View {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                         mode = m
                     }
+                    fvHaptic(.light)
                 } label: {
                     Text(m.localizedName)
                         .font(FVFont.label(13))
@@ -139,8 +158,8 @@ struct AuthView: View {
             if !password.isEmpty {
                 passwordRequirements
                     .transition(.asymmetric(
-                        insertion: .opacity.combined(with: .move(edge: .top)),
-                        removal: .opacity
+                        insertion: .opacity.combined(with: .move(edge: .top)).combined(with: .scale(scale: 0.95)),
+                        removal: .opacity.combined(with: .scale(scale: 0.95))
                     ))
             }
             FVTextField(title: String(localized: "auth.field.confirm_password"), text: $confirmPassword, secure: true, contentType: .password)
@@ -165,6 +184,7 @@ struct AuthView: View {
         .padding(10)
         .background(FVColor.abyss.opacity(0.4))
         .clipShape(RoundedRectangle(cornerRadius: 10))
+        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: password)
     }
 
     @ViewBuilder
@@ -174,17 +194,64 @@ struct AuthView: View {
                 .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(FVColor.danger)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .offset(x: errorShake ? -8 : 0)
+                .animation(
+                    .spring(response: 0.1, dampingFraction: 0.2).repeatCount(4, autoreverses: true),
+                    value: errorShake
+                )
+                .onChange(of: authManager.authError) { _, newValue in
+                    if !newValue.isEmpty {
+                        errorShake = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            errorShake = true
+                            fvHaptic(.error)
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            errorShake = false
+                        }
+                    }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
         }
     }
 
     private var submitButton: some View {
-        FVButton(title: mode == .login ? String(localized: "auth.button.login") : String(localized: "auth.button.register")) {
+        Button {
+            fvHaptic(.medium)
+            isLoading = true
             if mode == .login {
                 authManager.login(email: email, password: password)
             } else {
                 authManager.register(email: email, password: password, confirmPassword: confirmPassword, panicPassword: panicPassword)
             }
+            // Reset loading after a short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                isLoading = false
+            }
+        } label: {
+            HStack(spacing: 8) {
+                if isLoading {
+                    ProgressView()
+                        .tint(.white)
+                        .scaleEffect(0.8)
+                } else {
+                    Text(mode == .login ? String(localized: "auth.button.login") : String(localized: "auth.button.register"))
+                        .font(FVFont.label(15))
+                }
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(FVGradient.cyanToViolet)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
+            )
+            .shadow(color: FVColor.cyan.opacity(0.25), radius: 16, y: 6)
         }
+        .buttonStyle(.plain)
+        .disabled(isLoading)
     }
 
     // MARK: - Login Recovery Section
@@ -207,6 +274,7 @@ struct AuthView: View {
                     showRecoveryEntry.toggle()
                     recoveryError = ""
                 }
+                fvHaptic(.light)
             }
             .font(.system(size: 12, weight: .medium, design: .rounded))
             .foregroundStyle(FVColor.violet.opacity(0.9))
@@ -229,6 +297,7 @@ struct AuthView: View {
                     recoveryError = ""
                 } else {
                     recoveryError = String(localized: "auth.recovery.error.invalid")
+                    fvHaptic(.error)
                 }
             }
         }
@@ -245,7 +314,7 @@ struct AuthView: View {
 
             Text("FyxxVault v1.0")
                 .font(FVFont.caption(10))
-                .foregroundStyle(FVColor.smoke.opacity(0.45))
+                .foregroundStyle(FVColor.smoke.opacity(0.3))
         }
     }
 }

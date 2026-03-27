@@ -15,18 +15,31 @@ struct FVCollapsibleSection<Content: View>: View {
         VStack(spacing: 0) {
             // Header (tappable)
             Button {
+                fvHaptic(.light)
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                     isExpanded.toggle()
                 }
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: icon)
-                        .foregroundStyle(color)
-                        .font(.system(size: 18))
-                        .frame(width: 32)
+                    // Icon in gradient circle
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [color.opacity(0.25), color.opacity(0.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 34, height: 34)
+                        Image(systemName: icon)
+                            .foregroundStyle(color)
+                            .font(.system(size: 15, weight: .semibold))
+                    }
 
-                    Text(title)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    Text(title.uppercased())
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .kerning(1.2)
                         .foregroundStyle(.white)
 
                     if showProBadge { FVProBadge() }
@@ -59,6 +72,7 @@ struct FVCollapsibleSection<Content: View>: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(isExpanded ? color.opacity(0.2) : Color.white.opacity(0.06), lineWidth: 1)
         )
+        .shadow(color: isExpanded ? color.opacity(0.06) : .clear, radius: 12, y: 4)
     }
 }
 
@@ -270,6 +284,9 @@ struct VaultSettingsView: View {
 
     // MARK: - Profile Card (always visible)
 
+    @State private var avatarRotation: Double = 0
+    @State private var profilePressed = false
+
     private var profileCard: some View {
         let audit = vaultStore.securityAudit
         let score = audit.score
@@ -284,12 +301,46 @@ struct VaultSettingsView: View {
 
         return VStack(spacing: 16) {
             HStack(alignment: .center, spacing: 14) {
+                // Avatar with animated gradient ring
+                ZStack {
+                    Circle()
+                        .stroke(
+                            AngularGradient(
+                                colors: [FVColor.cyan, FVColor.violet, FVColor.rose, FVColor.gold, FVColor.cyan],
+                                center: .center,
+                                startAngle: .degrees(avatarRotation),
+                                endAngle: .degrees(avatarRotation + 360)
+                            ),
+                            lineWidth: 2.5
+                        )
+                        .frame(width: 48, height: 48)
+
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [FVColor.cyan.opacity(0.3), FVColor.violet.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 42, height: 42)
+
+                    Text(String(authManager.currentEmail.prefix(1)).uppercased())
+                        .font(FVFont.display(18))
+                        .foregroundStyle(.white)
+                }
+                .onAppear {
+                    withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
+                        avatarRotation = 360
+                    }
+                }
+
                 // Left side: email, tags, plan
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 6) {
                         Text(authManager.currentEmail)
-                            .font(FVFont.body(14))
-                            .foregroundStyle(FVColor.cyan)
+                            .font(FVFont.title(14))
+                            .foregroundStyle(.white)
                             .lineLimit(1)
 
                         syncStatusIcon
@@ -299,7 +350,10 @@ struct VaultSettingsView: View {
                         FVTag(text: "\(score)/100 \u{2022} \(level)", color: scoreColor)
 
                         if subscriptionService.isProUser {
-                            FVProBadge()
+                            HStack(spacing: 0) {
+                                FVProBadge()
+                            }
+                            .fvShimmer()
                         } else {
                             FVTag(text: String(localized: "paywall.free"), color: FVColor.smoke)
                         }
@@ -321,6 +375,7 @@ struct VaultSettingsView: View {
 
             if !subscriptionService.isProUser {
                 Button {
+                    fvHaptic(.medium)
                     showPaywall = true
                 } label: {
                     HStack(spacing: 8) {
@@ -351,6 +406,14 @@ struct VaultSettingsView: View {
                 )
         )
         .shadow(color: FVColor.cyan.opacity(0.06), radius: 20, y: 8)
+        .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
+        .scaleEffect(profilePressed ? 0.98 : 1.0)
+        .animation(.easeOut(duration: 0.1), value: profilePressed)
+        .pressEvents {
+            profilePressed = true
+        } onRelease: {
+            withAnimation(.spring(response: 0.3)) { profilePressed = false }
+        }
     }
 
     // MARK: - Sync Status Icon

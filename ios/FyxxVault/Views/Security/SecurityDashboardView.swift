@@ -8,6 +8,7 @@ struct SecurityDashboardView: View {
     @State private var showPaywall = false
     @State private var editingEntry: VaultEntry?
     @State private var statsAppeared = false
+    @State private var chevronAnimated: Set<Int> = []
 
     private var expiringEntries: [VaultEntry] {
         vaultStore.entries
@@ -21,10 +22,11 @@ struct SecurityDashboardView: View {
             let recommendations = actionableRecommendations(audit)
 
             VStack(spacing: 16) {
+                // MARK: - Header
                 VStack(alignment: .leading, spacing: 4) {
                     Text(String(localized: "security.title"))
                         .font(FVFont.display(28))
-                        .foregroundStyle(.white)
+                        .fvAnimatedGradient()
                     Text(String(localized: "security.subtitle"))
                         .font(FVFont.caption(11))
                         .kerning(1.5)
@@ -32,60 +34,105 @@ struct SecurityDashboardView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Security Score Card
-                VStack(spacing: 12) {
+                // MARK: - Security Score Card (200pt gauge)
+                VStack(spacing: 14) {
                     Text(String(localized: "security.score.label"))
                         .font(FVFont.caption(10))
                         .kerning(2)
                         .foregroundStyle(FVColor.smoke)
 
-                    FVSecurityGauge(score: audit.score, size: 180)
+                    ZStack {
+                        // Glow behind the ring
+                        Circle()
+                            .fill(
+                                RadialGradient(
+                                    colors: [scoreColor(audit.score).opacity(0.15), .clear],
+                                    center: .center,
+                                    startRadius: 40,
+                                    endRadius: 120
+                                )
+                            )
+                            .frame(width: 240, height: 240)
+
+                        FVSecurityGauge(score: audit.score, size: 200)
+                    }
 
                     Text(String(localized: "security.score.label"))
                         .font(FVFont.caption(12))
-                        .foregroundStyle(FVColor.mist.opacity(0.9))
+                        .fvAnimatedGradient(colors: [scoreColor(audit.score), FVColor.cyan, scoreColor(audit.score)])
                 }
                 .frame(maxWidth: .infinity)
                 .fvGlow(scoreColor(audit.score))
 
-                // Stat pills with stagger animation
+                // MARK: - Bento Grid Stats
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    FVStatPill(icon: "exclamationmark.triangle", title: String(localized: "security.stat.weak"), value: "\(audit.weakCount)", color: FVColor.danger)
-                        .opacity(statsAppeared ? 1 : 0)
-                        .offset(y: statsAppeared ? 0 : 20)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: statsAppeared)
+                    FVBentoStatCard(
+                        icon: "exclamationmark.triangle",
+                        title: String(localized: "security.stat.weak"),
+                        value: audit.weakCount,
+                        color: FVColor.danger
+                    )
+                    .opacity(statsAppeared ? 1 : 0)
+                    .offset(y: statsAppeared ? 0 : 20)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: statsAppeared)
 
-                    FVStatPill(icon: "arrow.triangle.2.circlepath", title: String(localized: "security.stat.reused"), value: "\(audit.reusedCount)", color: FVColor.warning)
-                        .opacity(statsAppeared ? 1 : 0)
-                        .offset(y: statsAppeared ? 0 : 20)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2), value: statsAppeared)
+                    FVBentoStatCard(
+                        icon: "arrow.triangle.2.circlepath",
+                        title: String(localized: "security.stat.reused"),
+                        value: audit.reusedCount,
+                        color: FVColor.warning
+                    )
+                    .opacity(statsAppeared ? 1 : 0)
+                    .offset(y: statsAppeared ? 0 : 20)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2), value: statsAppeared)
 
-                    FVStatPill(icon: "shield.slash", title: String(localized: "security.stat.no.mfa"), value: "\(audit.withoutMFACount)", color: FVColor.violet)
-                        .opacity(statsAppeared ? 1 : 0)
-                        .offset(y: statsAppeared ? 0 : 20)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: statsAppeared)
+                    FVBentoStatCard(
+                        icon: "shield.slash",
+                        title: String(localized: "security.stat.no.mfa"),
+                        value: audit.withoutMFACount,
+                        color: FVColor.violet
+                    )
+                    .opacity(statsAppeared ? 1 : 0)
+                    .offset(y: statsAppeared ? 0 : 20)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: statsAppeared)
 
-                    FVStatPill(icon: "clock.badge.exclamationmark", title: String(localized: "security.stat.expired"), value: "\(audit.expiredCount)", color: FVColor.rose)
-                        .opacity(statsAppeared ? 1 : 0)
-                        .offset(y: statsAppeared ? 0 : 20)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: statsAppeared)
+                    FVBentoStatCard(
+                        icon: "clock.badge.exclamationmark",
+                        title: String(localized: "security.stat.expired"),
+                        value: audit.expiredCount,
+                        color: FVColor.rose
+                    )
+                    .opacity(statsAppeared ? 1 : 0)
+                    .offset(y: statsAppeared ? 0 : 20)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: statsAppeared)
                 }
                 .onAppear { statsAppeared = true }
 
+                // MARK: - Recommendations
                 VStack(alignment: .leading, spacing: 10) {
                     FVSectionHeader(icon: "lightbulb", title: String(localized: "security.section.recommendations"))
-                    ForEach(Array(recommendations.enumerated()), id: \.offset) { _, item in
+                    ForEach(Array(recommendations.enumerated()), id: \.offset) { idx, item in
                         Button {
                             guard let action = item.action else { return }
                             fvHaptic(.light)
+                            _ = withAnimation(.spring(response: 0.3)) {
+                                chevronAnimated.insert(idx)
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                chevronAnimated.remove(idx)
+                            }
                             onRecommendationTap(action)
                         } label: {
                             HStack(spacing: 10) {
-                                // Severity icon
-                                Image(systemName: item.severityIcon)
-                                    .font(.system(size: 14, weight: .bold))
-                                    .foregroundStyle(item.severityColor)
-                                    .frame(width: 24, height: 24)
+                                // Severity icon in colored circle
+                                ZStack {
+                                    Circle()
+                                        .fill(item.severityColor.opacity(0.15))
+                                        .frame(width: 32, height: 32)
+                                    Image(systemName: item.severityIcon)
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundStyle(item.severityColor)
+                                }
 
                                 Text(item.text)
                                     .font(FVFont.body(13))
@@ -95,6 +142,7 @@ struct SecurityDashboardView: View {
                                 Image(systemName: item.action == nil ? "checkmark.circle.fill" : "chevron.right")
                                     .font(.system(size: 12, weight: .bold))
                                     .foregroundStyle(item.action == nil ? FVColor.success : FVColor.cyan.opacity(0.85))
+                                    .offset(x: chevronAnimated.contains(idx) ? 4 : 0)
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 12)
@@ -109,8 +157,9 @@ struct SecurityDashboardView: View {
                         .disabled(item.action == nil)
                     }
                 }
-                .fvGlass()
+                .fvPremiumCard()
 
+                // MARK: - Expirations
                 VStack(alignment: .leading, spacing: 10) {
                     FVSectionHeader(icon: "clock.arrow.circlepath", title: String(localized: "security.section.expirations"))
                     if expiringEntries.isEmpty {
@@ -317,5 +366,75 @@ struct SecurityDashboardView: View {
             items.append(.init(text: String(localized: "security.rec.excellent"), action: nil, severity: .ok))
         }
         return items
+    }
+}
+
+// MARK: - Bento Stat Card
+
+private struct FVBentoStatCard: View {
+    let icon: String
+    let title: String
+    let value: Int
+    var color: Color = FVColor.cyan
+    @State private var animatedValue: Int = 0
+    @State private var isPressed = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(color)
+                .frame(width: 4, height: 42)
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 5) {
+                    ZStack {
+                        Circle()
+                            .fill(color.opacity(0.15))
+                            .frame(width: 22, height: 22)
+                        Image(systemName: icon)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(color)
+                    }
+                    Text(title)
+                        .font(FVFont.caption(10))
+                        .foregroundStyle(FVColor.smoke)
+                }
+                Text("\(animatedValue)")
+                    .font(FVFont.heading(28))
+                    .foregroundStyle(.white)
+                    .contentTransition(.numericText())
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(
+            LinearGradient(
+                colors: [Color.white.opacity(0.11), Color.white.opacity(0.05)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(color.opacity(0.2), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: color.opacity(0.08), radius: 8, y: 4)
+        .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
+        .scaleEffect(isPressed ? 0.96 : 1.0)
+        .animation(.easeOut(duration: 0.1), value: isPressed)
+        .pressEvents {
+            isPressed = true
+        } onRelease: {
+            withAnimation(.spring(response: 0.3)) { isPressed = false }
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.8, dampingFraction: 0.7).delay(0.3)) {
+                animatedValue = value
+            }
+        }
+        .onChange(of: value) { _, newVal in
+            withAnimation(.spring(response: 0.5)) { animatedValue = newVal }
+        }
     }
 }
