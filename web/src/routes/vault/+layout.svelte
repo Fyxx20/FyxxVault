@@ -303,7 +303,7 @@
 						</div>
 						<div class="flex-1 min-w-0">
 							<p class="text-xs text-white font-medium truncate">{auth.user?.email ?? ''}</p>
-							<p class="text-[10px] {auth.isPro ? 'text-[var(--fv-gold)]' : 'text-[var(--fv-ash)]'}">{auth.isPro ? 'Plan Pro &#128081;' : 'Plan Gratuit'}</p>
+							<p class="text-[10px] {auth.isPro ? 'text-[var(--fv-gold)]' : 'text-[var(--fv-ash)]'}">{auth.isPro ? 'Plan Pro 👑' : 'Plan Gratuit'}</p>
 						</div>
 					</div>
 				</div>
