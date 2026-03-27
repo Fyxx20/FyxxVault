@@ -280,16 +280,16 @@
 			<div class="relative z-10 px-3 py-2">
 				<div class="pro-upsell-card p-3 rounded-xl">
 					<div class="flex items-center gap-2 mb-2">
-						<span class="text-lg">&#128081;</span>
+						<span class="text-lg">👑</span>
 						<span class="text-xs font-bold text-[var(--fv-gold)]">FyxxVault Pro</span>
 					</div>
 					<p class="text-[10px] text-[var(--fv-smoke)] mb-2 leading-relaxed">Comptes illimites, Dark Web, emails masques</p>
-					<button
-						onclick={handleSidebarCheckout}
-						class="block w-full text-center px-3 py-2.5 rounded-xl bg-gradient-to-r from-[var(--fv-gold)] to-[var(--fv-gold-light)] text-[#1a1a2e] text-xs font-bold transition-all duration-200 hover:shadow-lg hover:shadow-[var(--fv-gold)]/20 hover:translate-y-[-1px]"
+					<a
+						href="/vault/settings"
+						class="block w-full text-center px-3 py-2.5 rounded-xl bg-gradient-to-r from-[var(--fv-gold)] to-[var(--fv-gold-light)] text-[#1a1a2e] text-xs font-bold transition-all duration-200 hover:shadow-lg hover:shadow-[var(--fv-gold)]/20 hover:translate-y-[-1px] no-underline"
 					>
-						4,99&#8364;/mois &#8212; Essai gratuit
-					</button>
+						4,99€/mois — Essai gratuit
+					</a>
 				</div>
 			</div>
 			{/if}

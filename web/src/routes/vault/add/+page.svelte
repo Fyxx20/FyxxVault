@@ -5,6 +5,7 @@
 	import { generatePassword, generatePassphrase, passwordStrength } from '$lib/crypto';
 	import { addEntry, updateEntry, getVaultState } from '$lib/stores/vault.svelte';
 	import { getAuthState } from '$lib/stores/auth.svelte';
+	import { untrack } from 'svelte';
 
 	const vault = getVaultState();
 	const auth = getAuthState();
@@ -73,16 +74,33 @@
 	// Load draft or existing entry on mount (runs once)
 	let _initialized = false;
 	$effect(() => {
+		// Read reactive dependencies we care about
+		const existing = existingEntry;
+		// Guard: only run once
 		if (_initialized) return;
 		_initialized = true;
-		if (existingEntry) {
-			entry = { ...existingEntry };
-		} else {
-			loadDraft();
-		}
+		untrack(() => {
+			if (existing) {
+				entry = { ...existing };
+			} else {
+				loadDraft();
+			}
+		});
 	});
 
-	const strength = $derived(passwordStrength(entry.password));
+	const strengthRaw = $derived(passwordStrength(entry.password));
+	// Map CSS variables to explicit hex colors for inline styles (CSS vars don't always resolve in style attributes)
+	const strengthColorMap: Record<string, string> = {
+		'var(--fv-danger)': '#ef4444',
+		'var(--fv-gold)': '#ffc837',
+		'var(--fv-cyan)': '#00d4ff',
+		'var(--fv-success)': '#34d399',
+		'var(--fv-ash)': '#6b7280'
+	};
+	const strength = $derived({
+		...strengthRaw,
+		color: strengthColorMap[strengthRaw.color] ?? strengthRaw.color
+	});
 
 	const categories = Object.entries(CATEGORY_META) as [VaultCategory, typeof CATEGORY_META[VaultCategory]][];
 
@@ -545,8 +563,8 @@
 		<!-- Strength bar -->
 		{#if entry.password}
 			<div class="mt-3 flex items-center gap-3">
-				<div class="flex-1 h-3 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.08);">
-					<div class="h-full rounded-full" style="width: {strength.score}%; background: {strength.color}; box-shadow: 0 0 12px {strength.color}; transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;"></div>
+				<div class="flex-1 h-2.5 rounded-full overflow-hidden bg-white/10">
+					<div class="h-full rounded-full transition-all duration-500" style="width: {strength.score}%; background: {strength.color}; box-shadow: 0 0 12px {strength.color};"></div>
 				</div>
 				<span class="text-xs font-bold transition-colors duration-300 min-w-[60px] text-right" style="color: {strength.color};">{strength.label}</span>
 			</div>
@@ -554,22 +572,20 @@
 
 		<!-- Password generator -->
 		{#if showGenerator}
-			<div class="mt-4 p-5 rounded-2xl border border-white/8 space-y-4" style="background: rgba(255,255,255,0.03);">
+			<div class="mt-4 p-5 rounded-2xl border border-white/[0.08] space-y-4" style="background: rgba(255,255,255,0.03);">
 				<div class="flex items-center gap-2 mb-1">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-					<span class="text-xs font-semibold text-white/80 uppercase tracking-wider">Générateur</span>
+					<span class="text-xs font-semibold text-white/80 uppercase tracking-wider">Generateur</span>
 				</div>
 
-				<!-- Mode toggle -->
-				<div class="flex rounded-xl p-1" style="background: rgba(255,255,255,0.05);">
+				<!-- Mode toggle (segmented control) -->
+				<div class="flex rounded-xl p-1 bg-white/[0.05]">
 					<button type="button" onclick={() => genMode = 'password'}
-						class="flex-1 text-xs py-2.5 rounded-lg font-medium transition-all duration-200"
-						style="{genMode === 'password' ? 'background: var(--fv-cyan); color: var(--fv-abyss); font-weight: 700;' : 'color: var(--fv-smoke);'}"
-					>Aléatoire</button>
+						class="flex-1 text-xs py-2.5 rounded-lg font-semibold transition-all duration-200 {genMode === 'password' ? 'bg-gradient-to-r from-[var(--fv-cyan)] to-[var(--fv-violet)] text-white shadow-md' : 'text-[var(--fv-smoke)] hover:text-white'}"
+					>Mot de passe</button>
 					<button type="button" onclick={() => genMode = 'passphrase'}
-						class="flex-1 text-xs py-2.5 rounded-lg font-medium transition-all duration-200"
-						style="{genMode === 'passphrase' ? 'background: var(--fv-cyan); color: var(--fv-abyss); font-weight: 700;' : 'color: var(--fv-smoke);'}"
-					>Phrase secrète</button>
+						class="flex-1 text-xs py-2.5 rounded-lg font-semibold transition-all duration-200 {genMode === 'passphrase' ? 'bg-gradient-to-r from-[var(--fv-cyan)] to-[var(--fv-violet)] text-white shadow-md' : 'text-[var(--fv-smoke)] hover:text-white'}"
+					>Phrase secrete</button>
 				</div>
 
 				{#if genMode === 'password'}
@@ -577,9 +593,9 @@
 					<div>
 						<div class="flex items-center justify-between mb-2">
 							<span class="text-xs text-white/60">Longueur</span>
-							<span class="text-sm font-bold text-white tabular-nums" style="min-width: 28px; text-align: right;">{genLength}</span>
+							<span class="text-sm font-bold text-[var(--fv-cyan)] tabular-nums" style="min-width: 28px; text-align: right;">{genLength}</span>
 						</div>
-						<input type="range" min="8" max="64" bind:value={genLength} class="w-full h-1.5 rounded-full appearance-none cursor-pointer" style="background: linear-gradient(to right, var(--fv-cyan) {((genLength - 8) / 56) * 100}%, rgba(255,255,255,0.1) {((genLength - 8) / 56) * 100}%); accent-color: var(--fv-cyan);" />
+						<input type="range" min="8" max="64" bind:value={genLength} class="gen-slider w-full" />
 					</div>
 
 					<!-- Character options as pills -->
@@ -591,10 +607,7 @@
 							{ label: '#$&', desc: 'Symboles', checked: genSymbols, toggle: () => genSymbols = !genSymbols }
 						] as opt}
 							<button type="button" onclick={opt.toggle}
-								class="px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 border"
-								style="{opt.checked
-									? 'background: rgba(0,212,255,0.12); border-color: var(--fv-cyan); color: var(--fv-cyan);'
-									: 'background: transparent; border-color: rgba(255,255,255,0.08); color: var(--fv-smoke);'}"
+								class="gen-pill px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 border {opt.checked ? 'gen-pill-active' : 'gen-pill-inactive'}"
 							>
 								<span class="font-bold">{opt.label}</span>
 								<span class="ml-1 opacity-70">{opt.desc}</span>
@@ -606,39 +619,33 @@
 					<div>
 						<div class="flex items-center justify-between mb-2">
 							<span class="text-xs text-white/60">Nombre de mots</span>
-							<span class="text-sm font-bold text-white">{genWordCount}</span>
+							<span class="text-sm font-bold text-[var(--fv-cyan)]">{genWordCount}</span>
 						</div>
-						<input type="range" min="3" max="10" bind:value={genWordCount} class="w-full h-1.5 rounded-full appearance-none cursor-pointer" style="background: linear-gradient(to right, var(--fv-cyan) {((genWordCount - 3) / 7) * 100}%, rgba(255,255,255,0.1) {((genWordCount - 3) / 7) * 100}%); accent-color: var(--fv-cyan);" />
+						<input type="range" min="3" max="10" bind:value={genWordCount} class="gen-slider w-full" />
 					</div>
 					<div class="flex gap-3">
 						<div class="flex-1">
-							<span class="block text-[10px] text-white/50 mb-1.5 uppercase tracking-wider">Séparateur</span>
+							<span class="block text-[10px] text-white/50 mb-1.5 uppercase tracking-wider">Separateur</span>
 							<div class="flex gap-1.5">
-								{#each [{v: '-', l: '—'}, {v: '.', l: '·'}, {v: '_', l: '_'}, {v: ' ', l: '␣'}] as sep}
+								{#each [{v: '-', l: '\u2014'}, {v: '.', l: '\u00b7'}, {v: '_', l: '_'}, {v: ' ', l: '\u2423'}] as sep}
 									<button type="button" onclick={() => genSeparator = sep.v}
-										class="w-9 h-9 rounded-lg text-sm font-mono flex items-center justify-center transition-all border"
-										style="{genSeparator === sep.v
-											? 'background: rgba(0,212,255,0.12); border-color: var(--fv-cyan); color: var(--fv-cyan);'
-											: 'background: transparent; border-color: rgba(255,255,255,0.08); color: var(--fv-smoke);'}"
+										class="gen-pill w-9 h-9 rounded-lg text-sm font-mono flex items-center justify-center transition-all border {genSeparator === sep.v ? 'gen-pill-active' : 'gen-pill-inactive'}"
 									>{sep.l}</button>
 								{/each}
 							</div>
 						</div>
 						<button type="button" onclick={() => genCapitalize = !genCapitalize}
-							class="self-end mb-0.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border"
-							style="{genCapitalize
-								? 'background: rgba(0,212,255,0.12); border-color: var(--fv-cyan); color: var(--fv-cyan);'
-								: 'background: transparent; border-color: rgba(255,255,255,0.08); color: var(--fv-smoke);'}"
+							class="gen-pill self-end mb-0.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border {genCapitalize ? 'gen-pill-active' : 'gen-pill-inactive'}"
 						>Aa Majuscule</button>
 					</div>
 				{/if}
 
 				<!-- Generate button -->
 				<button type="button" onclick={handleGeneratePassword}
-					class="w-full py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-					style="background: var(--fv-cyan); color: var(--fv-abyss);"
+					class="gen-btn w-full py-3 rounded-xl text-sm font-bold transition-all duration-200 hover:brightness-110 active:scale-[0.98] flex items-center justify-center gap-2"
 				>
-					Générer un mot de passe
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+					Generer
 				</button>
 			</div>
 		{/if}
@@ -716,5 +723,60 @@
 	.add-submit-btn:hover:not(:disabled) {
 		transform: translateY(-2px);
 		box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3);
+	}
+
+	/* Generator slider */
+	.gen-slider {
+		height: 6px;
+		border-radius: 9999px;
+		appearance: none;
+		-webkit-appearance: none;
+		background: rgba(255,255,255,0.1);
+		cursor: pointer;
+		accent-color: var(--fv-cyan);
+	}
+	.gen-slider::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: var(--fv-cyan);
+		border: 2px solid var(--fv-abyss);
+		box-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
+		cursor: pointer;
+	}
+	.gen-slider::-moz-range-thumb {
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: var(--fv-cyan);
+		border: 2px solid var(--fv-abyss);
+		box-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
+		cursor: pointer;
+	}
+
+	/* Generator pill buttons */
+	.gen-pill-active {
+		background: rgba(0, 212, 255, 0.12);
+		border-color: rgba(0, 212, 255, 0.4);
+		color: var(--fv-cyan);
+	}
+	.gen-pill-inactive {
+		background: transparent;
+		border-color: rgba(255,255,255,0.08);
+		color: var(--fv-smoke);
+	}
+	.gen-pill-inactive:hover {
+		border-color: rgba(255,255,255,0.15);
+		color: white;
+	}
+
+	/* Generate button gradient */
+	.gen-btn {
+		background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet));
+		color: white;
+	}
+	.gen-btn:hover {
+		box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
 	}
 </style>
