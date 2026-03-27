@@ -21,6 +21,10 @@ final class AuthManager: ObservableObject {
     init() {
         loadAccount()
         loadPersistedAttemptState()
+        // Restore cloud session in background
+        Task {
+            await SupabaseAuthService.shared.restoreSession()
+        }
     }
 
     // MARK: Sync Integration
@@ -100,12 +104,19 @@ final class AuthManager: ObservableObject {
         pendingRecoveryKey = CryptoService.formatRecoveryKey(rawRecoveryKey)
         phase = .onboarding
 
-        // Auto cloud sync: sign up in the background (failures are silent)
-        if let syncService {
-            let email = cleanEmail
-            let pw = password
-            Task {
-                try? await syncService.signUpWithEmail(email: email, password: pw, masterPassword: pw)
+        // Cloud registration (background, non-blocking)
+        let regEmail = cleanEmail
+        let regPw = password
+        Task {
+            // 1. Register with Supabase Auth
+            do {
+                try await SupabaseAuthService.shared.signUp(email: regEmail, password: regPw)
+            } catch {
+                print("[FyxxVault] Cloud signup failed: \(error.localizedDescription)")
+            }
+            // 2. Set up cloud keys via SyncService (VEK wrapping, profile creation)
+            if let syncService = self.syncService {
+                try? await syncService.signUpWithEmail(email: regEmail, password: regPw, masterPassword: regPw)
             }
         }
     }
@@ -122,47 +133,103 @@ final class AuthManager: ObservableObject {
             return
         }
 
-        guard let account else {
-            authError = "Aucun compte trouvé. Crée ton compte d'abord."
-            return
-        }
-
         let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard cleanEmail == account.email else {
-            registerFailure()
-            authError = "Email inconnu."
-            return
-        }
 
-        // Panic password check (before master password, constant time comparison not needed here as panic wipes anyway)
-        if let panicSalt = account.panicSalt, let panicHash = account.panicHash {
-            let panicCandidate = CryptoService.hashMasterPasswordPBKDF2(
-                password, salt: panicSalt, rounds: max(account.passwordHashRounds, CryptoService.masterRounds())
-            )
-            if panicCandidate == panicHash {
-                panicTriggered = true
-                authError = "Mode panic activé."
-                phase = .auth
+        // --- Path A: Local account exists — try local auth first (instant, offline) ---
+        if let account {
+            guard cleanEmail == account.email else {
+                // Email mismatch with local account — try cloud fallback
+                loginViaCloud(email: cleanEmail, password: password)
                 return
             }
-        }
 
-        guard CryptoService.verifyMasterPassword(password, account: account) else {
-            registerFailure()
-            authError = "Mot de passe incorrect. (\(failedAttempts) tentative(s) échouée(s))"
+            // Panic password check
+            if let panicSalt = account.panicSalt, let panicHash = account.panicHash {
+                let panicCandidate = CryptoService.hashMasterPasswordPBKDF2(
+                    password, salt: panicSalt, rounds: max(account.passwordHashRounds, CryptoService.masterRounds())
+                )
+                if panicCandidate == panicHash {
+                    panicTriggered = true
+                    authError = "Mode panic active."
+                    phase = .auth
+                    return
+                }
+            }
+
+            if CryptoService.verifyMasterPassword(password, account: account) {
+                resetFailedAttempts()
+                migrateAccountHashIfNeeded(password: password)
+                phase = account.didCompleteOnboarding ? .vault : .onboarding
+
+                // Background cloud sync (non-blocking)
+                let syncEmail = cleanEmail
+                let syncPw = password
+                Task {
+                    try? await SupabaseAuthService.shared.signIn(email: syncEmail, password: syncPw)
+                    if let syncService = self.syncService {
+                        try? await syncService.signInWithEmail(email: syncEmail, password: syncPw, masterPassword: syncPw)
+                    }
+                }
+                return
+            }
+
+            // Local password wrong — still try cloud in case password was changed on web
+            loginViaCloud(email: cleanEmail, password: password)
             return
         }
 
-        resetFailedAttempts()
-        migrateAccountHashIfNeeded(password: password)
-        phase = account.didCompleteOnboarding ? .vault : .onboarding
+        // --- Path B: No local account — try cloud auth ---
+        loginViaCloud(email: cleanEmail, password: password)
+    }
 
-        // Auto cloud sync: sign in in the background (failures are silent)
-        if let syncService {
-            let email = cleanEmail
-            let pw = password
-            Task {
-                try? await syncService.signInWithEmail(email: email, password: pw, masterPassword: pw)
+    /// Attempts authentication via Supabase. On success, creates/updates the local account
+    /// so future logins work offline.
+    private func loginViaCloud(email: String, password: String) {
+        Task {
+            do {
+                try await SupabaseAuthService.shared.signIn(email: email, password: password)
+
+                // Cloud auth succeeded — create or update local account for offline access
+                let salt = CryptoService.makeSalt()
+                let hash = CryptoService.hashMasterPasswordPBKDF2(
+                    password, salt: salt, rounds: CryptoService.masterRounds()
+                )
+
+                if var existing = self.account, existing.email == email {
+                    // Update local hash to match the (possibly changed) password
+                    existing.passwordSalt = salt
+                    existing.passwordHash = hash
+                    existing.passwordHashAlgorithm = "pbkdf2-sha256"
+                    existing.passwordHashRounds = CryptoService.masterRounds()
+                    self.account = existing
+                } else {
+                    // First time on this device — create local account
+                    let created = Account(
+                        email: email,
+                        passwordSalt: salt,
+                        passwordHash: hash,
+                        passwordHashAlgorithm: "pbkdf2-sha256",
+                        passwordHashRounds: CryptoService.masterRounds(),
+                        didCompleteOnboarding: true
+                    )
+                    self.account = created
+                }
+                self.persistAccount()
+                self.resetFailedAttempts()
+                self.phase = self.account?.didCompleteOnboarding == true ? .vault : .onboarding
+
+                // Also sign into SyncService for vault data sync
+                if let syncService = self.syncService {
+                    try? await syncService.signInWithEmail(email: email, password: password, masterPassword: password)
+                }
+            } catch {
+                // Cloud auth also failed
+                if self.account != nil {
+                    self.registerFailure()
+                    self.authError = "Mot de passe incorrect. (\(self.failedAttempts) tentative(s) echouee(s))"
+                } else {
+                    self.authError = error.localizedDescription
+                }
             }
         }
     }
@@ -218,6 +285,7 @@ final class AuthManager: ObservableObject {
     }
 
     func logout() {
+        SupabaseAuthService.shared.signOut()
         syncService?.signOut()
         phase = .auth
         authError = ""
