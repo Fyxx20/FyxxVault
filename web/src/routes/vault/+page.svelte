@@ -400,7 +400,7 @@
 							<div class="entry-icon w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0 transition-all duration-250 group-hover:scale-110 overflow-hidden"
 								style="background: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'}15;">
 								{#if getFaviconUrl(entry)}
-									<img src={getFaviconUrl(entry)} alt="" class="w-7 h-7 rounded" onerror={(e) => { e.currentTarget.style.display='none'; }} />
+									<img src={getFaviconUrl(entry)} alt="" class="w-7 h-7 rounded" style="display:block;" onerror={(e) => { e.currentTarget.replaceWith(document.createTextNode(CATEGORY_META[entry.category]?.icon ?? '📦')); }} />
 								{:else}
 									{CATEGORY_META[entry.category]?.icon ?? '📦'}
 								{/if}
