@@ -399,7 +399,7 @@
 							<div class="entry-icon w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0 transition-all duration-250 group-hover:scale-110 overflow-hidden"
 								style="background: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'}15;">
 								{#if entry.website && entry.category === 'login'}
-									<img src="https://www.google.com/s2/favicons?domain={entry.website.replace(/^https?:\/\//, '').split('/')[0]}&sz=64" alt="" class="w-7 h-7 rounded" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+									<img src="https://www.google.com/s2/favicons?domain={entry.website.replace(/^https?:\/\//, '').split('/')[0]}&sz=64" alt="" class="w-7 h-7 rounded" onerror={(e) => { e.currentTarget.style.display='none'; }} />
 									<span style="display:none;">{CATEGORY_META[entry.category]?.icon ?? '🔑'}</span>
 								{:else}
 									{CATEGORY_META[entry.category]?.icon ?? '📦'}
@@ -750,7 +750,7 @@
 						<div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl overflow-hidden"
 							style="background: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'}15;">
 							{#if entry.website && entry.category === 'login'}
-								<img src="https://www.google.com/s2/favicons?domain={entry.website.replace(/^https?:\/\//, '').split('/')[0]}&sz=64" alt="" class="w-8 h-8 rounded" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+								<img src="https://www.google.com/s2/favicons?domain={entry.website.replace(/^https?:\/\//, '').split('/')[0]}&sz=64" alt="" class="w-8 h-8 rounded" onerror={(e) => { e.currentTarget.style.display='none'; }} />
 								<span style="display:none;">{CATEGORY_META[entry.category]?.icon ?? '🔑'}</span>
 							{:else}
 								{CATEGORY_META[entry.category]?.icon ?? '📦'}
