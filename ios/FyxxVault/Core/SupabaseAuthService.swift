@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 /// Lightweight Supabase Auth client using direct REST API calls.
 /// Handles sign-up, sign-in, sign-out, and session persistence.
