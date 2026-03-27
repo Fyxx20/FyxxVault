@@ -396,9 +396,14 @@
 							<div class="entry-card-border" style="background: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'};"></div>
 
 							<!-- Category icon in colored square -->
-							<div class="entry-icon w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0 transition-all duration-250 group-hover:scale-110"
+							<div class="entry-icon w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0 transition-all duration-250 group-hover:scale-110 overflow-hidden"
 								style="background: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'}15;">
-								{CATEGORY_META[entry.category]?.icon ?? '&#128230;'}
+								{#if entry.website && entry.category === 'login'}
+									<img src="https://www.google.com/s2/favicons?domain={entry.website.replace(/^https?:\/\//, '').split('/')[0]}&sz=64" alt="" class="w-7 h-7 rounded" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+									<span style="display:none;">{CATEGORY_META[entry.category]?.icon ?? '🔑'}</span>
+								{:else}
+									{CATEGORY_META[entry.category]?.icon ?? '📦'}
+								{/if}
 							</div>
 
 							<!-- Info -->
@@ -742,9 +747,14 @@
 				<div class="fv-glass p-6">
 					<!-- Header -->
 					<div class="flex items-center gap-3 mb-5">
-						<div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
+						<div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl overflow-hidden"
 							style="background: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'}15;">
-							{CATEGORY_META[entry.category]?.icon ?? '📦'}
+							{#if entry.website && entry.category === 'login'}
+								<img src="https://www.google.com/s2/favicons?domain={entry.website.replace(/^https?:\/\//, '').split('/')[0]}&sz=64" alt="" class="w-8 h-8 rounded" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+								<span style="display:none;">{CATEGORY_META[entry.category]?.icon ?? '🔑'}</span>
+							{:else}
+								{CATEGORY_META[entry.category]?.icon ?? '📦'}
+							{/if}
 						</div>
 						<div class="flex-1">
 							<h2 class="text-lg font-bold text-white">{entry.title || 'Sans titre'}</h2>
