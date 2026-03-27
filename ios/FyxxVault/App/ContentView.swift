@@ -82,6 +82,17 @@ struct ContentView: View {
                 isSyncing = false
             }
         }
+        .onChange(of: syncService.isCloudAuthenticated) { _, isAuthenticated in
+            // When SyncService becomes authenticated (e.g. background login on Path A),
+            // trigger a sync to pull remote vault items.
+            guard isAuthenticated, authManager.phase == .vault, !isSyncing else { return }
+            isSyncing = true
+            Task {
+                let merged = try? await syncService.sync(localEntries: vaultStore.entries)
+                if let merged { vaultStore.replaceEntries(merged) }
+                isSyncing = false
+            }
+        }
         .onChange(of: scenePhase) { _, newValue in
             appLock.handleScenePhase(newValue, userAuthenticated: authManager.phase == .vault)
         }

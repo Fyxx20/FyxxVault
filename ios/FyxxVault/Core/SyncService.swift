@@ -207,6 +207,18 @@ final class SyncService: ObservableObject {
         }
     }
 
+    /// Configure SyncService with a token already obtained by SupabaseAuthService,
+    /// then unlock the cloud vault with the master password.
+    /// This avoids a redundant /auth/v1/token call when SupabaseAuthService already signed in.
+    func configureWithToken(_ token: String, email: String?, masterPassword: String) async throws {
+        self.accessToken = token
+        self.cloudEmail = email
+        saveSession()
+
+        // Unlock cloud vault (fetches profile, derives KEK, unwraps VEK)
+        try await unlockCloud(masterPassword: masterPassword)
+    }
+
     func signOut() {
         accessToken = nil
         refreshToken = nil

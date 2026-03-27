@@ -161,13 +161,23 @@ final class AuthManager: ObservableObject {
                 migrateAccountHashIfNeeded(password: password)
                 phase = account.didCompleteOnboarding ? .vault : .onboarding
 
-                // Background cloud sync (non-blocking)
+                // Background cloud auth + SyncService setup (non-blocking — user already has local vault).
+                // Once SyncService.isCloudAuthenticated becomes true, ContentView's observer triggers sync.
                 let syncEmail = cleanEmail
                 let syncPw = password
                 Task {
-                    try? await SupabaseAuthService.shared.signIn(email: syncEmail, password: syncPw)
-                    if let syncService = self.syncService {
-                        try? await syncService.signInWithEmail(email: syncEmail, password: syncPw, masterPassword: syncPw)
+                    do {
+                        try await SupabaseAuthService.shared.signIn(email: syncEmail, password: syncPw)
+                        if let syncService = self.syncService,
+                           let token = SupabaseAuthService.shared.accessToken {
+                            try await syncService.configureWithToken(
+                                token,
+                                email: syncEmail,
+                                masterPassword: syncPw
+                            )
+                        }
+                    } catch {
+                        print("[FyxxVault] Background cloud sync setup failed: \(error.localizedDescription)")
                     }
                 }
                 return
@@ -183,7 +193,7 @@ final class AuthManager: ObservableObject {
     }
 
     /// Attempts authentication via Supabase. On success, creates/updates the local account
-    /// so future logins work offline.
+    /// so future logins work offline, then sets up SyncService before transitioning to vault.
     private func loginViaCloud(email: String, password: String) {
         Task {
             do {
@@ -216,12 +226,23 @@ final class AuthManager: ObservableObject {
                 }
                 self.persistAccount()
                 self.resetFailedAttempts()
-                self.phase = self.account?.didCompleteOnboarding == true ? .vault : .onboarding
 
-                // Also sign into SyncService for vault data sync
-                if let syncService = self.syncService {
-                    try? await syncService.signInWithEmail(email: email, password: password, masterPassword: password)
+                // Configure SyncService with the token BEFORE transitioning to vault,
+                // so ContentView's .task(id: phase) sees isCloudAuthenticated == true.
+                if let syncService = self.syncService,
+                   let token = SupabaseAuthService.shared.accessToken {
+                    do {
+                        try await syncService.configureWithToken(
+                            token,
+                            email: email,
+                            masterPassword: password
+                        )
+                    } catch {
+                        print("[FyxxVault] Cloud vault unlock failed after login: \(error.localizedDescription)")
+                    }
                 }
+
+                self.phase = self.account?.didCompleteOnboarding == true ? .vault : .onboarding
             } catch {
                 // Cloud auth also failed
                 if self.account != nil {
