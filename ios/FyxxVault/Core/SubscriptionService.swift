@@ -163,6 +163,15 @@ final class SubscriptionService: ObservableObject {
         }
     }
 
+    /// Called when the cloud profile reports a Stripe-based Pro entitlement.
+    /// Sets Pro if cloud says true. Revocation is only possible via StoreKit (not cloud).
+    func setCloudProStatus(_ isPro: Bool) {
+        if isPro && !isProUser {
+            isProUser = true
+            cacheEntitlementStatus(true)
+        }
+    }
+
     // MARK: - Cache
 
     private func cacheEntitlementStatus(_ isPro: Bool) {

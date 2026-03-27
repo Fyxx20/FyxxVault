@@ -35,14 +35,37 @@ enum CloudKeyManager {
     }
 
     /// Encrypt a single VaultEntry for cloud storage.
+    /// Dates are encoded as ISO 8601 strings to stay compatible with the web app.
     static func encryptEntry(_ entry: VaultEntry, with vek: Data) throws -> Data {
-        let json = try JSONEncoder().encode(entry)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let json = try encoder.encode(entry)
         return try CryptoService.encrypt(data: json, with: vek)
     }
 
     /// Decrypt a single VaultEntry from cloud storage.
+    /// Handles both ISO 8601 strings (from web) and legacy Double timestamps (from older iOS builds).
     static func decryptEntry(_ blob: Data, with vek: Data) throws -> VaultEntry {
         let json = try CryptoService.decrypt(data: blob, with: vek)
-        return try JSONDecoder().decode(VaultEntry.self, from: json)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { dec in
+            let container = try dec.singleValueContainer()
+            // Try ISO 8601 string first (web format)
+            if let str = try? container.decode(String.self) {
+                let iso = ISO8601DateFormatter()
+                iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                if let d = iso.date(from: str) { return d }
+                // Without fractional seconds
+                iso.formatOptions = [.withInternetDateTime]
+                if let d = iso.date(from: str) { return d }
+                // Fallback: try basic ISO
+                if let d = ISO8601DateFormatter().date(from: str) { return d }
+                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot parse date: \(str)")
+            }
+            // Legacy: Double (seconds from Swift reference date Jan 1 2001)
+            let secs = try container.decode(Double.self)
+            return Date(timeIntervalSinceReferenceDate: secs)
+        }
+        return try decoder.decode(VaultEntry.self, from: json)
     }
 }

@@ -93,6 +93,9 @@ struct ContentView: View {
                 isSyncing = false
             }
         }
+        .onChange(of: syncService.cloudIsProUser) { _, isPro in
+            if isPro { subscriptionService.setCloudProStatus(true) }
+        }
         .onChange(of: scenePhase) { _, newValue in
             appLock.handleScenePhase(newValue, userAuthenticated: authManager.phase == .vault)
         }

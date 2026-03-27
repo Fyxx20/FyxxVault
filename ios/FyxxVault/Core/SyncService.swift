@@ -84,6 +84,7 @@ final class SyncService: ObservableObject {
     @Published var lastSyncDate: Date?
     @Published var isCloudAuthenticated = false
     @Published var cloudEmail: String?
+    @Published var cloudIsProUser: Bool = false
 
     /// Vault Encryption Key — in-memory only, NEVER persisted
     private var vek: Data?
@@ -144,8 +145,8 @@ final class SyncService: ObservableObject {
         // 5. Store in profiles table
         let profileBody: [String: Any] = [
             "id": userId,
-            "wrapped_vek": wrappedVEK.base64EncodedString(),
-            "vek_salt": salt.base64EncodedString(),
+            "wrapped_vek": encodeSupabaseBytes(wrappedVEK),
+            "vek_salt": encodeSupabaseBytes(salt),
             "vek_rounds": 210_000
         ]
         _ = try await postJSON(path: "/rest/v1/profiles", body: profileBody, auth: true)
@@ -186,10 +187,10 @@ final class SyncService: ObservableObject {
         let profileData = try await getJSON(path: "/rest/v1/profiles?select=*&limit=1")
         guard let profiles = profileData as? [[String: Any]],
               let profile = profiles.first,
-              let wrappedVEKB64 = profile["wrapped_vek"] as? String,
-              let vekSaltB64 = profile["vek_salt"] as? String,
-              let wrappedVEK = Data(base64Encoded: wrappedVEKB64),
-              let vekSalt = Data(base64Encoded: vekSaltB64) else {
+              let wrappedVEKRaw = profile["wrapped_vek"] as? String,
+              let vekSaltRaw = profile["vek_salt"] as? String,
+              let wrappedVEK = decodeSupabaseBytes(wrappedVEKRaw),
+              let vekSalt = decodeSupabaseBytes(vekSaltRaw) else {
             throw SyncError.serverError("Profil cloud introuvable")
         }
 
@@ -202,6 +203,10 @@ final class SyncService: ObservableObject {
             self.vek = try CloudKeyManager.unwrapVEK(wrappedVEK, with: kek)
             self.isCloudAuthenticated = true
             self.state = .idle
+            // Read cloud Pro status (set by Stripe webhook on the web)
+            if let isPro = profile["is_pro"] as? Bool {
+                self.cloudIsProUser = isPro
+            }
         } catch {
             throw SyncError.encryptionError("Mot de passe maître incorrect pour le cloud")
         }
@@ -252,9 +257,9 @@ final class SyncService: ObservableObject {
 
             for item in remoteItems {
                 guard let remoteId = item["id"] as? String,
-                      let blobB64 = item["encrypted_blob"] as? String,
+                      let blobRaw = item["encrypted_blob"] as? String,
                       let updatedAtStr = item["updated_at"] as? String,
-                      let blob = Data(base64Encoded: blobB64) else { continue }
+                      let blob = decodeSupabaseBytes(blobRaw) else { continue }
 
                 let isDeleted = item["deleted_at"] != nil && !(item["deleted_at"] is NSNull)
                 let updatedAt = dateFormatter.date(from: updatedAtStr) ?? Date.distantPast
@@ -311,6 +316,9 @@ final class SyncService: ObservableObject {
             // 6. Update sync metadata
             try await updateSyncMetadata()
 
+            // 7. Refresh Pro status (in case it changed since last session)
+            await refreshProStatus()
+
             state = .idle
             lastSyncDate = Date()
             return merged
@@ -328,7 +336,7 @@ final class SyncService: ObservableObject {
 
         let body: [String: Any] = [
             "id": entry.id.uuidString,
-            "encrypted_blob": encrypted.base64EncodedString(),
+            "encrypted_blob": encodeSupabaseBytes(encrypted),
             "updated_at": now
         ]
 
@@ -345,6 +353,48 @@ final class SyncService: ObservableObject {
         let now = ISO8601DateFormatter().string(from: Date())
         let body: [String: Any] = ["deleted_at": now]
         _ = try await patchJSON(path: "/rest/v1/vault_items?id=eq.\(id.uuidString)", body: body)
+    }
+
+    // MARK: - Pro Status
+
+    private func refreshProStatus() async {
+        guard accessToken != nil else { return }
+        guard let profileData = try? await getJSON(path: "/rest/v1/profiles?select=is_pro&limit=1"),
+              let profiles = profileData as? [[String: Any]],
+              let profile = profiles.first,
+              let isPro = profile["is_pro"] as? Bool else { return }
+        if isPro != cloudIsProUser {
+            cloudIsProUser = isPro
+        }
+    }
+
+    // MARK: - Supabase BYTEA Helpers
+
+    /// Decode a Postgres BYTEA value returned as "\\x<hex>" or plain base64.
+    private func decodeSupabaseBytes(_ value: String) -> Data? {
+        var hex = value
+        if hex.hasPrefix("\\x") { hex = String(hex.dropFirst(2)) }
+        else if hex.hasPrefix("0x") { hex = String(hex.dropFirst(2)) }
+        else {
+            // Try base64 fallback
+            return Data(base64Encoded: value)
+        }
+        guard hex.count % 2 == 0 else { return nil }
+        var bytes = [UInt8]()
+        bytes.reserveCapacity(hex.count / 2)
+        var index = hex.startIndex
+        while index < hex.endIndex {
+            let next = hex.index(index, offsetBy: 2)
+            guard let byte = UInt8(hex[index..<next], radix: 16) else { return nil }
+            bytes.append(byte)
+            index = next
+        }
+        return Data(bytes)
+    }
+
+    /// Encode Data as a Postgres BYTEA hex string "\\x<hex>".
+    private func encodeSupabaseBytes(_ data: Data) -> String {
+        "\\x" + data.map { String(format: "%02x", $0) }.joined()
     }
 
     // MARK: - REST Helpers
