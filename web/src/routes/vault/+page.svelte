@@ -3,6 +3,7 @@
 	import { getVaultState, loadEntries, toggleFavorite, deleteEntry } from '$lib/stores/vault.svelte';
 	import { getAuthState } from '$lib/stores/auth.svelte';
 	import { CATEGORY_META, type VaultEntry, type VaultCategory } from '$lib/types';
+	import { getFaviconUrl } from '$lib/domainResolver';
 	import { passwordStrength } from '$lib/crypto';
 	import { generateTOTP, getTOTPRemaining } from '$lib/totp';
 	import { createShareLink } from '$lib/sharing';
@@ -398,9 +399,8 @@
 							<!-- Category icon in colored square -->
 							<div class="entry-icon w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0 transition-all duration-250 group-hover:scale-110 overflow-hidden"
 								style="background: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'}15;">
-								{#if entry.website && entry.category === 'login'}
-									<img src="https://www.google.com/s2/favicons?domain={entry.website.replace(/^https?:\/\//, '').split('/')[0]}&sz=64" alt="" class="w-7 h-7 rounded" onerror={(e) => { e.currentTarget.style.display='none'; }} />
-									<span style="display:none;">{CATEGORY_META[entry.category]?.icon ?? '🔑'}</span>
+								{#if getFaviconUrl(entry)}
+									<img src={getFaviconUrl(entry)} alt="" class="w-7 h-7 rounded" onerror={(e) => { e.currentTarget.style.display='none'; }} />
 								{:else}
 									{CATEGORY_META[entry.category]?.icon ?? '📦'}
 								{/if}
@@ -749,9 +749,8 @@
 					<div class="flex items-center gap-3 mb-5">
 						<div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl overflow-hidden"
 							style="background: {CATEGORY_META[entry.category]?.color ?? 'var(--fv-ash)'}15;">
-							{#if entry.website && entry.category === 'login'}
-								<img src="https://www.google.com/s2/favicons?domain={entry.website.replace(/^https?:\/\//, '').split('/')[0]}&sz=64" alt="" class="w-8 h-8 rounded" onerror={(e) => { e.currentTarget.style.display='none'; }} />
-								<span style="display:none;">{CATEGORY_META[entry.category]?.icon ?? '🔑'}</span>
+							{#if getFaviconUrl(entry)}
+								<img src={getFaviconUrl(entry)} alt="" class="w-8 h-8 rounded" onerror={(e) => { e.currentTarget.style.display='none'; }} />
 							{:else}
 								{CATEGORY_META[entry.category]?.icon ?? '📦'}
 							{/if}
