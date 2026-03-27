@@ -70,26 +70,15 @@
 		try { localStorage.removeItem(DRAFT_KEY); } catch {}
 	}
 
-	// Load draft on mount (only for new entries)
+	// Load draft or existing entry on mount (runs once)
+	let _initialized = false;
 	$effect(() => {
-		if (!editId) {
-			loadDraft();
-		}
-	});
-
-	// Auto-save draft on changes (debounced)
-	let draftTimeout: ReturnType<typeof setTimeout> | null = null;
-	$effect(() => {
-		// Track entry changes
-		const _ = JSON.stringify(entry);
-		if (draftTimeout) clearTimeout(draftTimeout);
-		draftTimeout = setTimeout(saveDraft, 1000);
-	});
-
-	// Load existing entry if editing
-	$effect(() => {
+		if (_initialized) return;
+		_initialized = true;
 		if (existingEntry) {
 			entry = { ...existingEntry };
+		} else {
+			loadDraft();
 		}
 	});
 
