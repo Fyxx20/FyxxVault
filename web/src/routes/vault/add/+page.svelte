@@ -547,8 +547,8 @@
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
 					{/if}
 				</button>
-				<button type="button" onclick={() => showGenerator = !showGenerator} class="p-1.5 rounded-lg hover:bg-white/10 text-[var(--fv-smoke)]" title="Générateur">
-					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+				<button type="button" onclick={() => showGenerator = !showGenerator} class="p-2 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-90" style="color: {showGenerator ? 'var(--fv-cyan)' : 'var(--fv-smoke)'};" title="Générateur de mot de passe">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
 				</button>
 			</div>
 		</div>
