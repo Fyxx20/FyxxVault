@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { getAuthState, logout, initAuth } from '$lib/stores/auth.svelte';
+	import { onMount } from 'svelte';
+	import { getAuthState, logout, lockVault, initAuth } from '$lib/stores/auth.svelte';
 	import { resetVault, getSecurityStats } from '$lib/stores/vault.svelte';
+	import { inboxUnreadCount } from '$lib/stores/email-badge';
 
 	let { children } = $props();
 
@@ -97,20 +99,51 @@
 	});
 
 	function handleLock() {
-		// Clear VEK and redirect to unlock
-		// We can't directly clear VEK from here, so we redirect
+		// Clear VEK and redirect to unlock — keep Supabase session alive
 		resetVault();
+		lockVault();
+		inboxUnreadCount.set(0);
 		goto('/vault/unlock');
-		// Force page reload to clear VEK from memory
-		window.location.href = '/vault/unlock';
 	}
+
+	async function refreshInboxBadge() {
+		if (!auth.session?.access_token || !auth.isUnlocked) return;
+		try {
+			const res = await fetch('/api/email/messages?folder=inbox', {
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${auth.session.access_token}`
+				}
+			});
+			if (!res.ok) return;
+			const data = await res.json();
+			if (data?.unreadCounts?.inbox !== undefined) {
+				inboxUnreadCount.set(data.unreadCounts.inbox ?? 0);
+			}
+		} catch {
+			// Silent fail: badge is best-effort.
+		}
+	}
+
+	onMount(() => {
+		refreshInboxBadge();
+	});
+
+	$effect(() => {
+		if (!auth.isUnlocked || !auth.session?.access_token) return;
+		const id = setInterval(refreshInboxBadge, 30000);
+		return () => clearInterval(id);
+	});
 
 	async function handleSidebarCheckout() {
 		try {
 			const res = await fetch('/api/checkout', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ plan: 'monthly', email: auth.user?.email })
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${auth.session?.access_token}`
+				},
+				body: JSON.stringify({ plan: 'monthly' })
 			});
 			const data = await res.json();
 			if (data.url) window.location.href = data.url;
@@ -130,6 +163,7 @@
 		setTimeout(async () => {
 			showLogoutToast = false;
 			resetVault();
+			inboxUnreadCount.set(0);
 			await logout();
 			goto('/login');
 		}, 1300);
@@ -142,7 +176,8 @@
 	const navItems = [
 		{ path: '/vault', label: 'Coffre', icon: 'vault', color: 'var(--fv-cyan)', mobileIcon: true },
 		{ path: '/vault/security', label: 'Securite', icon: 'shield', color: 'var(--fv-violet)', mobileIcon: true },
-		{ path: '/vault/emails', label: 'Emails masques', icon: 'mail', color: '#3b82f6', mobileIcon: true },
+		{ path: '/vault/emails', label: 'Messagerie', icon: 'mail', color: '#3b82f6', mobileIcon: true },
+		{ path: '/vault/announcements', label: 'Annonces', icon: 'megaphone', color: 'var(--fv-gold)', mobileIcon: true },
 		{ path: '/vault/settings', label: 'Parametres', icon: 'settings', color: 'var(--fv-smoke)', mobileIcon: true }
 	];
 
@@ -261,11 +296,22 @@
 									<circle cx="12" cy="12" r="3"/>
 									<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
 								</svg>
+							{:else if item.icon === 'megaphone'}
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
+								</svg>
 							{/if}
 						</div>
 						{item.label}
 						{#if item.icon === 'shield' && hasSecurityAlert}
 							<span class="ml-auto w-2 h-2 rounded-full bg-[var(--fv-danger)] shrink-0 security-alert-dot"></span>
+						{:else if item.icon === 'mail' && $inboxUnreadCount > 0}
+							<span class="ml-auto flex items-center gap-1.5 shrink-0">
+								<span class="w-2 h-2 rounded-full bg-[var(--fv-danger)] security-alert-dot"></span>
+								<span class="px-2 py-0.5 rounded-full text-[10px] font-bold leading-none text-[var(--fv-abyss)] bg-[var(--fv-cyan)] shadow-[0_0_12px_rgba(0,212,255,0.35)]">
+									{$inboxUnreadCount > 99 ? '99+' : $inboxUnreadCount}
+								</span>
+							</span>
 						{/if}
 					</a>
 				{/each}
@@ -380,10 +426,17 @@
 						{:else if item.icon === 'mail'}
 							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
 						{:else if item.icon === 'settings'}
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9"/></svg>
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+						{:else if item.icon === 'megaphone'}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
 						{/if}
 						{#if item.icon === 'shield' && hasSecurityAlert}
 							<span class="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-[var(--fv-danger)] security-alert-dot"></span>
+						{:else if item.icon === 'mail' && $inboxUnreadCount > 0}
+							<span class="absolute top-0 right-0 w-2 h-2 rounded-full bg-[var(--fv-danger)] security-alert-dot"></span>
+							<span class="absolute top-0 right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-[var(--fv-cyan)] text-[9px] font-bold text-[var(--fv-abyss)] flex items-center justify-center shadow-[0_0_10px_rgba(0,212,255,0.35)]">
+								{$inboxUnreadCount > 99 ? '99+' : $inboxUnreadCount}
+							</span>
 						{/if}
 						<span class="text-[9px] font-semibold">{item.label.split(' ')[0]}</span>
 					</a>
