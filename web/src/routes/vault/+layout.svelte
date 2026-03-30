@@ -5,6 +5,7 @@
 	import { getAuthState, logout, lockVault, initAuth } from '$lib/stores/auth.svelte';
 	import { resetVault, getSecurityStats } from '$lib/stores/vault.svelte';
 	import { inboxUnreadCount } from '$lib/stores/email-badge';
+	import { supabase } from '$lib/supabase';
 
 	let { children } = $props();
 
@@ -109,7 +110,8 @@
 	async function refreshInboxBadge() {
 		if (!auth.session?.access_token || !auth.isUnlocked) return;
 		try {
-			const res = await fetch('/api/email/messages?folder=inbox', {
+			const res = await fetch(`/api/email/messages?folder=inbox&t=${Date.now()}`, {
+				cache: 'no-store',
 				headers: {
 					'Content-Type': 'application/json',
 					Authorization: `Bearer ${auth.session.access_token}`
@@ -127,12 +129,59 @@
 
 	onMount(() => {
 		refreshInboxBadge();
+		const onFocus = () => refreshInboxBadge();
+		const onVisibility = () => {
+			if (!document.hidden) refreshInboxBadge();
+		};
+		window.addEventListener('focus', onFocus);
+		document.addEventListener('visibilitychange', onVisibility);
+		return () => {
+			window.removeEventListener('focus', onFocus);
+			document.removeEventListener('visibilitychange', onVisibility);
+		};
 	});
 
 	$effect(() => {
 		if (!auth.isUnlocked || !auth.session?.access_token) return;
-		const id = setInterval(refreshInboxBadge, 30000);
+		const id = setInterval(refreshInboxBadge, 3000);
 		return () => clearInterval(id);
+	});
+
+	$effect(() => {
+		const userId = auth.user?.id;
+		if (!auth.isUnlocked || !userId) return;
+
+		const channel = supabase
+			.channel(`inbox-badge-${userId}`)
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'emails',
+					filter: `user_id=eq.${userId}`
+				},
+				(payload) => {
+					// Fast path: increment instantly on a new unread inbox email.
+					if (payload.eventType === 'INSERT') {
+						const row = payload.new as { folder?: string; is_read?: boolean };
+						if (row.folder === 'inbox' && row.is_read === false) {
+							inboxUnreadCount.update((count) => count + 1);
+							return;
+						}
+					}
+
+					// For updates/deletes/moves, refresh from server for correctness.
+					refreshInboxBadge();
+				}
+			)
+			.subscribe((status) => {
+				if (status === 'SUBSCRIBED') refreshInboxBadge();
+			});
+
+		return () => {
+			supabase.removeChannel(channel);
+		};
 	});
 
 	async function handleSidebarCheckout() {
@@ -177,6 +226,7 @@
 		{ path: '/vault', label: 'Coffre', icon: 'vault', color: 'var(--fv-cyan)', mobileIcon: true },
 		{ path: '/vault/security', label: 'Securite', icon: 'shield', color: 'var(--fv-violet)', mobileIcon: true },
 		{ path: '/vault/emails', label: 'Messagerie', icon: 'mail', color: '#3b82f6', mobileIcon: true },
+		{ path: '/vault/identity', label: 'Identite', icon: 'identity', color: '#10b981', mobileIcon: true },
 		{ path: '/vault/announcements', label: 'Annonces', icon: 'megaphone', color: 'var(--fv-gold)', mobileIcon: true },
 		{ path: '/vault/settings', label: 'Parametres', icon: 'settings', color: 'var(--fv-smoke)', mobileIcon: true }
 	];
@@ -295,6 +345,12 @@
 								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 									<circle cx="12" cy="12" r="3"/>
 									<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+								</svg>
+							{:else if item.icon === 'identity'}
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<rect x="2" y="5" width="20" height="14" rx="2"/>
+									<circle cx="8" cy="12" r="2"/>
+									<path d="M14 9h4M14 12h4M14 15h2"/>
 								</svg>
 							{:else if item.icon === 'megaphone'}
 								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -427,6 +483,8 @@
 							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
 						{:else if item.icon === 'settings'}
 							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+						{:else if item.icon === 'identity'}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M14 9h4M14 12h4M14 15h2"/></svg>
 						{:else if item.icon === 'megaphone'}
 							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
 						{/if}
