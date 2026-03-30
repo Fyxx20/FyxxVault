@@ -6,16 +6,6 @@
 
 	const articles = [
 		{
-			slug: 'fyxxvault-vs-1password-vs-bitwarden',
-			title: 'FyxxVault vs 1Password vs Bitwarden (2026)',
-			excerpt: "An honest comparison of three password managers. Encryption, pricing, features, privacy — we break it all down to help you find the right fit.",
-			date: '30 March 2026',
-			readTime: '10 min',
-			category: 'Comparison',
-			categoryColor: 'var(--fv-cyan)',
-			live: true,
-		},
-		{
 			slug: 'pourquoi-fyxxvault-plus-sur',
 			title: 'Pourquoi FyxxVault est plus sur que votre gestionnaire actuel',
 			excerpt: "Architecture zero-knowledge, chiffrement AES-256-GCM, derivation de cle PBKDF2... Decouvrez pourquoi FyxxVault offre un niveau de securite superieur a la majorite des gestionnaires de mots de passe du marche.",
@@ -23,7 +13,6 @@
 			readTime: '6 min',
 			category: 'Securite',
 			categoryColor: 'var(--fv-success)',
-			live: false,
 		},
 		{
 			slug: '5-erreurs-mots-de-passe',
@@ -33,7 +22,6 @@
 			readTime: '4 min',
 			category: 'Conseils',
 			categoryColor: 'var(--fv-gold)',
-			live: false,
 		},
 		{
 			slug: 'zero-knowledge-comment-ca-marche',
@@ -43,7 +31,6 @@
 			readTime: '8 min',
 			category: 'Technologie',
 			categoryColor: 'var(--fv-violet)',
-			live: false,
 		},
 	];
 </script>
@@ -65,52 +52,28 @@
 
 		<div class="blog-grid">
 			{#each articles as article, i}
-				{#if article.live}
-					<a href="/blog/{article.slug}" class="blog-card-link">
-						<article class="blog-card fv-glass" style="animation-delay: {i * 100}ms">
-							<div class="blog-card-header">
-								<span class="blog-category" style="--cat-color: {article.categoryColor}">{article.category}</span>
-								<span class="blog-badge blog-badge-live">New</span>
-							</div>
-							<h2 class="blog-card-title">{article.title}</h2>
-							<p class="blog-card-excerpt">{article.excerpt}</p>
-							<div class="blog-card-meta">
-								<div class="blog-meta-left">
-									<span class="blog-date">
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-										{article.date}
-									</span>
-									<span class="blog-read-time">
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-										{article.readTime}
-									</span>
-								</div>
-								<span class="blog-read-link">Read &rarr;</span>
-							</div>
-						</article>
-					</a>
-				{:else}
-					<article class="blog-card fv-glass" style="animation-delay: {i * 100}ms">
-						<div class="blog-card-header">
-							<span class="blog-category" style="--cat-color: {article.categoryColor}">{article.category}</span>
-							<span class="blog-badge">Bientot</span>
+				<article class="blog-card fv-glass" style="animation-delay: {i * 100}ms">
+					<div class="blog-card-header">
+						<span class="blog-category" style="--cat-color: {article.categoryColor}">{article.category}</span>
+						<span class="blog-badge">Bientot</span>
+					</div>
+
+					<h2 class="blog-card-title">{article.title}</h2>
+					<p class="blog-card-excerpt">{article.excerpt}</p>
+
+					<div class="blog-card-meta">
+						<div class="blog-meta-left">
+							<span class="blog-date">
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+								{article.date}
+							</span>
+							<span class="blog-read-time">
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+								{article.readTime}
+							</span>
 						</div>
-						<h2 class="blog-card-title">{article.title}</h2>
-						<p class="blog-card-excerpt">{article.excerpt}</p>
-						<div class="blog-card-meta">
-							<div class="blog-meta-left">
-								<span class="blog-date">
-									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-									{article.date}
-								</span>
-								<span class="blog-read-time">
-									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-									{article.readTime}
-								</span>
-							</div>
-						</div>
-					</article>
-				{/if}
+					</div>
+				</article>
 			{/each}
 		</div>
 
@@ -289,30 +252,6 @@
 		max-width: 480px;
 		margin: 0 0 16px;
 		line-height: 1.5;
-	}
-
-	.blog-card-link {
-		text-decoration: none;
-		display: block;
-	}
-	.blog-card-link .blog-card:hover {
-		border-color: rgba(0, 212, 255, 0.3);
-	}
-
-	.blog-badge-live {
-		color: var(--fv-cyan) !important;
-		background: rgba(0, 212, 255, 0.1) !important;
-		border: 1px solid rgba(0, 212, 255, 0.2) !important;
-	}
-
-	.blog-read-link {
-		color: var(--fv-cyan);
-		font-size: 14px;
-		font-weight: 600;
-		transition: opacity 0.2s;
-	}
-	.blog-card-link:hover .blog-read-link {
-		opacity: 0.8;
 	}
 
 	@media (max-width: 640px) {
