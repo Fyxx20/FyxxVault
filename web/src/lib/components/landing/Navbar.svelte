@@ -1,6 +1,15 @@
 <script lang="ts">
+	import { supabase } from '$lib/supabase';
+	import { onMount } from 'svelte';
+
 	let scrolled = $state(false);
 	let mobileOpen = $state(false);
+	let hasSession = $state(false);
+
+	onMount(async () => {
+		const { data: { session } } = await supabase.auth.getSession();
+		hasSession = !!session;
+	});
 
 	function handleScroll() {
 		scrolled = window.scrollY > 20;
@@ -14,6 +23,7 @@
 		{ href: '#features', label: 'Fonctionnalites' },
 		{ href: '#security', label: 'Securite' },
 		{ href: '#pricing', label: 'Prix' },
+		{ href: '/blog', label: 'Blog' },
 	];
 </script>
 
@@ -44,8 +54,12 @@
 
 		<!-- CTA -->
 		<div class="fv-navbar__actions">
-			<a href="/login" class="fv-navbar__login">Connexion</a>
-			<a href="/register" class="fv-navbar__cta">
+			{#if hasSession}
+				<a href="/vault/unlock" class="fv-navbar__login">Mon coffre</a>
+			{:else}
+				<a href="/login" class="fv-navbar__login">Connexion</a>
+			{/if}
+			<a href={hasSession ? "/vault/unlock" : "/register"} class="fv-navbar__cta">
 				Commencer
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
 			</a>
