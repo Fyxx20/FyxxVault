@@ -227,6 +227,24 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
 
   const handle = async () => {
     switch (msg.type) {
+      case 'LOGIN_AND_UNLOCK': {
+        try {
+          const { email, masterPassword } = msg as any;
+          // Sign in with Supabase
+          const { data, error: authError } = await supabase.auth.signInWithPassword({
+            email,
+            password: masterPassword
+          });
+          if (authError) return { success: false, error: authError.message };
+          if (!data.session) return { success: false, error: 'Pas de session.' };
+
+          // Now unlock the vault with the same master password
+          return await unlock(masterPassword);
+        } catch (e: any) {
+          return { success: false, error: e.message || 'Erreur de connexion.' };
+        }
+      }
+
       case 'OPEN_CHROME_PASSWORDS': {
         chrome.tabs.create({ url: 'chrome://password-manager/settings' });
         return { success: true };

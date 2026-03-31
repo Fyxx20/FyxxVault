@@ -16,14 +16,22 @@
       <p class="loading-text">Chargement...</p>
     </div>
 
-    <!-- Not authenticated -->
+    <!-- Not authenticated — email/password login -->
     <div id="view-login" class="view hidden">
       <div class="logo-container">
         <img src="../icons/icon-128.png" alt="FyxxVault" class="logo">
       </div>
       <h2>FyxxVault</h2>
-      <p class="subtitle">Connectez-vous sur le site FyxxVault pour synchroniser automatiquement.</p>
-      <button id="btn-open-vault" class="btn-primary">Ouvrir FyxxVault</button>
+      <p class="subtitle">Connecte-toi pour acceder a tes identifiants.</p>
+      <div class="input-group">
+        <input type="email" id="login-email" placeholder="Email" autocomplete="off">
+        <input type="password" id="login-password" placeholder="Mot de passe maitre" autocomplete="off">
+        <button id="btn-login" class="btn-primary">Se connecter</button>
+      </div>
+      <p id="login-error" class="error hidden"></p>
+      <p class="subtitle" style="margin-top:12px;font-size:11px">
+        Pas de compte ? <a href="#" id="btn-register" style="color:var(--fv-cyan)">Creer un compte</a>
+      </p>
     </div>
 
     <!-- Authenticated but locked -->
@@ -32,7 +40,7 @@
         <img src="../icons/icon-128.png" alt="FyxxVault" class="logo logo-small">
       </div>
       <h2>Coffre verrouille</h2>
-      <p class="subtitle">Entrez votre mot de passe maitre ou deverrouillez depuis le site.</p>
+      <p class="subtitle">Entre ton mot de passe maitre.</p>
       <div class="input-group">
         <input type="password" id="master-password" placeholder="Mot de passe maitre" autocomplete="off">
         <button id="btn-unlock" class="btn-primary">Deverrouiller</button>

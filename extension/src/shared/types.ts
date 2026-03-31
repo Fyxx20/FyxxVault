@@ -81,6 +81,7 @@ export type ExtMessage =
   | { type: 'DISABLE_GOOGLE_PASSWORDS' }
   | { type: 'OPEN_CHROME_PASSWORDS' }
   | { type: 'IMPORT_CSV_ENTRIES'; entries: Array<{ name: string; url: string; username: string; password: string }> }
+  | { type: 'LOGIN_AND_UNLOCK'; email: string; masterPassword: string }
   | { type: 'UNLOCK'; masterPassword: string }
   | { type: 'LOCK' };
 

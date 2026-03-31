@@ -7,7 +7,11 @@ const viewLoading = document.getElementById('view-loading')!;
 const viewLogin = document.getElementById('view-login')!;
 const viewLocked = document.getElementById('view-locked')!;
 const viewUnlocked = document.getElementById('view-unlocked')!;
-const btnOpenVault = document.getElementById('btn-open-vault')!;
+const btnLogin = document.getElementById('btn-login')!;
+const loginEmail = document.getElementById('login-email') as HTMLInputElement;
+const loginPassword = document.getElementById('login-password') as HTMLInputElement;
+const loginError = document.getElementById('login-error')!;
+const btnRegister = document.getElementById('btn-register')!;
 const btnUnlock = document.getElementById('btn-unlock')!;
 const btnLock = document.getElementById('btn-lock')!;
 const masterPasswordInput = document.getElementById('master-password') as HTMLInputElement;
@@ -114,11 +118,46 @@ function escapeHtml(str: string): string {
 
 // ─── Event handlers ───
 
-btnOpenVault.addEventListener('click', () => {
-  chrome.tabs.create({ url: 'https://fyxxvault.netlify.app/login' });
-  window.close();
+// ─── Login with email + password ───
+btnLogin.addEventListener('click', async () => {
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value;
+  if (!email || !password) return;
+
+  btnLogin.textContent = '...';
+  btnLogin.setAttribute('disabled', 'true');
+
+  // Login + unlock in one step (password = master password)
+  const response = await chrome.runtime.sendMessage({
+    type: 'LOGIN_AND_UNLOCK',
+    email,
+    masterPassword: password
+  });
+
+  if (response?.success) {
+    loginError.classList.add('hidden');
+    await loadAndShow();
+  } else {
+    loginError.textContent = response?.error || 'Erreur de connexion';
+    loginError.classList.remove('hidden');
+    btnLogin.textContent = 'Se connecter';
+    btnLogin.removeAttribute('disabled');
+  }
 });
 
+loginPassword.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') btnLogin.click();
+});
+loginEmail.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') loginPassword.focus();
+});
+
+btnRegister.addEventListener('click', (e) => {
+  e.preventDefault();
+  chrome.tabs.create({ url: 'https://fyxxvault.com/register' });
+});
+
+// ─── Unlock (already logged in, just need master password) ───
 btnUnlock.addEventListener('click', async () => {
   const password = masterPasswordInput.value;
   if (!password) return;
