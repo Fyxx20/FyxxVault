@@ -93,9 +93,7 @@ function init() {
   });
 
   async function processCSV(file: File) {
-    uploadZone.classList.add('hidden');
-    $('export-card').classList.add('hidden');
-    $('upload-card').classList.add('hidden');
+    $('import-flow').classList.add('hidden');
     $('import-loading').classList.remove('hidden');
 
     const text = await file.text();
@@ -116,9 +114,7 @@ function init() {
       $('pro-popup').classList.remove('hidden');
       $('btn-step3-skip').classList.add('hidden');
     } else {
-      $('export-card').classList.remove('hidden');
-      $('upload-card').classList.remove('hidden');
-      uploadZone.classList.remove('hidden');
+      $('import-flow').classList.remove('hidden');
 
       const errorMsg = response?.error || 'Erreur inconnue';
       if (errorMsg.includes('verrouille') || errorMsg.includes('authentifie')) {
