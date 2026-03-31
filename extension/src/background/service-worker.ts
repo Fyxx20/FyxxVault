@@ -31,29 +31,47 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
-// ─── In-memory state (lost on SW restart) ───
+// ─── In-memory state ───
 let vek: Uint8Array | null = null;
 let entries: VaultEntry[] = [];
 let lastActivity = Date.now();
 
-const VEK_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+// ─── Persist VEK in session storage (survives SW restarts, cleared on browser close) ───
+async function persistVEK(vekBytes: Uint8Array) {
+  vek = vekBytes;
+  lastActivity = Date.now();
+  await chrome.storage.session.set({
+    vekHex: bytesToHex(vekBytes),
+    vekTimestamp: Date.now()
+  });
+}
 
-// ─── Auto-lock on inactivity ───
-chrome.alarms.create('fyxxvault-autolock', { periodInMinutes: 1 });
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'fyxxvault-autolock') {
-    if (vek && Date.now() - lastActivity > VEK_TIMEOUT_MS) {
-      lock();
+async function restoreVEK(): Promise<boolean> {
+  if (vek) return true; // Already in memory
+  try {
+    const { vekHex, vekTimestamp } = await chrome.storage.session.get(['vekHex', 'vekTimestamp']);
+    if (vekHex) {
+      vek = hexToBytes(vekHex);
+      lastActivity = vekTimestamp || Date.now();
+      return true;
     }
-  }
-});
+  } catch {}
+  return false;
+}
 
 function lock() {
   vek = null;
   entries = [];
-  // Update badge
+  chrome.storage.session.remove(['vekHex', 'vekTimestamp']);
   chrome.action.setBadgeText({ text: '' });
 }
+
+// ─── Restore VEK on service worker wake ───
+restoreVEK().then(async (restored) => {
+  if (restored) {
+    await loadEntries();
+  }
+});
 
 // ─── Restore session on SW wake ───
 async function ensureSession(): Promise<boolean> {
@@ -192,8 +210,7 @@ async function unlock(masterPassword: string): Promise<{ success: boolean; error
     const kek = await deriveKEK(masterPassword, salt, rounds);
     const unwrapped = await unwrapVEK(wrappedVek, kek);
 
-    vek = unwrapped;
-    lastActivity = Date.now();
+    await persistVEK(unwrapped);
     await loadEntries();
     return { success: true };
   } catch (e: any) {
@@ -212,6 +229,11 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
     switch (msg.type) {
       case 'GET_STATUS': {
         const hasSession = await ensureSession();
+        // Restore VEK from session storage if SW restarted
+        if (!vek) {
+          const restored = await restoreVEK();
+          if (restored && entries.length === 0) await loadEntries();
+        }
         return {
           isAuthenticated: hasSession,
           isUnlocked: !!vek,
@@ -338,10 +360,8 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
       }
 
       case 'BRIDGE_VEK': {
-        // Web app sends the VEK directly (user already unlocked on web)
         try {
-          vek = hexToBytes(msg.vekHex);
-          lastActivity = Date.now();
+          await persistVEK(hexToBytes(msg.vekHex));
           await loadEntries();
           return { success: true };
         } catch (e: any) {
@@ -378,8 +398,7 @@ chrome.runtime.onMessageExternal.addListener((msg: ExtMessage, _sender, sendResp
 
     if (msg.type === 'BRIDGE_VEK') {
       try {
-        vek = hexToBytes(msg.vekHex);
-        lastActivity = Date.now();
+        await persistVEK(hexToBytes(msg.vekHex));
         await loadEntries();
         return { success: true };
       } catch (e: any) {
