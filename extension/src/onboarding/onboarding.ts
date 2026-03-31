@@ -8,12 +8,63 @@ function goToStep(n: number) {
 // ─── Step 1 → 2 ───
 document.getElementById('btn-start')!.addEventListener('click', () => goToStep(2));
 
-// ─── Step 2: Connect ───
-document.getElementById('btn-open-vault')!.addEventListener('click', () => {
-  chrome.tabs.create({ url: 'https://fyxxvault.com/login' });
+// ─── Step 2: Pin + Connect via popup ───
+let statusPoll: ReturnType<typeof setInterval> | null = null;
+
+function startStatusPoll() {
+  const dot = document.getElementById('status-dot')!;
+  const text = document.getElementById('status-text')!;
+  const btn = document.getElementById('btn-step2-next') as HTMLButtonElement;
+
+  statusPoll = setInterval(async () => {
+    try {
+      const status = await chrome.runtime.sendMessage({ type: 'GET_STATUS' });
+      if (status?.isUnlocked) {
+        dot.classList.add('connected');
+        text.textContent = 'Coffre deverrouille !';
+        btn.disabled = false;
+        btn.classList.remove('disabled');
+        if (statusPoll) { clearInterval(statusPoll); statusPoll = null; }
+      } else if (status?.isAuthenticated) {
+        dot.classList.add('partial');
+        text.textContent = 'Connecte — deverrouille le coffre dans le popup';
+      }
+    } catch {}
+  }, 2000);
+}
+
+// Start polling when step 2 is shown
+const observer = new MutationObserver(() => {
+  if (document.getElementById('step-2')?.classList.contains('active')) {
+    startStatusPoll();
+  }
 });
-document.getElementById('btn-step2-next')!.addEventListener('click', () => goToStep(3));
-document.getElementById('btn-step2-skip')!.addEventListener('click', () => goToStep(3));
+observer.observe(document.getElementById('step-2')!, { attributes: true, attributeFilter: ['class'] });
+
+// Also check immediately
+(async () => {
+  try {
+    const status = await chrome.runtime.sendMessage({ type: 'GET_STATUS' });
+    if (status?.isUnlocked) {
+      const dot = document.getElementById('status-dot')!;
+      const text = document.getElementById('status-text')!;
+      const btn = document.getElementById('btn-step2-next') as HTMLButtonElement;
+      dot.classList.add('connected');
+      text.textContent = 'Coffre deverrouille !';
+      btn.disabled = false;
+      btn.classList.remove('disabled');
+    }
+  } catch {}
+})();
+
+document.getElementById('btn-step2-next')!.addEventListener('click', () => {
+  if (statusPoll) { clearInterval(statusPoll); statusPoll = null; }
+  goToStep(3);
+});
+document.getElementById('btn-step2-skip')!.addEventListener('click', () => {
+  if (statusPoll) { clearInterval(statusPoll); statusPoll = null; }
+  goToStep(3);
+});
 
 // ─── Step 3: Import ───
 document.getElementById('btn-open-export')!.addEventListener('click', () => {
@@ -35,7 +86,6 @@ uploadZone.addEventListener('drop', (e) => {
 csvInput.addEventListener('change', () => { if (csvInput.files?.[0]) processCSV(csvInput.files[0]); });
 
 async function processCSV(file: File) {
-  // Hide upload, show loading
   uploadZone.classList.add('hidden');
   document.getElementById('export-card')!.classList.add('hidden');
   document.getElementById('upload-card')!.classList.add('hidden');
@@ -44,7 +94,7 @@ async function processCSV(file: File) {
   const text = await file.text();
   const entries = parseGoogleCSV(text);
 
-  document.getElementById('import-progress')!.textContent = `${entries.length} identifiants trouves, import en cours...`;
+  document.getElementById('import-progress')!.textContent = `${entries.length} identifiants trouves...`;
 
   const response = await chrome.runtime.sendMessage({ type: 'IMPORT_CSV_ENTRIES', entries });
 
@@ -59,11 +109,17 @@ async function processCSV(file: File) {
     document.getElementById('pro-popup')!.classList.remove('hidden');
     document.getElementById('btn-step3-skip')!.classList.add('hidden');
   } else {
-    // Error — show upload again
+    // Show error inline
     document.getElementById('export-card')!.classList.remove('hidden');
     document.getElementById('upload-card')!.classList.remove('hidden');
     uploadZone.classList.remove('hidden');
-    alert(response?.error || 'Erreur. Assure-toi d\'etre connecte et d\'avoir deverrouille ton coffre sur fyxxvault.com.');
+
+    const errorMsg = response?.error || 'Erreur inconnue';
+    if (errorMsg.includes('verrouille') || errorMsg.includes('authentifie')) {
+      alert('Connecte-toi et deverrouille ton coffre via le popup de l\'extension (icone en haut a droite), puis reessaye.');
+    } else {
+      alert('Erreur: ' + errorMsg);
+    }
   }
 }
 
@@ -92,7 +148,6 @@ function parseCSVLine(line: string) {
 document.getElementById('btn-step3-next')!.addEventListener('click', () => goToStep(4));
 document.getElementById('btn-step3-skip')!.addEventListener('click', () => goToStep(4));
 
-// Pro popup
 document.getElementById('btn-upgrade-pro')!.addEventListener('click', () => {
   chrome.tabs.create({ url: 'https://fyxxvault.com/vault/settings' });
 });
@@ -113,6 +168,5 @@ document.getElementById('btn-step4-skip')!.addEventListener('click', () => goToS
 
 // ─── Step 5: Done ───
 document.getElementById('btn-go-vault')!.addEventListener('click', () => {
-  chrome.tabs.create({ url: 'https://fyxxvault.com/vault' });
   window.close();
 });

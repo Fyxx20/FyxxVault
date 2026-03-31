@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="onboarding.css">
 </head>
 <body>
-  <!-- Background glow -->
   <div class="bg-glow"></div>
   <div class="bg-glow-2"></div>
 
@@ -31,7 +30,7 @@
       </button>
     </div>
 
-    <!-- Step 2: Connect to FyxxVault -->
+    <!-- Step 2: Pin + Connect via popup -->
     <div id="step-2" class="step">
       <div class="step-indicator">
         <div class="step-dot filled"></div>
@@ -40,18 +39,37 @@
         <div class="step-line"></div>
         <div class="step-dot"></div>
       </div>
-      <div class="step-icon">🔗</div>
-      <h2>Connecte-toi a FyxxVault</h2>
-      <p class="subtitle">Connecte-toi sur le site pour synchroniser tes identifiants avec l'extension.</p>
-      <button class="btn-primary" id="btn-open-vault">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
-        <span>Ouvrir FyxxVault</span>
+      <div class="step-icon">📌</div>
+      <h2>Epingle et connecte-toi</h2>
+      <p class="subtitle">Epingle l'extension puis connecte-toi directement depuis le popup.</p>
+
+      <div class="guide-cards">
+        <div class="guide-card">
+          <div class="guide-num">1</div>
+          <div class="guide-content">
+            <div class="guide-title">Epingle l'extension</div>
+            <div class="guide-desc">Clique sur 🧩 en haut a droite, puis 📌 a cote de FyxxVault</div>
+          </div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-num">2</div>
+          <div class="guide-content">
+            <div class="guide-title">Connecte-toi via le popup</div>
+            <div class="guide-desc">Clique sur l'icone FyxxVault dans la barre d'outils et deverrouille ton coffre</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-check" id="status-check">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">En attente de connexion...</span>
+      </div>
+
+      <button class="btn-primary disabled" id="btn-step2-next" disabled>
+        <span>Continuer</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </button>
-      <p class="hint">Connecte-toi et deverrouille ton coffre, puis reviens ici.</p>
-      <button class="btn-secondary" id="btn-step2-next">
-        <span>C'est fait, j'ai deverrouille mon coffre</span>
-      </button>
-      <button class="btn-ghost" id="btn-step2-skip">J'ai deja un compte connecte</button>
+      <button class="btn-ghost" id="btn-step2-skip">Passer</button>
     </div>
 
     <!-- Step 3: Import -->
@@ -68,7 +86,6 @@
       <p class="subtitle">Recupere tes identifiants depuis Chrome ou un autre gestionnaire.</p>
 
       <div class="import-flow">
-        <!-- Sub-step A: Export -->
         <div class="import-card" id="export-card">
           <div class="import-card-number">1</div>
           <div class="import-card-content">
@@ -77,8 +94,6 @@
           </div>
           <button class="btn-small" id="btn-open-export">Ouvrir</button>
         </div>
-
-        <!-- Sub-step B: Upload -->
         <div class="import-card" id="upload-card">
           <div class="import-card-number">2</div>
           <div class="import-card-content">
@@ -86,7 +101,6 @@
             <div class="import-card-desc">Glisse le fichier ou clique pour selectionner</div>
           </div>
         </div>
-
         <div class="upload-zone" id="upload-zone">
           <div class="upload-zone-inner">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -97,7 +111,6 @@
         </div>
       </div>
 
-      <!-- Import states -->
       <div class="import-loading hidden" id="import-loading">
         <div class="spinner"></div>
         <div id="import-progress">Import en cours...</div>
@@ -110,7 +123,6 @@
         <div class="import-success-text" id="import-count"></div>
       </div>
 
-      <!-- Pro popup -->
       <div class="pro-card hidden" id="pro-popup">
         <div class="pro-card-glow"></div>
         <div class="pro-badge">PRO</div>
@@ -144,7 +156,6 @@
       <div class="step-icon">🛡️</div>
       <h2>Desactive Google Passwords</h2>
       <p class="subtitle">Evite les doublons : desactive le gestionnaire integre de Chrome.</p>
-
       <div class="action-card" id="btn-open-settings">
         <div class="action-left">
           <div class="action-icon-wrap">
@@ -152,12 +163,11 @@
           </div>
           <div>
             <div class="action-title">Parametres Chrome</div>
-            <div class="action-desc">Desactive le toggle "Proposer d'enregistrer les mots de passe"</div>
+            <div class="action-desc">Desactive "Proposer d'enregistrer les mots de passe"</div>
           </div>
         </div>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
       </div>
-
       <button class="btn-primary" id="btn-step4-next">
         <span>Terminer</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
@@ -178,24 +188,15 @@
       <div class="done-features">
         <div class="done-feature">
           <div class="done-feature-icon">🔐</div>
-          <div>
-            <div class="done-feature-title">Autofill automatique</div>
-            <div class="done-feature-desc">Sur tous les sites, sans rien faire</div>
-          </div>
+          <div><div class="done-feature-title">Autofill automatique</div><div class="done-feature-desc">Sur tous les sites, sans rien faire</div></div>
         </div>
         <div class="done-feature">
           <div class="done-feature-icon">💾</div>
-          <div>
-            <div class="done-feature-title">Sauvegarde intelligente</div>
-            <div class="done-feature-desc">Detecte les nouveaux identifiants</div>
-          </div>
+          <div><div class="done-feature-title">Sauvegarde intelligente</div><div class="done-feature-desc">Detecte les nouveaux identifiants</div></div>
         </div>
         <div class="done-feature">
           <div class="done-feature-icon">🔑</div>
-          <div>
-            <div class="done-feature-title">2FA / TOTP</div>
-            <div class="done-feature-desc">Remplissage automatique des codes</div>
-          </div>
+          <div><div class="done-feature-title">2FA / TOTP</div><div class="done-feature-desc">Remplissage automatique des codes</div></div>
         </div>
       </div>
       <button class="btn-primary btn-glow" id="btn-go-vault">
