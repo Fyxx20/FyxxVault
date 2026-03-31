@@ -22,8 +22,7 @@ function startStatusPoll() {
       if (status?.isUnlocked) {
         dot.classList.add('connected');
         text.textContent = 'Coffre deverrouille !';
-        btn.disabled = false;
-        btn.classList.remove('disabled');
+        btn.classList.remove('hidden');
         if (statusPoll) { clearInterval(statusPoll); statusPoll = null; }
       } else if (status?.isAuthenticated) {
         dot.classList.add('partial');
@@ -51,8 +50,7 @@ observer.observe(document.getElementById('step-2')!, { attributes: true, attribu
       const btn = document.getElementById('btn-step2-next') as HTMLButtonElement;
       dot.classList.add('connected');
       text.textContent = 'Coffre deverrouille !';
-      btn.disabled = false;
-      btn.classList.remove('disabled');
+      btn.classList.remove('hidden');
     }
   } catch {}
 })();
