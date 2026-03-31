@@ -189,40 +189,46 @@ h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
   50% { box-shadow: 0 4px 32px rgba(0,212,255,0.4); }
 }
 
-/* ─── Import cards ─── */
-.import-flow { width: 100%; max-width: 400px; margin-bottom: 20px; }
+/* ─── Import steps ─── */
+.import-steps { width: 100%; max-width: 420px; margin-bottom: 20px; }
 
-.import-card {
-  display: flex; align-items: center; gap: 14px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-  padding: 14px 16px; margin-bottom: 10px; transition: all 0.2s;
+.import-step {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  padding: 20px; margin-bottom: 12px; text-align: left;
 }
-.import-card:hover { border-color: rgba(255,255,255,0.1); }
 
-.import-card-number {
-  width: 28px; height: 28px; border-radius: 50%;
+.import-step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+
+.import-step-num {
+  width: 26px; height: 26px; border-radius: 50%;
   background: linear-gradient(135deg, var(--cyan), var(--violet));
   color: white; font-size: 13px; font-weight: 700;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.import-card-content { flex: 1; text-align: left; }
-.import-card-title { font-size: 14px; font-weight: 600; color: var(--text); }
-.import-card-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-/* ─── Upload zone ─── */
-.upload-zone {
-  width: 100%; max-width: 400px; border: 2px dashed rgba(0,212,255,0.2);
-  border-radius: 16px; cursor: pointer; transition: all 0.25s; overflow: hidden;
+.import-step-title { font-size: 15px; font-weight: 700; }
+.import-step-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border: 1px solid rgba(0,212,255,0.3); border-radius: 10px;
+  background: rgba(0,212,255,0.06); color: var(--cyan);
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
 }
-.upload-zone:hover, .upload-zone.drag-over {
-  border-color: var(--cyan); background: rgba(0,212,255,0.03);
-  box-shadow: 0 0 20px rgba(0,212,255,0.08);
+.btn-outline:hover { background: rgba(0,212,255,0.12); border-color: var(--cyan); }
+
+/* ─── Upload area ─── */
+.upload-area {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 20px; border: 2px dashed rgba(0,212,255,0.2);
+  border-radius: 12px; cursor: pointer; transition: all 0.25s;
+  color: var(--muted); font-size: 13px; width: 100%;
 }
+.upload-area:hover, .upload-area.drag-over {
+  border-color: var(--cyan); background: rgba(0,212,255,0.04); color: var(--text);
+}
+.upload-area u { color: var(--cyan); }
 .file-input-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.upload-zone-inner { padding: 32px 20px; display: flex; flex-direction: column; align-items: center; }
-.upload-text { font-size: 14px; font-weight: 600; margin-top: 12px; }
-.upload-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
-.upload-link { color: var(--cyan); text-decoration: underline; }
 
 /* ─── Import states ─── */
 .import-loading { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 32px; }

@@ -64,7 +64,7 @@ function init() {
     chrome.runtime.sendMessage({ type: 'OPEN_CHROME_PASSWORDS' });
   });
 
-  const uploadZone = $('upload-zone');
+  const uploadZone = $('upload-zone') as HTMLElement;
   const csvInput = $('csv-file') as HTMLInputElement;
 
   uploadZone.addEventListener('dragover', (e) => {

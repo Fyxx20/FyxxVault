@@ -80,31 +80,36 @@
         <div class="step-line"></div>
         <div class="step-dot"></div>
       </div>
-      <div class="step-icon">📥</div>
+
       <h2>Importe tes mots de passe</h2>
-      <p class="subtitle">Recupere tes identifiants depuis Chrome ou un autre gestionnaire.</p>
+      <p class="subtitle">Transfere tes identifiants Chrome vers FyxxVault en 2 clics.</p>
 
-      <div class="import-flow" id="import-flow">
-        <button class="action-card" id="btn-open-export">
-          <div class="action-left">
-            <div class="action-icon-wrap" style="background: rgba(0,212,255,0.1)">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </div>
-            <div>
-              <div class="action-title">Exporter depuis Chrome</div>
-              <div class="action-desc">Ouvre les parametres et telecharge le CSV</div>
-            </div>
+      <div class="import-steps" id="import-flow">
+        <!-- Step A: Export -->
+        <div class="import-step">
+          <div class="import-step-header">
+            <div class="import-step-num">1</div>
+            <div class="import-step-title">Exporte tes mots de passe Chrome</div>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
-        </button>
+          <p class="import-step-desc">Clique ci-dessous pour ouvrir les parametres Chrome, puis "Exporter les mots de passe" et sauvegarde le fichier CSV.</p>
+          <button class="btn-outline" id="btn-open-export">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+            Ouvrir les parametres Chrome
+          </button>
+        </div>
 
-        <label class="upload-zone" id="upload-zone" for="csv-file">
-          <div class="upload-zone-inner">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <div class="upload-text">Glisse ton CSV ici ou clique pour selectionner</div>
+        <!-- Step B: Import -->
+        <div class="import-step">
+          <div class="import-step-header">
+            <div class="import-step-num">2</div>
+            <div class="import-step-title">Importe le fichier CSV</div>
           </div>
-          <input type="file" id="csv-file" accept=".csv" class="file-input-hidden">
-        </label>
+          <label class="upload-area" id="upload-zone" for="csv-file">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Glisse ton CSV ici ou <u>clique pour choisir</u></span>
+            <input type="file" id="csv-file" accept=".csv" class="file-input-hidden">
+          </label>
+        </div>
       </div>
 
       <div class="import-loading hidden" id="import-loading">
