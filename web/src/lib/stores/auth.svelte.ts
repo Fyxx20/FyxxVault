@@ -1,5 +1,5 @@
 import { supabase } from '$lib/supabase';
-import { deriveKEK, unwrapVEK, wrapVEK, generateVEK, generateSalt } from '$lib/crypto';
+import { deriveKEK, unwrapVEK, wrapVEK, generateVEK, generateSalt, bytesToHex } from '$lib/crypto';
 import type { User, Session } from '@supabase/supabase-js';
 
 // ─── Private state (VEK never persisted) ───
@@ -30,6 +30,35 @@ export function getVEK(): Uint8Array | null {
 	return _vek;
 }
 
+// ─── Browser Extension Bridge ───
+// Sends session and VEK to the FyxxVault extension automatically.
+// Uses both postMessage (for content script in isolated world) and custom events.
+function bridgeToExtension() {
+	if (typeof window === 'undefined') return;
+
+	if (_session) {
+		window.dispatchEvent(new CustomEvent('fyxxvault-bridge-session', {
+			detail: {
+				access_token: _session.access_token,
+				refresh_token: _session.refresh_token
+			}
+		}));
+	}
+
+	if (_vek) {
+		const vekHex = bytesToHex(_vek);
+		// Custom event (same-world listeners)
+		window.dispatchEvent(new CustomEvent('fyxxvault-bridge-vek', { detail: vekHex }));
+		// postMessage (cross-world — content script isolated world can read this)
+		window.postMessage({ type: '__FYXX_VEK__', payload: vekHex }, '*');
+	}
+}
+
+// Listen for extension requesting current state
+if (typeof window !== 'undefined') {
+	window.addEventListener('fyxxvault-extension-ready', () => bridgeToExtension());
+}
+
 // ─── Initialize: listen for auth changes ───
 let _initialized = false;
 export function initAuth() {
@@ -48,6 +77,7 @@ export function initAuth() {
 		_user = session?.user ?? null;
 		_isAuthenticated = !!session;
 		_loading = false;
+		if (session) bridgeToExtension();
 	});
 }
 
@@ -84,6 +114,7 @@ export async function unlockVault(masterPassword: string): Promise<{ success: bo
 		_vek = vek;
 		_isUnlocked = true;
 		_isPro = profile.is_pro === true;
+		bridgeToExtension();
 		return { success: true };
 	} catch (e: any) {
 		console.error('Unlock failed:', e);
@@ -120,6 +151,7 @@ async function bootstrapProfile(masterPassword: string): Promise<{ success: bool
 
 		_vek = vek;
 		_isUnlocked = true;
+		bridgeToExtension();
 		return { success: true };
 	} catch (e: any) {
 		return { success: false, error: e.message || 'Erreur lors de la création du profil.' };

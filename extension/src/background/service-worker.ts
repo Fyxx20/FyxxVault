@@ -1,0 +1,264 @@
+// FyxxVault Extension — Service Worker (Manifest V3)
+// Manages: Supabase session, VEK in memory, vault entries cache, messaging
+
+import { supabase } from '../shared/supabase';
+import { decryptEntry, encryptEntry, decodeSupabaseBytes, encodeToSupabaseBytes, deriveKEK, unwrapVEK, hexToBytes, bytesToHex } from '../shared/crypto';
+import { newVaultEntry } from '../shared/types';
+import type { VaultEntry, ExtMessage, ExtStatus } from '../shared/types';
+
+// ─── In-memory state (lost on SW restart) ───
+let vek: Uint8Array | null = null;
+let entries: VaultEntry[] = [];
+let lastActivity = Date.now();
+
+const VEK_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
+// ─── Auto-lock on inactivity ───
+chrome.alarms.create('fyxxvault-autolock', { periodInMinutes: 1 });
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'fyxxvault-autolock') {
+    if (vek && Date.now() - lastActivity > VEK_TIMEOUT_MS) {
+      lock();
+    }
+  }
+});
+
+function lock() {
+  vek = null;
+  entries = [];
+  // Update badge
+  chrome.action.setBadgeText({ text: '' });
+}
+
+// ─── Restore session on SW wake ───
+async function ensureSession(): Promise<boolean> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return !!session;
+}
+
+// ─── Load and decrypt vault entries ───
+async function loadEntries(): Promise<void> {
+  if (!vek) return;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
+  const { data, error } = await supabase
+    .from('vault_items')
+    .select('id, user_id, encrypted_blob, updated_at, deleted_at')
+    .eq('user_id', session.user.id)
+    .is('deleted_at', null)
+    .order('updated_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('Failed to load vault items:', error);
+    return;
+  }
+
+  const decrypted: VaultEntry[] = [];
+  for (const row of data) {
+    try {
+      const blob = decodeSupabaseBytes(row.encrypted_blob);
+      const entry = await decryptEntry(blob, vek);
+      entry.id = row.id;
+      decrypted.push(entry);
+    } catch (e) {
+      console.error(`Failed to decrypt entry ${row.id}:`, e);
+    }
+  }
+
+  entries = decrypted;
+  chrome.action.setBadgeText({ text: String(entries.length) });
+  chrome.action.setBadgeBackgroundColor({ color: '#00D4FF' });
+}
+
+// ─── Domain matching ───
+function extractDomain(url: string): string {
+  try {
+    return new URL(url.startsWith('http') ? url : `https://${url}`).hostname.replace(/^www\./, '');
+  } catch {
+    return url.replace(/^www\./, '').split('/')[0];
+  }
+}
+
+function matchesDomain(entryWebsite: string, pageDomain: string): boolean {
+  if (!entryWebsite) return false;
+  const entryDomain = extractDomain(entryWebsite);
+  // Exact match or subdomain match
+  return pageDomain === entryDomain ||
+    pageDomain.endsWith('.' + entryDomain) ||
+    entryDomain.endsWith('.' + pageDomain);
+}
+
+function getLoginsForDomain(domain: string): VaultEntry[] {
+  return entries.filter(e =>
+    e.category === 'login' && matchesDomain(e.website, domain)
+  );
+}
+
+// ─── Save new login ───
+async function saveLogin(entry: VaultEntry): Promise<{ success: boolean; error?: string }> {
+  if (!vek) return { success: false, error: 'Vault locked' };
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { success: false, error: 'Not authenticated' };
+
+  try {
+    const blob = await encryptEntry(entry, vek);
+    const { error } = await supabase.from('vault_items').insert({
+      id: entry.id,
+      user_id: session.user.id,
+      encrypted_blob: encodeToSupabaseBytes(blob),
+      updated_at: new Date().toISOString()
+    });
+
+    if (error) return { success: false, error: error.message };
+
+    entries = [entry, ...entries];
+    chrome.action.setBadgeText({ text: String(entries.length) });
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+// ─── Unlock vault with master password ───
+async function unlock(masterPassword: string): Promise<{ success: boolean; error?: string }> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { success: false, error: 'Non authentifie. Connectez-vous sur FyxxVault.' };
+
+  try {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('wrapped_vek, vek_salt, vek_rounds')
+      .eq('id', session.user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return { success: false, error: 'Profil introuvable.' };
+    }
+
+    const wrappedVek = decodeSupabaseBytes(profile.wrapped_vek);
+    const salt = decodeSupabaseBytes(profile.vek_salt);
+    const rounds = profile.vek_rounds || 210_000;
+
+    const kek = await deriveKEK(masterPassword, salt, rounds);
+    const unwrapped = await unwrapVEK(wrappedVek, kek);
+
+    vek = unwrapped;
+    lastActivity = Date.now();
+    await loadEntries();
+    return { success: true };
+  } catch (e: any) {
+    if (e?.name === 'OperationError' || e?.message?.includes('decrypt')) {
+      return { success: false, error: 'Mot de passe maitre incorrect.' };
+    }
+    return { success: false, error: e.message || 'Erreur inconnue.' };
+  }
+}
+
+// ─── Message handler ───
+chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) => {
+  lastActivity = Date.now();
+
+  const handle = async () => {
+    switch (msg.type) {
+      case 'GET_STATUS': {
+        const hasSession = await ensureSession();
+        return {
+          isAuthenticated: hasSession,
+          isUnlocked: !!vek,
+          entryCount: entries.length
+        } satisfies ExtStatus;
+      }
+
+      case 'GET_LOGINS': {
+        if (!vek) return { logins: [] };
+        // Empty domain = return all entries (for popup list)
+        if (!msg.domain) return { logins: entries };
+        return { logins: getLoginsForDomain(msg.domain) };
+      }
+
+      case 'SAVE_LOGIN': {
+        return await saveLogin(msg.entry);
+      }
+
+      case 'UNLOCK': {
+        return await unlock(msg.masterPassword);
+      }
+
+      case 'LOCK': {
+        lock();
+        return { success: true };
+      }
+
+      case 'BRIDGE_SESSION': {
+        // Web app sends its Supabase session to the extension
+        try {
+          const { error } = await supabase.auth.setSession({
+            access_token: msg.session.access_token,
+            refresh_token: msg.session.refresh_token
+          });
+          if (error) return { success: false, error: error.message };
+          return { success: true };
+        } catch (e: any) {
+          return { success: false, error: e.message };
+        }
+      }
+
+      case 'BRIDGE_VEK': {
+        // Web app sends the VEK directly (user already unlocked on web)
+        try {
+          vek = hexToBytes(msg.vekHex);
+          lastActivity = Date.now();
+          await loadEntries();
+          return { success: true };
+        } catch (e: any) {
+          return { success: false, error: e.message };
+        }
+      }
+
+      default:
+        return { error: 'Unknown message type' };
+    }
+  };
+
+  handle().then(sendResponse);
+  return true; // Keep message channel open for async response
+});
+
+// ─── External messages from web app (externally_connectable) ───
+chrome.runtime.onMessageExternal.addListener((msg: ExtMessage, _sender, sendResponse) => {
+  lastActivity = Date.now();
+
+  const handle = async () => {
+    if (msg.type === 'BRIDGE_SESSION') {
+      try {
+        const { error } = await supabase.auth.setSession({
+          access_token: msg.session.access_token,
+          refresh_token: msg.session.refresh_token
+        });
+        if (error) return { success: false, error: error.message };
+        return { success: true };
+      } catch (e: any) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    if (msg.type === 'BRIDGE_VEK') {
+      try {
+        vek = hexToBytes(msg.vekHex);
+        lastActivity = Date.now();
+        await loadEntries();
+        return { success: true };
+      } catch (e: any) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    return { error: 'Unsupported external message' };
+  };
+
+  handle().then(sendResponse);
+  return true;
+});

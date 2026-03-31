@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "FyxxVault – Autofill",
+  "version": "1.0.0",
+  "description": "Remplissage automatique de vos identifiants FyxxVault sur tous les sites.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "alarms"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/autofill.js"],
+      "css": ["content/autofill.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.fyxxvault.com/*",
+        "https://*.fyxxvault.netlify.app/*",
+        "http://localhost:5173/*",
+        "http://localhost:4173/*"
+      ],
+      "js": ["content/bridge.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png"
+    }
+  },
+  "externally_connectable": {
+    "matches": [
+      "https://*.fyxxvault.com/*",
+      "https://*.fyxxvault.netlify.app/*",
+      "http://localhost:*/*"
+    ]
+  }
+}

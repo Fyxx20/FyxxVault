@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=380, initial-scale=1.0">
+  <title>FyxxVault</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Loading state -->
+    <div id="view-loading" class="view">
+      <div class="logo-container">
+        <img src="../icons/icon-128.png" alt="FyxxVault" class="logo">
+      </div>
+      <p class="loading-text">Chargement...</p>
+    </div>
+
+    <!-- Not authenticated -->
+    <div id="view-login" class="view hidden">
+      <div class="logo-container">
+        <img src="../icons/icon-128.png" alt="FyxxVault" class="logo">
+      </div>
+      <h2>FyxxVault</h2>
+      <p class="subtitle">Connectez-vous sur le site FyxxVault pour synchroniser automatiquement.</p>
+      <button id="btn-open-vault" class="btn-primary">Ouvrir FyxxVault</button>
+    </div>
+
+    <!-- Authenticated but locked -->
+    <div id="view-locked" class="view hidden">
+      <div class="logo-container">
+        <img src="../icons/icon-128.png" alt="FyxxVault" class="logo logo-small">
+      </div>
+      <h2>Coffre verrouille</h2>
+      <p class="subtitle">Entrez votre mot de passe maitre ou deverrouillez depuis le site.</p>
+      <div class="input-group">
+        <input type="password" id="master-password" placeholder="Mot de passe maitre" autocomplete="off">
+        <button id="btn-unlock" class="btn-primary">Deverrouiller</button>
+      </div>
+      <p id="unlock-error" class="error hidden"></p>
+    </div>
+
+    <!-- Unlocked — main view -->
+    <div id="view-unlocked" class="view hidden">
+      <div class="header">
+        <div class="header-left">
+          <img src="../icons/icon-48.png" alt="" class="header-logo">
+          <span class="header-title">FyxxVault</span>
+        </div>
+        <button id="btn-lock" class="btn-icon" title="Verrouiller">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </button>
+      </div>
+
+      <div class="search-bar">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="search-input" placeholder="Rechercher...">
+      </div>
+
+      <div id="entries-list" class="entries-list">
+        <!-- Filled dynamically -->
+      </div>
+
+      <div id="empty-state" class="empty-state hidden">
+        <p>Aucun identifiant trouve</p>
+      </div>
+
+      <div class="footer">
+        <span id="entry-count" class="entry-count"></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>
