@@ -230,6 +230,17 @@ h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .upload-area u { color: var(--cyan); }
 .file-input-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
+/* ─── Info note ─── */
+.info-note {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.15);
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 20px;
+  width: 100%; max-width: 400px; text-align: left;
+}
+.info-note-icon { flex-shrink: 0; margin-top: 1px; }
+.info-note-text { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.info-note-text a { color: var(--cyan); text-decoration: underline; cursor: pointer; }
+
 /* ─── Import states ─── */
 .import-loading { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 32px; }
 

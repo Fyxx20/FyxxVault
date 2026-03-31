@@ -137,6 +137,10 @@ function init() {
   });
 
   // ─── Step 4: Disable Google ───
+  $('btn-delete-google-data').addEventListener('click', (e) => {
+    e.preventDefault();
+    chrome.runtime.sendMessage({ type: 'OPEN_CHROME_PASSWORDS' });
+  });
   $('btn-open-settings').addEventListener('click', () => {
     chrome.runtime.sendMessage({ type: 'OPEN_CHROME_PASSWORDS' });
   });
