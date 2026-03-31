@@ -36,6 +36,35 @@ h2 { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
 .subtitle { color: var(--fv-muted); font-size: 15px; line-height: 1.6; margin-bottom: 28px; max-width: 420px; }
 .step-badge { background: rgba(0,212,255,0.1); color: var(--fv-cyan); font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 20px; }
 .hint { font-size: 13px; color: var(--fv-muted); margin: 12px 0 20px; max-width: 380px; }
+/* ─── Pro popup ─── */
+.pro-popup { width: 100%; max-width: 400px; }
+.pro-popup-card {
+  background: var(--fv-surface);
+  border: 1px solid rgba(138, 92, 246, 0.3);
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+}
+.pro-icon { font-size: 40px; margin-bottom: 12px; }
+.pro-popup-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--fv-text); }
+.pro-popup-card p { font-size: 14px; color: var(--fv-muted); line-height: 1.5; margin-bottom: 20px; }
+.pro-popup-card strong { color: var(--fv-violet); }
+.pro-features { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
+.pro-feature { background: rgba(138,92,246,0.1); color: var(--fv-violet); font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px; }
+.btn-pro {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--fv-violet), #c084fc);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+.btn-pro:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
 .hidden { display: none !important; }
 
 .btn-primary { width: 100%; max-width: 320px; padding: 14px 24px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet)); color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: filter 0.15s, transform 0.1s; margin-top: 8px; }

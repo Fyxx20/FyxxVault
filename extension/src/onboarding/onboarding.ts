@@ -45,6 +45,12 @@ async function processCSV(file: File) {
   if (response?.success) {
     document.getElementById('import-count')!.textContent = `${response.count} identifiants importes !`;
     document.getElementById('btn-step2-next')!.classList.remove('hidden');
+  } else if (response?.needsPro) {
+    // Show Pro upgrade popup
+    document.getElementById('import-status')!.classList.add('hidden');
+    document.getElementById('import-result')!.classList.add('hidden');
+    document.getElementById('pro-popup')!.classList.remove('hidden');
+    uploadZone.classList.add('hidden');
   } else {
     document.getElementById('import-count')!.textContent = response?.error || 'Erreur. Connecte-toi d\'abord sur FyxxVault.';
     document.getElementById('import-count')!.style.color = '#EF4444';
@@ -77,6 +83,15 @@ function parseCSVLine(line: string) {
 
 document.getElementById('btn-step2-next')!.addEventListener('click', () => goToStep(3));
 document.getElementById('btn-step2-skip')!.addEventListener('click', () => goToStep(3));
+
+// Pro popup buttons
+document.getElementById('btn-upgrade-pro')!.addEventListener('click', () => {
+  chrome.tabs.create({ url: 'https://fyxxvault.com/vault/settings' });
+});
+document.getElementById('btn-pro-skip')!.addEventListener('click', () => {
+  document.getElementById('pro-popup')!.classList.add('hidden');
+  goToStep(3);
+});
 
 // Step 3: Disable Google
 document.getElementById('btn-open-settings')!.addEventListener('click', () => {

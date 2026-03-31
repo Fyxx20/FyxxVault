@@ -233,7 +233,7 @@
 			}
 
 			try {
-				const result = await addEntry(entry, { skipLimit: true });
+				const result = await addEntry(entry);
 				if (result.success) {
 					imported++;
 				} else {

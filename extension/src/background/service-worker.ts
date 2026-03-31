@@ -241,6 +241,12 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return { success: false, error: 'Non authentifie. Connecte-toi sur FyxxVault.' };
 
+        // Check free user limit before import
+        const isPro = await checkIsPro(session.user.id);
+        if (!isPro && entries.length >= FREE_LIMIT) {
+          return { success: false, error: 'UPGRADE_PRO', needsPro: true };
+        }
+
         try {
           let count = 0;
           for (const csvEntry of (msg as any).entries) {

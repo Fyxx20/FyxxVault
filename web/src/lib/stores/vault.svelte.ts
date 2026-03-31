@@ -97,15 +97,14 @@ export async function loadEntries(): Promise<void> {
 }
 
 // ─── Add entry ───
-// skipLimit: true for imports (CSV migration), false for manual creation
-export async function addEntry(entry: VaultEntry, { skipLimit = false } = {}): Promise<{ success: boolean; error?: string }> {
+export async function addEntry(entry: VaultEntry): Promise<{ success: boolean; error?: string }> {
 	const vek = getVEK();
 	const auth = getAuthState();
 	if (!vek || !auth.user) return { success: false, error: 'Coffre non déverrouillé.' };
 
 	try {
-		// Enforce free plan limit (skip for imports)
-		if (!skipLimit && !auth.isPro) {
+		// Enforce free plan limit
+		if (!auth.isPro) {
 			if (_entries.length >= FREE_VAULT_LIMIT) {
 				return { success: false, error: `Plan gratuit limite a ${FREE_VAULT_LIMIT} elements. Passe a Pro pour illimite.` };
 			}
