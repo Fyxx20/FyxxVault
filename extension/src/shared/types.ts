@@ -77,6 +77,7 @@ export type ExtMessage =
   | { type: 'FILL_CREDENTIALS'; username: string; password: string }
   | { type: 'BRIDGE_SESSION'; session: any }
   | { type: 'BRIDGE_VEK'; vekHex: string }
+  | { type: 'GET_TOTP'; domain: string }
   | { type: 'UNLOCK'; masterPassword: string }
   | { type: 'LOCK' };
 

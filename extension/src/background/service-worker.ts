@@ -4,7 +4,20 @@
 import { supabase } from '../shared/supabase';
 import { decryptEntry, encryptEntry, decodeSupabaseBytes, encodeToSupabaseBytes, deriveKEK, unwrapVEK, hexToBytes, bytesToHex } from '../shared/crypto';
 import { newVaultEntry } from '../shared/types';
+import { generateTOTP } from '../shared/totp';
 import type { VaultEntry, ExtMessage, ExtStatus } from '../shared/types';
+
+// ─── On install: open FyxxVault login page ───
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    chrome.tabs.create({ url: 'https://fyxxvault.com/login' });
+  }
+});
+
+// ─── Disable Chrome's built-in password manager ───
+chrome.privacy.services.passwordSavingEnabled.set({ value: false });
+chrome.privacy.services.autofillAddressEnabled.set({ value: false });
+chrome.privacy.services.autofillCreditCardEnabled.set({ value: false });
 
 // ─── In-memory state (lost on SW restart) ───
 let vek: Uint8Array | null = null;
@@ -177,6 +190,20 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
         // Empty domain = return all entries (for popup list)
         if (!msg.domain) return { logins: entries };
         return { logins: getLoginsForDomain(msg.domain) };
+      }
+
+      case 'GET_TOTP': {
+        if (!vek) return { code: null };
+        const login = entries.find(e =>
+          matchesDomain(e.website, msg.domain) && e.mfaEnabled && e.mfaSecret
+        );
+        if (!login?.mfaSecret) return { code: null };
+        try {
+          const code = await generateTOTP(login.mfaSecret);
+          return { code };
+        } catch {
+          return { code: null };
+        }
       }
 
       case 'SAVE_LOGIN': {

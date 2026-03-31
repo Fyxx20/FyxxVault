@@ -61,10 +61,13 @@ function attachFocusDropdown(field: HTMLInputElement, logins: VaultEntry[], user
   if (processedFields.has(field)) return;
   processedFields.add(field);
 
+  let justFilled = false;
+
   const showDropdown = () => {
+    if (justFilled) return;
     if (logins.length === 0) return;
-    if (currentDropdown) return; // Already showing
-    showLoginDropdown(field, logins, usernameField, passwordField);
+    if (currentDropdown) return;
+    showLoginDropdown(field, logins, usernameField, passwordField, () => { justFilled = true; });
   };
 
   field.addEventListener('focus', showDropdown);
@@ -76,7 +79,8 @@ function showLoginDropdown(
   anchorField: HTMLInputElement,
   logins: VaultEntry[],
   usernameField: HTMLInputElement | null,
-  passwordField: HTMLInputElement
+  passwordField: HTMLInputElement,
+  onFill?: () => void
 ) {
   removeDropdown();
 
@@ -110,8 +114,9 @@ function showLoginDropdown(
     item.addEventListener('mousedown', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      fillCredentials(usernameField, passwordField, login.username, login.password);
       removeDropdown();
+      if (onFill) onFill();
+      fillCredentials(usernameField, passwordField, login.username, login.password);
     });
 
     dropdown.appendChild(item);
@@ -123,15 +128,27 @@ function showLoginDropdown(
   footer.innerHTML = `<span class="fyxx-dropdown-footer-icon">${LOCK_SVG}</span> FyxxVault`;
   dropdown.appendChild(footer);
 
-  // Position below the anchor field
+  // Position ABOVE the anchor field so it doesn't overlap with Chrome's native dropdown
   const rect = anchorField.getBoundingClientRect();
   dropdown.style.position = 'fixed';
-  dropdown.style.top = `${rect.bottom + 4}px`;
   dropdown.style.left = `${rect.left}px`;
   dropdown.style.width = `${Math.max(rect.width, 280)}px`;
   dropdown.style.zIndex = '2147483647';
 
+  // Temporarily add to DOM to measure height
+  dropdown.style.visibility = 'hidden';
   document.body.appendChild(dropdown);
+  const dropdownHeight = dropdown.offsetHeight;
+  dropdown.style.visibility = '';
+
+  // Place above the field; if not enough space, fall below
+  const spaceAbove = rect.top;
+  if (spaceAbove >= dropdownHeight + 4) {
+    dropdown.style.top = `${rect.top - dropdownHeight - 4}px`;
+  } else {
+    dropdown.style.top = `${rect.bottom + 4}px`;
+  }
+
   currentDropdown = dropdown;
 
   // Close on outside click or blur
@@ -353,10 +370,13 @@ async function init() {
     return;
   }
 
+  const domain = location.hostname.replace(/^www\./, '');
+
+  // Always try MFA detection (MFA pages don't have password fields)
+  detectMfaField(domain);
+
   const { usernameField, passwordField } = findLoginFields();
   if (!passwordField) return;
-
-  const domain = location.hostname.replace(/^www\./, '');
 
   // Fetch logins for this domain
   if (domain !== cachedDomain) {
@@ -366,12 +386,86 @@ async function init() {
   }
 
   if (cachedLogins.length > 0) {
-    // Attach dropdown to both fields — shows on focus/click
     if (usernameField) attachFocusDropdown(usernameField, cachedLogins, usernameField, passwordField);
     attachFocusDropdown(passwordField, cachedLogins, usernameField, passwordField);
   }
 
   detectFormSubmission();
+}
+
+// ─── MFA/TOTP auto-fill ───
+async function detectMfaField(domain?: string) {
+  if (!domain) domain = location.hostname.replace(/^www\./, '');
+  // Common selectors for TOTP/2FA input fields
+  const selectors = [
+    'input[autocomplete="one-time-code"]',
+    'input[name*="otp"]', 'input[name*="totp"]', 'input[name*="mfa"]',
+    'input[name*="2fa"]', 'input[name*="verification"]', 'input[name*="code"]',
+    'input[id*="otp"]', 'input[id*="totp"]', 'input[id*="mfa"]',
+    'input[id*="2fa"]', 'input[id*="code"]',
+    'input[aria-label*="code"]', 'input[aria-label*="verification"]',
+    'input[placeholder*="code"]', 'input[placeholder*="XXXXXX"]',
+    'input[placeholder*="000000"]', 'input[placeholder*="6-digit"]',
+    'input[maxlength="6"][type="text"]', 'input[maxlength="6"][type="tel"]',
+    'input[maxlength="6"][type="number"]',
+    'input[maxlength="6"]:not([type])',
+  ];
+
+  let mfaField: HTMLInputElement | null = null;
+  for (const sel of selectors) {
+    const el = document.querySelector<HTMLInputElement>(sel);
+    if (el && !el.value) {
+      mfaField = el;
+      break;
+    }
+  }
+
+  // Also check if page text mentions 2FA/TOTP/verification
+  if (!mfaField) {
+    const pageText = document.body.innerText.toLowerCase();
+    const is2faPage = pageText.includes('two-factor') || pageText.includes('2fa') ||
+      pageText.includes('authentication code') || pageText.includes('verification code') ||
+      pageText.includes('authenticator') || pageText.includes('code de verification');
+
+    if (is2faPage) {
+      // Find a short text/number input that looks like a code field
+      const inputs = document.querySelectorAll<HTMLInputElement>(
+        'input[type="text"], input[type="tel"], input[type="number"], input:not([type])'
+      );
+      for (const input of inputs) {
+        const ml = input.getAttribute('maxlength');
+        const isShort = ml && parseInt(ml) <= 8;
+        const isPassword = input.type === 'password';
+        if (!isPassword && (isShort || input.inputMode === 'numeric') && !input.value) {
+          mfaField = input;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!mfaField) return;
+
+  const response = await chrome.runtime.sendMessage({ type: 'GET_TOTP', domain });
+
+  if (response?.code) {
+    // Auto-fill the TOTP code
+    fillField(mfaField, response.code);
+  }
+}
+
+function fillField(field: HTMLInputElement, value: string) {
+  field.focus();
+  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype, 'value'
+  )?.set;
+  if (nativeInputValueSetter) {
+    nativeInputValueSetter.call(field, value);
+  } else {
+    field.value = value;
+  }
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+  field.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 // ─── Handle FILL_CREDENTIALS from popup ───

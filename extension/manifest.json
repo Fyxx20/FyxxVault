@@ -11,7 +11,8 @@
   "permissions": [
     "storage",
     "activeTab",
-    "alarms"
+    "alarms",
+    "privacy"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -29,13 +30,28 @@
     },
     {
       "matches": [
+        "https://fyxxvault.com/*",
         "https://*.fyxxvault.com/*",
+        "https://fyxxvault.netlify.app/*",
+        "https://*.fyxxvault.netlify.app/*",
+        "http://localhost:5173/*",
+        "http://localhost:4173/*"
+      ],
+      "js": ["content/bridge-main.js"],
+      "world": "MAIN",
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://fyxxvault.com/*",
+        "https://*.fyxxvault.com/*",
+        "https://fyxxvault.netlify.app/*",
         "https://*.fyxxvault.netlify.app/*",
         "http://localhost:5173/*",
         "http://localhost:4173/*"
       ],
       "js": ["content/bridge.js"],
-      "run_at": "document_start"
+      "run_at": "document_idle"
     }
   ],
   "action": {
@@ -47,7 +63,9 @@
   },
   "externally_connectable": {
     "matches": [
+      "https://fyxxvault.com/*",
       "https://*.fyxxvault.com/*",
+      "https://fyxxvault.netlify.app/*",
       "https://*.fyxxvault.netlify.app/*",
       "http://localhost:*/*"
     ]
