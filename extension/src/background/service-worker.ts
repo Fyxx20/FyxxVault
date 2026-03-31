@@ -227,6 +227,11 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
 
   const handle = async () => {
     switch (msg.type) {
+      case 'OPEN_CHROME_PASSWORDS': {
+        chrome.tabs.create({ url: 'chrome://password-manager/settings' });
+        return { success: true };
+      }
+
       case 'GET_STATUS': {
         const hasSession = await ensureSession();
         // Restore VEK from session storage if SW restarted
