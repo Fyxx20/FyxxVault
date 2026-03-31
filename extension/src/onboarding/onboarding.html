@@ -7,100 +7,200 @@
   <link rel="stylesheet" href="onboarding.css">
 </head>
 <body>
+  <!-- Background glow -->
+  <div class="bg-glow"></div>
+  <div class="bg-glow-2"></div>
+
   <div class="container">
     <!-- Step 1: Welcome -->
     <div id="step-1" class="step active">
-      <div class="logo">
-        <img src="../icons/icon-128.png" alt="FyxxVault">
+      <div class="logo-wrap">
+        <div class="logo-ring"></div>
+        <img src="../icons/icon-128.png" alt="FyxxVault" class="logo">
       </div>
       <h1>Bienvenue sur <span class="gradient">FyxxVault</span></h1>
-      <p class="subtitle">Configurons ton gestionnaire en 2 minutes.</p>
-      <button class="btn-primary" id="btn-start">C'est parti</button>
+      <p class="subtitle">Ton gestionnaire de mots de passe<br>zero-knowledge, pret en 2 minutes.</p>
+      <div class="features-mini">
+        <span>Chiffrement AES-256</span>
+        <span>Autofill intelligent</span>
+        <span>Zero-knowledge</span>
+      </div>
+      <button class="btn-primary" id="btn-start">
+        <span>Configurer FyxxVault</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
     </div>
 
-    <!-- Step 2: Import Google passwords -->
+    <!-- Step 2: Connect to FyxxVault -->
     <div id="step-2" class="step">
-      <div class="step-badge">1/3</div>
+      <div class="step-indicator">
+        <div class="step-dot filled"></div>
+        <div class="step-line"></div>
+        <div class="step-dot"></div>
+        <div class="step-line"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div class="step-icon">🔗</div>
+      <h2>Connecte-toi a FyxxVault</h2>
+      <p class="subtitle">Connecte-toi sur le site pour synchroniser tes identifiants avec l'extension.</p>
+      <button class="btn-primary" id="btn-open-vault">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+        <span>Ouvrir FyxxVault</span>
+      </button>
+      <p class="hint">Connecte-toi et deverrouille ton coffre, puis reviens ici.</p>
+      <button class="btn-secondary" id="btn-step2-next">
+        <span>C'est fait, j'ai deverrouille mon coffre</span>
+      </button>
+      <button class="btn-ghost" id="btn-step2-skip">J'ai deja un compte connecte</button>
+    </div>
+
+    <!-- Step 3: Import -->
+    <div id="step-3" class="step">
+      <div class="step-indicator">
+        <div class="step-dot filled"></div>
+        <div class="step-line filled"></div>
+        <div class="step-dot filled"></div>
+        <div class="step-line"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div class="step-icon">📥</div>
       <h2>Importe tes mots de passe</h2>
-      <p class="subtitle">Recupere tes mots de passe depuis Chrome pour les avoir dans FyxxVault.</p>
+      <p class="subtitle">Recupere tes identifiants depuis Chrome ou un autre gestionnaire.</p>
 
-      <button class="btn-secondary" id="btn-open-export">1. Exporter depuis Chrome</button>
-      <p class="hint">Ouvre les parametres Chrome, clique "Exporter" et sauvegarde le CSV.</p>
-
-      <div class="upload-zone" id="upload-zone">
-        <div class="upload-icon">📄</div>
-        <div class="upload-text">2. Glisse ton CSV ici</div>
-        <div class="upload-hint">ou clique pour selectionner</div>
-        <input type="file" id="csv-file" accept=".csv" hidden>
-      </div>
-
-      <div class="import-status hidden" id="import-status">
-        <div class="import-progress" id="import-progress"></div>
-      </div>
-
-      <div class="import-result hidden" id="import-result">
-        <div class="success-icon-large">✓</div>
-        <div id="import-count"></div>
-      </div>
-
-      <!-- Pro upgrade popup -->
-      <div class="pro-popup hidden" id="pro-popup">
-        <div class="pro-popup-card">
-          <div class="pro-icon">🔒</div>
-          <h3>Limite atteinte</h3>
-          <p>Tu as deja 5 identifiants ou plus dans ton coffre. Passe a <strong>FyxxVault Pro</strong> pour un stockage illimite et importer tous tes mots de passe.</p>
-          <div class="pro-features">
-            <div class="pro-feature">Identifiants illimites</div>
-            <div class="pro-feature">Import/Export CSV</div>
-            <div class="pro-feature">Emails jetables @fyxxmail.com</div>
-            <div class="pro-feature">Support prioritaire</div>
+      <div class="import-flow">
+        <!-- Sub-step A: Export -->
+        <div class="import-card" id="export-card">
+          <div class="import-card-number">1</div>
+          <div class="import-card-content">
+            <div class="import-card-title">Exporte depuis Chrome</div>
+            <div class="import-card-desc">Ouvre les parametres et clique "Exporter les mots de passe"</div>
           </div>
-          <button class="btn-pro" id="btn-upgrade-pro">Passer a Pro</button>
-          <button class="btn-skip" id="btn-pro-skip">Plus tard</button>
+          <button class="btn-small" id="btn-open-export">Ouvrir</button>
+        </div>
+
+        <!-- Sub-step B: Upload -->
+        <div class="import-card" id="upload-card">
+          <div class="import-card-number">2</div>
+          <div class="import-card-content">
+            <div class="import-card-title">Importe le fichier CSV</div>
+            <div class="import-card-desc">Glisse le fichier ou clique pour selectionner</div>
+          </div>
+        </div>
+
+        <div class="upload-zone" id="upload-zone">
+          <div class="upload-zone-inner">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div class="upload-text">Glisse ton fichier CSV ici</div>
+            <div class="upload-hint">ou <span class="upload-link">clique pour selectionner</span></div>
+          </div>
+          <input type="file" id="csv-file" accept=".csv" hidden>
         </div>
       </div>
 
-      <button class="btn-primary hidden" id="btn-step2-next">Suivant</button>
-      <button class="btn-skip" id="btn-step2-skip">Je ferai plus tard</button>
+      <!-- Import states -->
+      <div class="import-loading hidden" id="import-loading">
+        <div class="spinner"></div>
+        <div id="import-progress">Import en cours...</div>
+      </div>
+
+      <div class="import-success hidden" id="import-success">
+        <div class="checkmark-circle">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        <div class="import-success-text" id="import-count"></div>
+      </div>
+
+      <!-- Pro popup -->
+      <div class="pro-card hidden" id="pro-popup">
+        <div class="pro-card-glow"></div>
+        <div class="pro-badge">PRO</div>
+        <h3>Limite de 5 identifiants atteinte</h3>
+        <p>Passe a FyxxVault Pro pour importer tous tes mots de passe sans limite.</p>
+        <div class="pro-perks">
+          <div class="pro-perk">Stockage illimite</div>
+          <div class="pro-perk">Emails jetables</div>
+          <div class="pro-perk">Support prioritaire</div>
+        </div>
+        <button class="btn-pro" id="btn-upgrade-pro">Passer a Pro</button>
+        <button class="btn-ghost" id="btn-pro-skip">Plus tard</button>
+      </div>
+
+      <button class="btn-primary hidden" id="btn-step3-next">
+        <span>Continuer</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <button class="btn-ghost" id="btn-step3-skip">Passer cette etape</button>
     </div>
 
-    <!-- Step 3: Disable Google autofill -->
-    <div id="step-3" class="step">
-      <div class="step-badge">2/3</div>
+    <!-- Step 4: Disable Google -->
+    <div id="step-4" class="step">
+      <div class="step-indicator">
+        <div class="step-dot filled"></div>
+        <div class="step-line filled"></div>
+        <div class="step-dot filled"></div>
+        <div class="step-line filled"></div>
+        <div class="step-dot filled"></div>
+      </div>
+      <div class="step-icon">🛡️</div>
       <h2>Desactive Google Passwords</h2>
-      <p class="subtitle">Pour que seul FyxxVault apparaisse quand tu te connectes sur un site.</p>
+      <p class="subtitle">Evite les doublons : desactive le gestionnaire integre de Chrome.</p>
 
       <div class="action-card" id="btn-open-settings">
         <div class="action-left">
-          <div class="action-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="#94A3B8" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="#94A3B8" stroke-width="2"/></svg>
+          <div class="action-icon-wrap">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
           </div>
           <div>
-            <div class="action-title">Ouvrir les parametres Chrome</div>
-            <div class="action-desc">Desactive "Proposer d'enregistrer les mots de passe"</div>
+            <div class="action-title">Parametres Chrome</div>
+            <div class="action-desc">Desactive le toggle "Proposer d'enregistrer les mots de passe"</div>
           </div>
         </div>
-        <div class="action-arrow">→</div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
       </div>
 
-      <button class="btn-primary" id="btn-step3-next">C'est fait</button>
-      <button class="btn-skip" id="btn-step3-skip">Passer</button>
+      <button class="btn-primary" id="btn-step4-next">
+        <span>Terminer</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </button>
+      <button class="btn-ghost" id="btn-step4-skip">Passer</button>
     </div>
 
-    <!-- Step 4: Done -->
-    <div id="step-4" class="step">
-      <div class="done-icon">✓</div>
-      <h1><span class="gradient">FyxxVault</span> est pret</h1>
-      <p class="subtitle">Connecte-toi sur fyxxvault.com et deverrouille ton coffre. L'autofill fonctionne sur tous les sites.</p>
-      <button class="btn-primary" id="btn-go-vault">Se connecter</button>
-    </div>
-
-    <!-- Progress dots -->
-    <div class="progress-dots">
-      <div class="dot active" data-step="1"></div>
-      <div class="dot" data-step="2"></div>
-      <div class="dot" data-step="3"></div>
-      <div class="dot" data-step="4"></div>
+    <!-- Step 5: Done -->
+    <div id="step-5" class="step">
+      <div class="done-animation">
+        <div class="done-ring"></div>
+        <div class="done-check">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+      </div>
+      <h1><span class="gradient">FyxxVault</span> est pret !</h1>
+      <p class="subtitle">L'autofill fonctionne sur tous les sites. Tes mots de passe sont chiffres et en securite.</p>
+      <div class="done-features">
+        <div class="done-feature">
+          <div class="done-feature-icon">🔐</div>
+          <div>
+            <div class="done-feature-title">Autofill automatique</div>
+            <div class="done-feature-desc">Sur tous les sites, sans rien faire</div>
+          </div>
+        </div>
+        <div class="done-feature">
+          <div class="done-feature-icon">💾</div>
+          <div>
+            <div class="done-feature-title">Sauvegarde intelligente</div>
+            <div class="done-feature-desc">Detecte les nouveaux identifiants</div>
+          </div>
+        </div>
+        <div class="done-feature">
+          <div class="done-feature-icon">🔑</div>
+          <div>
+            <div class="done-feature-title">2FA / TOTP</div>
+            <div class="done-feature-desc">Remplissage automatique des codes</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary btn-glow" id="btn-go-vault">
+        <span>Commencer a utiliser FyxxVault</span>
+      </button>
     </div>
   </div>
 

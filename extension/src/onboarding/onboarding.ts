@@ -1,16 +1,21 @@
-const dots = document.querySelectorAll('.dot');
+// FyxxVault Onboarding
 
 function goToStep(n: number) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-  dots.forEach(d => d.classList.remove('active'));
   document.getElementById(`step-${n}`)!.classList.add('active');
-  dots[n - 1]?.classList.add('active');
 }
 
-// Step 1 → 2
+// ─── Step 1 → 2 ───
 document.getElementById('btn-start')!.addEventListener('click', () => goToStep(2));
 
-// Step 2: Import
+// ─── Step 2: Connect ───
+document.getElementById('btn-open-vault')!.addEventListener('click', () => {
+  chrome.tabs.create({ url: 'https://fyxxvault.com/login' });
+});
+document.getElementById('btn-step2-next')!.addEventListener('click', () => goToStep(3));
+document.getElementById('btn-step2-skip')!.addEventListener('click', () => goToStep(3));
+
+// ─── Step 3: Import ───
 document.getElementById('btn-open-export')!.addEventListener('click', () => {
   chrome.tabs.create({ url: 'chrome://password-manager/settings' });
 });
@@ -30,32 +35,35 @@ uploadZone.addEventListener('drop', (e) => {
 csvInput.addEventListener('change', () => { if (csvInput.files?.[0]) processCSV(csvInput.files[0]); });
 
 async function processCSV(file: File) {
+  // Hide upload, show loading
   uploadZone.classList.add('hidden');
-  document.getElementById('import-status')!.classList.remove('hidden');
-  document.getElementById('import-progress')!.textContent = 'Import en cours...';
+  document.getElementById('export-card')!.classList.add('hidden');
+  document.getElementById('upload-card')!.classList.add('hidden');
+  document.getElementById('import-loading')!.classList.remove('hidden');
 
   const text = await file.text();
   const entries = parseGoogleCSV(text);
 
+  document.getElementById('import-progress')!.textContent = `${entries.length} identifiants trouves, import en cours...`;
+
   const response = await chrome.runtime.sendMessage({ type: 'IMPORT_CSV_ENTRIES', entries });
 
-  document.getElementById('import-status')!.classList.add('hidden');
-  document.getElementById('import-result')!.classList.remove('hidden');
+  document.getElementById('import-loading')!.classList.add('hidden');
 
   if (response?.success) {
+    document.getElementById('import-success')!.classList.remove('hidden');
     document.getElementById('import-count')!.textContent = `${response.count} identifiants importes !`;
-    document.getElementById('btn-step2-next')!.classList.remove('hidden');
+    document.getElementById('btn-step3-next')!.classList.remove('hidden');
+    document.getElementById('btn-step3-skip')!.classList.add('hidden');
   } else if (response?.needsPro) {
-    // Show Pro upgrade popup
-    document.getElementById('import-status')!.classList.add('hidden');
-    document.getElementById('import-result')!.classList.add('hidden');
     document.getElementById('pro-popup')!.classList.remove('hidden');
-    uploadZone.classList.add('hidden');
+    document.getElementById('btn-step3-skip')!.classList.add('hidden');
   } else {
-    document.getElementById('import-count')!.textContent = response?.error || 'Erreur. Connecte-toi d\'abord sur FyxxVault.';
-    document.getElementById('import-count')!.style.color = '#EF4444';
+    // Error — show upload again
+    document.getElementById('export-card')!.classList.remove('hidden');
+    document.getElementById('upload-card')!.classList.remove('hidden');
     uploadZone.classList.remove('hidden');
-    document.getElementById('import-result')!.classList.add('hidden');
+    alert(response?.error || 'Erreur. Assure-toi d\'etre connecte et d\'avoir deverrouille ton coffre sur fyxxvault.com.');
   }
 }
 
@@ -64,7 +72,7 @@ function parseGoogleCSV(text: string) {
   const entries: Array<{ name: string; url: string; username: string; password: string }> = [];
   for (let i = 1; i < lines.length; i++) {
     const f = parseCSVLine(lines[i].trim());
-    if (f.length >= 4) entries.push({ name: f[0], url: f[1], username: f[2], password: f[3] });
+    if (f.length >= 4 && f[3]) entries.push({ name: f[0], url: f[1], username: f[2], password: f[3] });
   }
   return entries;
 }
@@ -81,29 +89,30 @@ function parseCSVLine(line: string) {
   return result;
 }
 
-document.getElementById('btn-step2-next')!.addEventListener('click', () => goToStep(3));
-document.getElementById('btn-step2-skip')!.addEventListener('click', () => goToStep(3));
+document.getElementById('btn-step3-next')!.addEventListener('click', () => goToStep(4));
+document.getElementById('btn-step3-skip')!.addEventListener('click', () => goToStep(4));
 
-// Pro popup buttons
+// Pro popup
 document.getElementById('btn-upgrade-pro')!.addEventListener('click', () => {
   chrome.tabs.create({ url: 'https://fyxxvault.com/vault/settings' });
 });
 document.getElementById('btn-pro-skip')!.addEventListener('click', () => {
   document.getElementById('pro-popup')!.classList.add('hidden');
-  goToStep(3);
+  goToStep(4);
 });
 
-// Step 3: Disable Google
+// ─── Step 4: Disable Google ───
 document.getElementById('btn-open-settings')!.addEventListener('click', () => {
   chrome.tabs.create({ url: 'chrome://password-manager/settings' });
 });
-document.getElementById('btn-step3-next')!.addEventListener('click', async () => {
+document.getElementById('btn-step4-next')!.addEventListener('click', async () => {
   await chrome.runtime.sendMessage({ type: 'DISABLE_GOOGLE_PASSWORDS' });
-  goToStep(4);
+  goToStep(5);
 });
-document.getElementById('btn-step3-skip')!.addEventListener('click', () => goToStep(4));
+document.getElementById('btn-step4-skip')!.addEventListener('click', () => goToStep(5));
 
-// Step 4: Done
+// ─── Step 5: Done ───
 document.getElementById('btn-go-vault')!.addEventListener('click', () => {
-  chrome.tabs.create({ url: 'https://fyxxvault.com/login' });
+  chrome.tabs.create({ url: 'https://fyxxvault.com/vault' });
+  window.close();
 });
