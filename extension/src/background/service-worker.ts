@@ -7,17 +7,29 @@ import { newVaultEntry } from '../shared/types';
 import { generateTOTP } from '../shared/totp';
 import type { VaultEntry, ExtMessage, ExtStatus } from '../shared/types';
 
-// ─── On install: open FyxxVault login page ───
+// ─── Disable Chrome's built-in password manager ───
+function disableChromePasswordManager() {
+  chrome.privacy.services.passwordSavingEnabled.set({ value: false }, () => {
+    if (chrome.runtime.lastError) {
+      console.error('Failed to disable passwordSaving:', chrome.runtime.lastError);
+    } else {
+      console.log('FyxxVault: Chrome password saving disabled');
+    }
+  });
+  chrome.privacy.services.autofillAddressEnabled.set({ value: false });
+  chrome.privacy.services.autofillCreditCardEnabled.set({ value: false });
+}
+
+// Run on every SW wake
+disableChromePasswordManager();
+
+// ─── On install: open FyxxVault login page + disable Chrome passwords ───
 chrome.runtime.onInstalled.addListener((details) => {
+  disableChromePasswordManager();
   if (details.reason === 'install') {
-    chrome.tabs.create({ url: 'https://fyxxvault.com/login' });
+    chrome.tabs.create({ url: chrome.runtime.getURL('onboarding/onboarding.html') });
   }
 });
-
-// ─── Disable Chrome's built-in password manager ───
-chrome.privacy.services.passwordSavingEnabled.set({ value: false });
-chrome.privacy.services.autofillAddressEnabled.set({ value: false });
-chrome.privacy.services.autofillCreditCardEnabled.set({ value: false });
 
 // ─── In-memory state (lost on SW restart) ───
 let vek: Uint8Array | null = null;
@@ -183,6 +195,22 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
           isUnlocked: !!vek,
           entryCount: entries.length
         } satisfies ExtStatus;
+      }
+
+      case 'DISABLE_GOOGLE_PASSWORDS': {
+        try {
+          await new Promise<void>((resolve, reject) => {
+            chrome.privacy.services.passwordSavingEnabled.set({ value: false }, () => {
+              if (chrome.runtime.lastError) reject(chrome.runtime.lastError);
+              else resolve();
+            });
+          });
+          chrome.privacy.services.autofillAddressEnabled.set({ value: false });
+          chrome.privacy.services.autofillCreditCardEnabled.set({ value: false });
+          return { success: true };
+        } catch (e: any) {
+          return { success: false, error: e.message || 'Erreur' };
+        }
       }
 
       case 'GET_LOGINS': {

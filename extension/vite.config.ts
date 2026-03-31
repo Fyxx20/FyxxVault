@@ -15,6 +15,7 @@ export default defineConfig({
         'content/bridge': resolve(__dirname, 'src/content/bridge.ts'),
         'content/bridge-main': resolve(__dirname, 'src/content/bridge-main.ts'),
         'popup/popup': resolve(__dirname, 'src/popup/popup.ts'),
+        'onboarding/onboarding': resolve(__dirname, 'src/onboarding/onboarding.ts'),
       },
       output: {
         entryFileNames: '[name].js',

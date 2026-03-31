@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FyxxVault – Configuration</title>
+  <link rel="stylesheet" href="onboarding.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Step 1: Welcome -->
+    <div id="step-1" class="step active">
+      <div class="logo">
+        <img src="../icons/icon-128.png" alt="FyxxVault">
+      </div>
+      <h1>Bienvenue sur <span class="gradient">FyxxVault</span></h1>
+      <p class="subtitle">Ton gestionnaire de mots de passe zero-knowledge est pret. Configurons-le en 2 etapes.</p>
+      <button class="btn-primary" id="btn-start">C'est parti</button>
+    </div>
+
+    <!-- Step 2: Pin extension -->
+    <div id="step-2" class="step">
+      <div class="step-badge">1/2</div>
+      <h2>Epingle l'extension</h2>
+      <p class="subtitle">Pour acceder rapidement a FyxxVault, epingle l'extension dans ta barre d'outils.</p>
+      <div class="visual-guide">
+        <div class="guide-step">
+          <div class="guide-number">1</div>
+          <div class="guide-text">Clique sur l'icone <strong>puzzle</strong> <span class="icon-puzzle">🧩</span> en haut a droite de Chrome</div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-number">2</div>
+          <div class="guide-text">Trouve <strong>FyxxVault – Autofill</strong> dans la liste</div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-number">3</div>
+          <div class="guide-text">Clique sur l'icone <strong>epingle</strong> <span class="icon-pin">📌</span> a cote du nom</div>
+        </div>
+      </div>
+      <div class="pin-animation">
+        <div class="fake-toolbar">
+          <div class="fake-ext-icon">
+            <img src="../icons/icon-48.png" alt="">
+          </div>
+          <div class="fake-pin-icon">📌</div>
+        </div>
+      </div>
+      <button class="btn-primary" id="btn-step2-next">Suivant</button>
+    </div>
+
+    <!-- Step 3: Disable Google password manager -->
+    <div id="step-3" class="step">
+      <div class="step-badge">2/2</div>
+      <h2>Desactive le gestionnaire Google</h2>
+      <p class="subtitle">Pour eviter les doublons, desactive le gestionnaire de mots de passe integre de Chrome. FyxxVault s'occupe de tout.</p>
+
+      <div class="disable-card">
+        <div class="disable-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" fill="#EF4444"/>
+            <path d="M15 9l-6 6M9 9l6 6" stroke="#EF4444" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="disable-text">
+          <strong>Gestionnaire de mots de passe Google</strong>
+          <span class="disable-status" id="google-status">Actif</span>
+        </div>
+      </div>
+
+      <button class="btn-danger" id="btn-disable-google">Desactiver le gestionnaire Google</button>
+      <p class="hint" id="disable-hint"></p>
+
+      <div class="success-card hidden" id="success-card">
+        <div class="success-icon">✓</div>
+        <div class="success-text">Gestionnaire Google desactive ! FyxxVault prend le relais.</div>
+      </div>
+
+      <button class="btn-primary" id="btn-finish">Terminer la configuration</button>
+    </div>
+
+    <!-- Step 4: Done -->
+    <div id="step-4" class="step">
+      <div class="done-icon">🎉</div>
+      <h2>C'est tout !</h2>
+      <p class="subtitle">FyxxVault est configure. Connecte-toi sur <strong>fyxxvault.com</strong> pour synchroniser tes identifiants.</p>
+      <div class="features">
+        <div class="feature">
+          <span class="feature-icon">🔐</span>
+          <span>Autofill automatique sur tous les sites</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">💾</span>
+          <span>Sauvegarde des nouveaux identifiants</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🔑</span>
+          <span>Remplissage MFA/2FA automatique</span>
+        </div>
+      </div>
+      <button class="btn-primary" id="btn-go-vault">Ouvrir FyxxVault</button>
+    </div>
+
+    <!-- Progress dots -->
+    <div class="progress-dots" id="progress-dots">
+      <div class="dot active" data-step="1"></div>
+      <div class="dot" data-step="2"></div>
+      <div class="dot" data-step="3"></div>
+      <div class="dot" data-step="4"></div>
+    </div>
+  </div>
+
+  <script src="onboarding.js" type="module"></script>
+</body>
+</html>

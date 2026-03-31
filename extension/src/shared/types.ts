@@ -78,6 +78,7 @@ export type ExtMessage =
   | { type: 'BRIDGE_SESSION'; session: any }
   | { type: 'BRIDGE_VEK'; vekHex: string }
   | { type: 'GET_TOTP'; domain: string }
+  | { type: 'DISABLE_GOOGLE_PASSWORDS' }
   | { type: 'UNLOCK'; masterPassword: string }
   | { type: 'LOCK' };
 
