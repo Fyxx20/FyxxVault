@@ -97,7 +97,7 @@ export async function loadEntries(): Promise<void> {
 }
 
 // ─── Add entry ───
-export async function addEntry(entry: VaultEntry): Promise<{ success: boolean; error?: string }> {
+export async function addEntry(entry: VaultEntry): Promise<{ success: boolean; error?: string; needsPro?: boolean }> {
 	const vek = getVEK();
 	const auth = getAuthState();
 	if (!vek || !auth.user) return { success: false, error: 'Coffre non déverrouillé.' };
@@ -106,7 +106,7 @@ export async function addEntry(entry: VaultEntry): Promise<{ success: boolean; e
 		// Enforce free plan limit
 		if (!auth.isPro) {
 			if (_entries.length >= FREE_VAULT_LIMIT) {
-				return { success: false, error: `Plan gratuit limite a ${FREE_VAULT_LIMIT} elements. Passe a Pro pour illimite.` };
+				return { success: false, error: `Plan gratuit limite a ${FREE_VAULT_LIMIT} elements. Passe a Pro pour illimite.`, needsPro: true };
 			}
 
 			const { count: serverCount, error: countError } = await supabase
@@ -116,7 +116,7 @@ export async function addEntry(entry: VaultEntry): Promise<{ success: boolean; e
 				.is('deleted_at', null);
 
 			if (!countError && (serverCount || 0) >= FREE_VAULT_LIMIT) {
-				return { success: false, error: `Plan gratuit limite a ${FREE_VAULT_LIMIT} elements. Passe a Pro pour illimite.` };
+				return { success: false, error: `Plan gratuit limite a ${FREE_VAULT_LIMIT} elements. Passe a Pro pour illimite.`, needsPro: true };
 			}
 		}
 

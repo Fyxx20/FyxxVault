@@ -302,11 +302,38 @@ function showSaveBanner(domain: string, username: string, password: string) {
       lastModifiedAt: new Date().toISOString(),
       passwordHistory: []
     };
-    chrome.runtime.sendMessage({ type: 'SAVE_LOGIN', entry });
+    chrome.runtime.sendMessage({ type: 'SAVE_LOGIN', entry }, (response) => {
+      if (response?.error && response.error.includes('Pro')) {
+        showProBanner();
+      }
+    });
     removeBanner();
   });
 
   document.getElementById('fyxx-save-no')?.addEventListener('click', removeBanner);
+  setTimeout(removeBanner, 15000);
+}
+
+function showProBanner() {
+  removeBanner();
+  const banner = document.createElement('div');
+  banner.className = 'fyxx-save-banner';
+  banner.id = 'fyxx-save-banner';
+  banner.innerHTML = `
+    <div class="fyxx-save-banner-content">
+      <div class="fyxx-save-banner-text">
+        <strong style="color:#8A5CF6">FyxxVault Pro</strong> — Limite de 5 identifiants atteinte. Passe a Pro pour un stockage illimite.
+      </div>
+      <button class="fyxx-save-btn" style="background:linear-gradient(135deg,#8A5CF6,#c084fc);color:white" id="fyxx-pro-yes">Passer a Pro</button>
+      <button class="fyxx-save-btn fyxx-save-btn-secondary" id="fyxx-pro-no">Plus tard</button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+  document.getElementById('fyxx-pro-yes')?.addEventListener('click', () => {
+    window.open('https://fyxxvault.com/vault/settings', '_blank');
+    removeBanner();
+  });
+  document.getElementById('fyxx-pro-no')?.addEventListener('click', removeBanner);
   setTimeout(removeBanner, 15000);
 }
 

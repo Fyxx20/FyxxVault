@@ -16,6 +16,7 @@
 	let importing = $state(false);
 	let importResult = $state<{ imported: number; skipped: number; errors: number } | null>(null);
 	let selectedEntries = $state<Set<string>>(new Set());
+	let showProPopup = $state(false);
 
 	function handleDragOver(e: DragEvent) {
 		e.preventDefault();
@@ -236,6 +237,9 @@
 				const result = await addEntry(entry);
 				if (result.success) {
 					imported++;
+				} else if (result.needsPro) {
+					showProPopup = true;
+					break;
 				} else {
 					errors++;
 				}
@@ -252,6 +256,25 @@
 <svelte:head>
 	<title>{t('import.title')} — FyxxVault</title>
 </svelte:head>
+
+{#if showProPopup}
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+	<div class="bg-[var(--fv-obsidian)] border border-white/10 rounded-2xl p-8 max-w-md w-full mx-4 text-center">
+		<div class="text-4xl mb-4">🔒</div>
+		<h3 class="text-xl font-bold text-white mb-2">Limite atteinte</h3>
+		<p class="text-sm text-[var(--fv-smoke)] mb-6 leading-relaxed">
+			Tu as deja 5 identifiants dans ton coffre. Passe a <strong class="text-[var(--fv-violet)]">FyxxVault Pro</strong> pour un stockage illimite.
+		</p>
+		<div class="flex flex-wrap gap-2 justify-center mb-6">
+			<span class="text-xs font-semibold px-3 py-1 rounded-full bg-[var(--fv-violet)]/10 text-[var(--fv-violet)]">Identifiants illimites</span>
+			<span class="text-xs font-semibold px-3 py-1 rounded-full bg-[var(--fv-violet)]/10 text-[var(--fv-violet)]">Import/Export CSV</span>
+			<span class="text-xs font-semibold px-3 py-1 rounded-full bg-[var(--fv-violet)]/10 text-[var(--fv-violet)]">Emails jetables</span>
+		</div>
+		<button onclick={() => goto('/vault/settings')} class="fv-btn fv-btn-primary w-full !py-3.5 mb-3" style="background: linear-gradient(135deg, var(--fv-violet), #c084fc);">Passer a Pro</button>
+		<button onclick={() => { showProPopup = false; }} class="text-sm text-[var(--fv-smoke)] hover:text-white">Plus tard</button>
+	</div>
+</div>
+{/if}
 
 <div class="max-w-2xl mx-auto">
 	<!-- Header -->
