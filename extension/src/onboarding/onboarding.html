@@ -14,70 +14,22 @@
         <img src="../icons/icon-128.png" alt="FyxxVault">
       </div>
       <h1>Bienvenue sur <span class="gradient">FyxxVault</span></h1>
-      <p class="subtitle">Ton gestionnaire de mots de passe zero-knowledge est pret. On va tout configurer en quelques etapes.</p>
+      <p class="subtitle">Configurons ton gestionnaire en 2 minutes.</p>
       <button class="btn-primary" id="btn-start">C'est parti</button>
     </div>
 
-    <!-- Step 2: Pin extension -->
+    <!-- Step 2: Import Google passwords -->
     <div id="step-2" class="step">
-      <div class="step-badge">Etape 1</div>
-      <h2>Epingle l'extension</h2>
-      <p class="subtitle">Pour acceder rapidement a FyxxVault, epingle l'extension dans ta barre d'outils.</p>
-      <div class="visual-guide">
-        <div class="guide-step">
-          <div class="guide-number">1</div>
-          <div class="guide-text">Clique sur l'icone <strong>puzzle</strong> 🧩 en haut a droite de Chrome</div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-number">2</div>
-          <div class="guide-text">Trouve <strong>FyxxVault – Autofill</strong> dans la liste</div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-number">3</div>
-          <div class="guide-text">Clique sur l'icone <strong>epingle</strong> 📌 a cote du nom</div>
-        </div>
-      </div>
-      <button class="btn-primary" id="btn-step2-next">Suivant</button>
-      <button class="btn-skip" id="btn-step2-skip">Passer</button>
-    </div>
+      <div class="step-badge">1/3</div>
+      <h2>Importe tes mots de passe</h2>
+      <p class="subtitle">Recupere tes mots de passe depuis Chrome pour les avoir dans FyxxVault.</p>
 
-    <!-- Step 3: Export Google passwords -->
-    <div id="step-3" class="step">
-      <div class="step-badge">Etape 2 — Exporter</div>
-      <h2>Sauvegarde tes mots de passe Google</h2>
-      <p class="subtitle">Avant de migrer vers FyxxVault, exporte tes mots de passe Chrome en CSV. C'est ta sauvegarde de securite.</p>
-
-      <div class="visual-guide">
-        <div class="guide-step">
-          <div class="guide-number">1</div>
-          <div class="guide-text">Clique sur le bouton ci-dessous pour ouvrir les parametres</div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-number">2</div>
-          <div class="guide-text">Clique sur <strong>"Exporter les mots de passe"</strong></div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-number">3</div>
-          <div class="guide-text">Sauvegarde le fichier <strong>CSV</strong> sur ton bureau</div>
-        </div>
-      </div>
-
-      <button class="btn-primary" id="btn-open-export">Ouvrir les parametres Chrome</button>
-      <p class="hint">Le fichier CSV contient tous tes mots de passe en clair. Garde-le en securite.</p>
-
-      <button class="btn-secondary" id="btn-step3-next">J'ai exporte mon fichier CSV</button>
-      <button class="btn-skip" id="btn-step3-skip">Passer cette etape</button>
-    </div>
-
-    <!-- Step 4: Import into FyxxVault -->
-    <div id="step-4" class="step">
-      <div class="step-badge">Etape 3 — Importer</div>
-      <h2>Importe dans FyxxVault</h2>
-      <p class="subtitle">Glisse ton fichier CSV ici ou clique pour le selectionner. Tes mots de passe seront chiffres et sauvegardes dans ton coffre-fort.</p>
+      <button class="btn-secondary" id="btn-open-export">1. Exporter depuis Chrome</button>
+      <p class="hint">Ouvre les parametres Chrome, clique "Exporter" et sauvegarde le CSV.</p>
 
       <div class="upload-zone" id="upload-zone">
         <div class="upload-icon">📄</div>
-        <div class="upload-text">Glisse ton fichier CSV ici</div>
+        <div class="upload-text">2. Glisse ton CSV ici</div>
         <div class="upload-hint">ou clique pour selectionner</div>
         <input type="file" id="csv-file" accept=".csv" hidden>
       </div>
@@ -91,76 +43,47 @@
         <div id="import-count"></div>
       </div>
 
-      <button class="btn-primary hidden" id="btn-step4-next">Suivant</button>
-      <button class="btn-skip" id="btn-step4-skip">Passer</button>
+      <button class="btn-primary hidden" id="btn-step2-next">Suivant</button>
+      <button class="btn-skip" id="btn-step2-skip">Je ferai plus tard</button>
     </div>
 
-    <!-- Step 5: Delete Google passwords -->
-    <div id="step-5" class="step">
-      <div class="step-badge">Etape 4 — Supprimer</div>
-      <h2>Supprime les mots de passe Google</h2>
-      <p class="subtitle">Tes mots de passe sont maintenant dans FyxxVault. Supprime-les de Chrome pour eviter les doublons.</p>
+    <!-- Step 3: Disable Google autofill -->
+    <div id="step-3" class="step">
+      <div class="step-badge">2/3</div>
+      <h2>Desactive Google Passwords</h2>
+      <p class="subtitle">Pour que seul FyxxVault apparaisse quand tu te connectes sur un site.</p>
 
-      <div class="warning-card">
-        <div class="warning-icon">⚠️</div>
-        <div class="warning-text">Assure-toi d'avoir bien sauvegarde ton fichier CSV avant de continuer !</div>
-      </div>
-
-      <div class="visual-guide">
-        <div class="guide-step">
-          <div class="guide-number">1</div>
-          <div class="guide-text">Clique sur le bouton ci-dessous pour ouvrir le gestionnaire Google</div>
+      <div class="action-card" id="btn-open-settings">
+        <div class="action-left">
+          <div class="action-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="#94A3B8" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="#94A3B8" stroke-width="2"/></svg>
+          </div>
+          <div>
+            <div class="action-title">Ouvrir les parametres Chrome</div>
+            <div class="action-desc">Desactive "Proposer d'enregistrer les mots de passe"</div>
+          </div>
         </div>
-        <div class="guide-step">
-          <div class="guide-number">2</div>
-          <div class="guide-text">Selectionne tous les mots de passe et <strong>supprime-les</strong></div>
-        </div>
+        <div class="action-arrow">→</div>
       </div>
 
-      <button class="btn-danger" id="btn-open-delete">Ouvrir le gestionnaire Google</button>
-
-      <div class="checkbox-row" id="confirm-row">
-        <input type="checkbox" id="confirm-deleted">
-        <label for="confirm-deleted">J'ai supprime mes mots de passe Google</label>
-      </div>
-
-      <button class="btn-primary disabled" id="btn-step5-next" disabled>Suivant</button>
+      <button class="btn-primary" id="btn-step3-next">C'est fait</button>
+      <button class="btn-skip" id="btn-step3-skip">Passer</button>
     </div>
 
-    <!-- Step 6: Done -->
-    <div id="step-6" class="step">
-      <div class="done-icon">🎉</div>
-      <h2>C'est termine !</h2>
-      <p class="subtitle">FyxxVault est ton nouveau gestionnaire de mots de passe. Connecte-toi pour synchroniser tes identifiants.</p>
-      <div class="features">
-        <div class="feature">
-          <span class="feature-icon">🔐</span>
-          <span>Autofill automatique sur tous les sites</span>
-        </div>
-        <div class="feature">
-          <span class="feature-icon">💾</span>
-          <span>Sauvegarde des nouveaux identifiants</span>
-        </div>
-        <div class="feature">
-          <span class="feature-icon">🔑</span>
-          <span>Remplissage MFA/2FA automatique</span>
-        </div>
-        <div class="feature">
-          <span class="feature-icon">🛡️</span>
-          <span>Chiffrement zero-knowledge AES-256</span>
-        </div>
-      </div>
-      <button class="btn-primary" id="btn-go-vault">Ouvrir FyxxVault</button>
+    <!-- Step 4: Done -->
+    <div id="step-4" class="step">
+      <div class="done-icon">✓</div>
+      <h1><span class="gradient">FyxxVault</span> est pret</h1>
+      <p class="subtitle">Connecte-toi sur fyxxvault.com et deverrouille ton coffre. L'autofill fonctionne sur tous les sites.</p>
+      <button class="btn-primary" id="btn-go-vault">Se connecter</button>
     </div>
 
     <!-- Progress dots -->
-    <div class="progress-dots" id="progress-dots">
+    <div class="progress-dots">
       <div class="dot active" data-step="1"></div>
       <div class="dot" data-step="2"></div>
       <div class="dot" data-step="3"></div>
       <div class="dot" data-step="4"></div>
-      <div class="dot" data-step="5"></div>
-      <div class="dot" data-step="6"></div>
     </div>
   </div>
 

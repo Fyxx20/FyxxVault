@@ -121,12 +121,34 @@ function getLoginsForDomain(domain: string): VaultEntry[] {
   );
 }
 
+// ─── Check if user is Pro ───
+async function checkIsPro(userId: string): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('is_pro')
+      .eq('id', userId)
+      .single();
+    return data?.is_pro === true;
+  } catch {
+    return false;
+  }
+}
+
+const FREE_LIMIT = 5;
+
 // ─── Save new login ───
 async function saveLogin(entry: VaultEntry): Promise<{ success: boolean; error?: string }> {
   if (!vek) return { success: false, error: 'Vault locked' };
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return { success: false, error: 'Not authenticated' };
+
+  // Free users: block if already at 5+ entries
+  const isPro = await checkIsPro(session.user.id);
+  if (!isPro && entries.length >= FREE_LIMIT) {
+    return { success: false, error: `Limite de ${FREE_LIMIT} identifiants atteinte. Passe a FyxxVault Pro pour un stockage illimite.` };
+  }
 
   try {
     const blob = await encryptEntry(entry, vek);
