@@ -213,6 +213,54 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
         }
       }
 
+      case 'IMPORT_CSV_ENTRIES': {
+        if (!vek) return { success: false, error: 'Coffre verrouille. Connecte-toi d\'abord sur FyxxVault.' };
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return { success: false, error: 'Non authentifie. Connecte-toi sur FyxxVault.' };
+
+        try {
+          let count = 0;
+          for (const csvEntry of (msg as any).entries) {
+            const entry: VaultEntry = {
+              id: crypto.randomUUID(),
+              title: csvEntry.name || extractDomain(csvEntry.url),
+              username: csvEntry.username || '',
+              password: csvEntry.password || '',
+              website: csvEntry.url || '',
+              notes: '',
+              category: 'login',
+              folder: '',
+              tags: ['import-google'],
+              isFavorite: false,
+              mfaEnabled: false,
+              mfaSecret: '',
+              createdAt: new Date().toISOString(),
+              lastModifiedAt: new Date().toISOString(),
+              passwordHistory: []
+            };
+
+            const blob = await encryptEntry(entry, vek);
+            const { error } = await supabase.from('vault_items').insert({
+              id: entry.id,
+              user_id: session.user.id,
+              encrypted_blob: encodeToSupabaseBytes(blob),
+              updated_at: new Date().toISOString()
+            });
+
+            if (!error) {
+              entries.push(entry);
+              count++;
+            }
+          }
+
+          chrome.action.setBadgeText({ text: String(entries.length) });
+          return { success: true, count };
+        } catch (e: any) {
+          return { success: false, error: e.message };
+        }
+      }
+
       case 'GET_LOGINS': {
         if (!vek) return { logins: [] };
         // Empty domain = return all entries (for popup list)

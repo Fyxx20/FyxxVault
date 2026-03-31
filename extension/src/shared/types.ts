@@ -79,6 +79,7 @@ export type ExtMessage =
   | { type: 'BRIDGE_VEK'; vekHex: string }
   | { type: 'GET_TOTP'; domain: string }
   | { type: 'DISABLE_GOOGLE_PASSWORDS' }
+  | { type: 'IMPORT_CSV_ENTRIES'; entries: Array<{ name: string; url: string; username: string; password: string }> }
   | { type: 'UNLOCK'; masterPassword: string }
   | { type: 'LOCK' };
 
