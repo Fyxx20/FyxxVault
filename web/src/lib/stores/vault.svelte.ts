@@ -9,6 +9,7 @@ let _loading = $state(false);
 let _searchQuery = $state('');
 let _activeFilter = $state<string>('all');
 let _selectedEntryId = $state<string | null>(null);
+const FREE_VAULT_LIMIT = 5;
 
 // ─── Public accessor ───
 export function getVaultState() {
@@ -102,6 +103,23 @@ export async function addEntry(entry: VaultEntry): Promise<{ success: boolean; e
 	if (!vek || !auth.user) return { success: false, error: 'Coffre non déverrouillé.' };
 
 	try {
+		// Enforce free plan limit server-side as well (not only in UI)
+		if (!auth.isPro) {
+			if (_entries.length >= FREE_VAULT_LIMIT) {
+				return { success: false, error: `Plan gratuit limite a ${FREE_VAULT_LIMIT} elements. Passe a Pro pour illimite.` };
+			}
+
+			const { count: serverCount, error: countError } = await supabase
+				.from('vault_items')
+				.select('id', { count: 'exact', head: true })
+				.eq('user_id', auth.user.id)
+				.is('deleted_at', null);
+
+			if (!countError && (serverCount || 0) >= FREE_VAULT_LIMIT) {
+				return { success: false, error: `Plan gratuit limite a ${FREE_VAULT_LIMIT} elements. Passe a Pro pour illimite.` };
+			}
+		}
+
 		const blob = await encryptEntry(entry, vek);
 
 		const { error } = await supabase.from('vault_items').insert({

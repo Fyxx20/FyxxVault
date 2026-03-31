@@ -16,11 +16,37 @@
 	let adminLoading = $state(false);
 	let adminMessage = $state('');
 
+	type AnnouncementType = 'update' | 'maintenance' | 'security' | 'feature' | 'info';
+	interface AdminAnnouncement {
+		id: string;
+		type: AnnouncementType;
+		title: string;
+		content: string;
+		date: string;
+		pinned: boolean;
+	}
+	const announcementTypeOptions: { value: AnnouncementType; label: string }[] = [
+		{ value: 'feature', label: 'Nouveaute' },
+		{ value: 'update', label: 'Mise a jour' },
+		{ value: 'info', label: 'Info' },
+		{ value: 'security', label: 'Securite' },
+		{ value: 'maintenance', label: 'Maintenance' }
+	];
+	let announcements = $state<AdminAnnouncement[]>([]);
+	let announcementLoading = $state(false);
+	let announcementMessage = $state('');
+	let announcementMessageType = $state<'success' | 'error'>('success');
+	let newAnnouncementTitle = $state('');
+	let newAnnouncementContent = $state('');
+	let newAnnouncementType = $state<AnnouncementType>('feature');
+	let newAnnouncementPinned = $state(false);
+
 	$effect(() => {
 		if (auth.session?.access_token) {
 			checkEnvStatus();
 			fetchMaintenanceStatus();
 			fetchAdminEmails();
+			fetchAnnouncements();
 		}
 	});
 
@@ -73,6 +99,100 @@
 		} catch {} finally {
 			adminLoading = false;
 			setTimeout(() => adminMessage = '', 3000);
+		}
+	}
+
+	async function fetchAnnouncements() {
+		try {
+			const res = await fetch('/api/admin/announcements', {
+				headers: { Authorization: `Bearer ${auth.session?.access_token}` }
+			});
+			if (res.ok) {
+				const data = await res.json();
+				announcements = data.announcements ?? [];
+			}
+		} catch {}
+	}
+
+	async function createAnnouncement() {
+		if (!newAnnouncementTitle.trim() || !newAnnouncementContent.trim()) return;
+		announcementLoading = true;
+		announcementMessage = '';
+		try {
+			const res = await fetch('/api/admin/announcements', {
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${auth.session?.access_token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					title: newAnnouncementTitle.trim(),
+					content: newAnnouncementContent.trim(),
+					type: newAnnouncementType,
+					pinned: newAnnouncementPinned
+				})
+			});
+
+			if (res.ok) {
+				const data = await res.json();
+				announcements = data.announcements ?? announcements;
+				newAnnouncementTitle = '';
+				newAnnouncementContent = '';
+				newAnnouncementType = 'feature';
+				newAnnouncementPinned = false;
+				announcementMessageType = 'success';
+				announcementMessage = 'Annonce publiee avec succes.';
+			} else {
+				const data = await res.json().catch(() => ({}));
+				announcementMessageType = 'error';
+				announcementMessage = data.error || 'Erreur lors de la publication.';
+			}
+		} catch {
+			announcementMessageType = 'error';
+			announcementMessage = 'Erreur reseau.';
+		} finally {
+			announcementLoading = false;
+			setTimeout(() => { announcementMessage = ''; }, 5000);
+		}
+	}
+
+	async function toggleAnnouncementPin(announcement: AdminAnnouncement) {
+		announcementLoading = true;
+		try {
+			const res = await fetch('/api/admin/announcements', {
+				method: 'PATCH',
+				headers: {
+					Authorization: `Bearer ${auth.session?.access_token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ id: announcement.id, pinned: !announcement.pinned })
+			});
+			if (res.ok) {
+				const data = await res.json();
+				announcements = data.announcements ?? announcements;
+			}
+		} catch {} finally {
+			announcementLoading = false;
+		}
+	}
+
+	async function deleteAnnouncement(id: string) {
+		announcementLoading = true;
+		try {
+			const res = await fetch('/api/admin/announcements', {
+				method: 'DELETE',
+				headers: {
+					Authorization: `Bearer ${auth.session?.access_token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ id })
+			});
+			if (res.ok) {
+				const data = await res.json();
+				announcements = data.announcements ?? announcements;
+			}
+		} catch {} finally {
+			announcementLoading = false;
 		}
 	}
 
@@ -171,6 +291,15 @@
 
 	const appVersion = '1.0.0';
 	const buildDate = '2026-03-26';
+
+	function formatDate(dateStr: string): string {
+		if (!dateStr) return '';
+		return new Date(dateStr).toLocaleDateString('fr-FR', {
+			day: '2-digit',
+			month: 'long',
+			year: 'numeric'
+		});
+	}
 </script>
 
 <svelte:head>
@@ -393,6 +522,102 @@
 					<p class="text-xs text-[var(--fv-violet-light)]">{adminMessage}</p>
 				</div>
 			{/if}
+		</div>
+
+		<!-- Announcements Management -->
+		<div class="fv-glass p-6 mb-6">
+			<h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-violet-light)" stroke-width="2">
+					<path d="M3 11l18-5v12L3 13v-2z"/>
+					<path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
+				</svg>
+				Annonces in-app
+			</h2>
+
+			<div class="p-4 rounded-xl bg-white/5 border border-white/8 mb-4 space-y-3">
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+					<input
+						type="text"
+						bind:value={newAnnouncementTitle}
+						placeholder="Titre de l'annonce"
+						class="admin-input text-sm"
+					/>
+					<select bind:value={newAnnouncementType} class="admin-input text-sm">
+						{#each announcementTypeOptions as opt}
+							<option value={opt.value}>{opt.label}</option>
+						{/each}
+					</select>
+				</div>
+				<textarea
+					bind:value={newAnnouncementContent}
+					rows="4"
+					placeholder="Contenu de l'annonce..."
+					class="admin-input text-sm resize-y"
+				></textarea>
+				<div class="flex items-center justify-between gap-3">
+					<label class="flex items-center gap-2 text-xs text-[var(--fv-smoke)]">
+						<input type="checkbox" bind:checked={newAnnouncementPinned} class="accent-[var(--fv-violet)]" />
+						Epingler cette annonce
+					</label>
+					<button
+						onclick={createAnnouncement}
+						disabled={announcementLoading || !newAnnouncementTitle.trim() || !newAnnouncementContent.trim()}
+						class="px-5 py-2.5 rounded-xl bg-[var(--fv-violet)] text-white text-sm font-semibold hover:bg-[var(--fv-violet)]/80 disabled:opacity-40 transition-all"
+					>
+						{announcementLoading ? 'Publication...' : 'Publier'}
+					</button>
+				</div>
+			</div>
+
+			{#if announcementMessage}
+				<div class="mb-4 p-2 rounded-lg {announcementMessageType === 'success' ? 'bg-[var(--fv-success)]/10' : 'bg-[var(--fv-danger)]/10'}">
+					<p class="text-xs {announcementMessageType === 'success' ? 'text-[var(--fv-success)]' : 'text-[var(--fv-danger)]'}">
+						{announcementMessage}
+					</p>
+				</div>
+			{/if}
+
+			<div class="space-y-2">
+				{#if announcements.length === 0}
+					<p class="text-xs text-[var(--fv-ash)]">Aucune annonce publiee.</p>
+				{:else}
+					{#each announcements as ann}
+						<div class="p-3 rounded-xl bg-white/5 border border-white/8">
+							<div class="flex items-start justify-between gap-3">
+								<div>
+									<div class="flex items-center gap-2 mb-1">
+										<span class="text-xs px-2 py-0.5 rounded-full bg-[var(--fv-violet)]/10 text-[var(--fv-violet-light)] border border-[var(--fv-violet)]/20">
+											{announcementTypeOptions.find(t => t.value === ann.type)?.label || ann.type}
+										</span>
+										{#if ann.pinned}
+											<span class="text-[10px] px-2 py-0.5 rounded-full bg-[var(--fv-gold)]/10 text-[var(--fv-gold)] border border-[var(--fv-gold)]/25">Epingle</span>
+										{/if}
+										<span class="text-[10px] text-[var(--fv-ash)]">{formatDate(ann.date)}</span>
+									</div>
+									<p class="text-sm text-white font-semibold">{ann.title}</p>
+									<p class="text-xs text-[var(--fv-smoke)] mt-1">{ann.content}</p>
+								</div>
+								<div class="flex items-center gap-1 flex-shrink-0">
+									<button
+										onclick={() => toggleAnnouncementPin(ann)}
+										disabled={announcementLoading}
+										class="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-white/8 text-[var(--fv-smoke)] hover:bg-white/15 transition-all"
+									>
+										{ann.pinned ? 'Desepingler' : 'Epingler'}
+									</button>
+									<button
+										onclick={() => deleteAnnouncement(ann.id)}
+										disabled={announcementLoading}
+										class="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-[var(--fv-danger)]/10 text-[var(--fv-danger)] hover:bg-[var(--fv-danger)]/20 transition-all"
+									>
+										Supprimer
+									</button>
+								</div>
+							</div>
+						</div>
+					{/each}
+				{/if}
+			</div>
 		</div>
 
 		<!-- Links -->

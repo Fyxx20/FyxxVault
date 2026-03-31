@@ -555,3 +555,5 @@
 /* Missing keys */
 "auth.divider.or" = "or";
 "vault.bulk.count %lld" = "%lld entry(ies)";
+"lock.title" = "VAULT LOCKED";
+"lock.subtitle" = "Vault locked for your security";

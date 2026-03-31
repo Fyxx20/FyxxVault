@@ -62,6 +62,23 @@ export const GET: RequestHandler = async ({ request, params }) => {
 			.select('*', { count: 'exact', head: true })
 			.eq('user_id', userId);
 
+		// Email stats
+		const { count: emailAliasesCount } = await supabaseAdmin
+			.from('email_aliases')
+			.select('*', { count: 'exact', head: true })
+			.eq('user_id', userId);
+
+		const { count: activeEmailAliasesCount } = await supabaseAdmin
+			.from('email_aliases')
+			.select('*', { count: 'exact', head: true })
+			.eq('user_id', userId)
+			.eq('is_active', true);
+
+		const { count: emailsReceivedCount } = await supabaseAdmin
+			.from('emails')
+			.select('*', { count: 'exact', head: true })
+			.eq('user_id', userId);
+
 		// Get vault items for category stats
 		const { data: vaultItems } = await supabaseAdmin
 			.from('vault_items')
@@ -81,6 +98,20 @@ export const GET: RequestHandler = async ({ request, params }) => {
 			.order('last_sync', { ascending: false })
 			.limit(1)
 			.single();
+
+		// Get support tickets
+		const { data: supportTickets } = await supabaseAdmin
+			.from('support_tickets')
+			.select('id, subject, status, created_at, updated_at')
+			.eq('user_id', userId)
+			.order('created_at', { ascending: false })
+			.limit(10);
+
+		// Get total messages count for this user
+		const { count: supportMessagesCount } = await supabaseAdmin
+			.from('support_messages')
+			.select('*', { count: 'exact', head: true })
+			.in('ticket_id', (supportTickets || []).map(t => t.id));
 
 		// Get Stripe subscription details if available
 		let stripeSubscription: any = null;
@@ -116,6 +147,9 @@ export const GET: RequestHandler = async ({ request, params }) => {
 			plan: profile?.plan || 'free',
 			stripe_customer_id: profile?.stripe_customer_id || null,
 			stripe_subscription_id: profile?.stripe_subscription_id || null,
+			email_aliases_count: emailAliasesCount ?? 0,
+			active_email_aliases_count: activeEmailAliasesCount ?? 0,
+			emails_received_count: emailsReceivedCount ?? 0,
 			vault_items_count: vaultItemsCount ?? 0,
 			categories_count: categories.size,
 			categories_list: Array.from(categories),
@@ -124,7 +158,10 @@ export const GET: RequestHandler = async ({ request, params }) => {
 				device_name: syncMeta.device_name || null,
 				device_id: syncMeta.device_id || null
 			} : null,
-			stripe_subscription: stripeSubscription
+			stripe_subscription: stripeSubscription,
+			support_tickets: supportTickets || [],
+			support_tickets_count: supportTickets?.length ?? 0,
+			support_messages_count: supportMessagesCount ?? 0
 		});
 	} catch (err: any) {
 		return json({ error: err.message }, { status: 500 });
@@ -159,7 +196,10 @@ export const PATCH: RequestHandler = async ({ request, params }) => {
 
 			const { data, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
 				type: 'recovery',
-				email: user.email
+				email: user.email,
+				options: {
+					redirectTo: 'https://fyxxvault.com/reset-password'
+				}
 			});
 
 			if (resetError) {

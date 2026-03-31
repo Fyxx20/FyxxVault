@@ -1,8 +1,6 @@
 import SwiftUI
 import LocalAuthentication
 
-// MARK: - VaultLockView
-
 struct VaultLockView: View {
     @ObservedObject var appLock: AppLockManager
     @ObservedObject var authManager: AuthManager
@@ -12,586 +10,662 @@ struct VaultLockView: View {
     @State private var showRecoveryKeyEntry = false
     @State private var recoveryKeyInput = ""
     @State private var recoveryKeyError = ""
-
-    // Clock
-    @State private var currentTime = Date()
-    private let timeTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-
-    // Lock icon animations
-    @State private var lockFloat: CGFloat = 0
-    @State private var lockGlowPulse = false
-    @State private var lockScanOffset: CGFloat = -50
-    @State private var lockAppeared = false
-
-    // Particle / orb animations
-    @State private var orb1Offset: CGSize = .zero
-    @State private var orb2Offset: CGSize = .zero
-    @State private var orb3Offset: CGSize = .zero
-    @State private var orb4Offset: CGSize = .zero
-    @State private var orb1Scale: CGFloat = 1
-    @State private var orb2Scale: CGFloat = 1
-    @State private var particlePhase: CGFloat = 0
-
-    // Biometric type
+    @State private var revealPassword = false
+    @State private var biometricAvailable = false
     @State private var biometricIcon = "faceid"
     @State private var biometricLabel = "Face ID"
 
-    // Card entrance animation
-    @State private var cardVisible = false
-
-    // Biometric button press state
-    @State private var biometricPressed = false
-
-    // Time formatter
-    private var timeString: String {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm"
-        return f.string(from: currentTime)
-    }
-    private var dateString: String {
-        let f = DateFormatter()
-        f.dateFormat = "EEEE d MMMM"
-        f.locale = Locale(identifier: "fr_FR")
-        return f.string(from: currentTime).capitalized
-    }
+    // Animation states
+    @State private var appeared = false
+    @State private var glowPulse = false
+    @State private var lockFloat: CGFloat = 0
+    @State private var shimmerOffset: CGFloat = -1.2
+    @State private var passwordFieldFocused = false
+    @State private var pulseRing = false
+    @State private var shakeOffset: CGFloat = 0
+    @FocusState private var isPasswordFocused: Bool
 
     var body: some View {
         ZStack {
-            // ── Background ───────────────────────────────────────────────
-            FVAnimatedBackground()
-
-            // Extra deep-cyan orbs layered on top of the shared background
-            lockScreenOrbs
-
-            // ── Content ──────────────────────────────────────────────────
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-
-                    // Time display
-                    timeHeader
-                        .fvAppear(delay: 0.1)
-
-                    Spacer().frame(height: 28)
-
-                    // Animated lock icon
-                    lockHero
-                        .fvAppear(delay: 0.2)
-
-                    Spacer().frame(height: 28)
-
-                    // Title + subtitle
-                    titleBlock
-                        .fvAppear(delay: 0.3)
-
-                    Spacer().frame(height: 32)
-
-                    // Biometric button
-                    biometricButton
-                        .fvAppear(delay: 0.4)
-
-                    Spacer().frame(height: 20)
-
-                    // Glass form card
-                    formCard
-                        .fvAppear(delay: 0.5)
-
-                    Spacer().frame(height: 32)
-
-                    // Back to login link
-                    backToLoginLink
-                        .fvAppear(delay: 0.65)
-
-                    Spacer().frame(height: 24)
-                }
-                .padding(.horizontal, 22)
-                .padding(.top, 16)
+            backgroundLayer
+            scrollContent
+        }
+        .onAppear(perform: onAppearSetup)
+        .onChange(of: isPasswordFocused) { _, focused in
+            withAnimation(.easeInOut(duration: 0.25)) {
+                passwordFieldFocused = focused
             }
         }
-        .ignoresSafeArea()
-        .onReceive(timeTimer) { _ in currentTime = Date() }
-        .onAppear { startAllAnimations(); detectBiometricType() }
     }
 
-    // MARK: - Subviews
+    // MARK: - Background
 
-    private var lockScreenOrbs: some View {
+    private var backgroundLayer: some View {
+        ZStack {
+            FVAnimatedBackground()
+            backgroundOrbs
+        }
+    }
+
+    private var backgroundOrbs: some View {
         ZStack {
             Circle()
-                .fill(RadialGradient(
-                    colors: [FVColor.cyan.opacity(0.13), .clear],
-                    center: .center, startRadius: 10, endRadius: 220))
-                .frame(width: 440, height: 440)
-                .offset(orb1Offset)
-                .scaleEffect(orb1Scale)
-                .blur(radius: 38)
+                .fill(FVColor.cyan.opacity(0.04))
+                .frame(width: 300, height: 300)
+                .blur(radius: 120)
+                .offset(x: -100, y: -260)
 
             Circle()
-                .fill(RadialGradient(
-                    colors: [FVColor.violet.opacity(0.11), .clear],
-                    center: .center, startRadius: 10, endRadius: 260))
-                .frame(width: 520, height: 520)
-                .offset(orb2Offset)
-                .scaleEffect(orb2Scale)
-                .blur(radius: 50)
-
-            Circle()
-                .fill(RadialGradient(
-                    colors: [FVColor.cyan.opacity(0.07), .clear],
-                    center: .center, startRadius: 10, endRadius: 160))
-                .frame(width: 320, height: 320)
-                .offset(orb3Offset)
-                .blur(radius: 30)
-
-            Circle()
-                .fill(RadialGradient(
-                    colors: [FVColor.violet.opacity(0.09), .clear],
-                    center: .center, startRadius: 10, endRadius: 140))
-                .frame(width: 280, height: 280)
-                .offset(orb4Offset)
-                .blur(radius: 28)
+                .fill(FVColor.violet.opacity(0.04))
+                .frame(width: 300, height: 300)
+                .blur(radius: 120)
+                .offset(x: 100, y: 260)
         }
         .ignoresSafeArea()
     }
 
-    private var timeHeader: some View {
-        VStack(spacing: 4) {
-            Text(timeString)
-                .font(.system(size: 72, weight: .thin, design: .rounded))
-                .foregroundStyle(.white.opacity(0.88))
-                .kerning(-2)
-                .contentTransition(.numericText())
-                .animation(.easeInOut(duration: 0.3), value: timeString)
+    // MARK: - Scroll Content
 
-            Text(dateString)
-                .font(FVFont.body(14))
-                .foregroundStyle(FVColor.mist.opacity(0.6))
-                .kerning(0.5)
+    private var scrollContent: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 0) {
+                Spacer().frame(height: 70)
+                headerSection
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 18)
+                Spacer().frame(height: 32)
+                glassCard
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 30)
+                Spacer().frame(height: 24)
+                footerLinks
+                    .opacity(appeared ? 1 : 0)
+                Spacer().frame(height: 20)
+                securityBadge
+                    .opacity(appeared ? 1 : 0)
+                Spacer().frame(height: 40)
+            }
+            .frame(maxWidth: 440)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.top, 52)
     }
 
-    private var lockHero: some View {
+    // MARK: - Header Section
+
+    private var headerSection: some View {
+        VStack(spacing: 16) {
+            headerLogo
+            headerTitles
+        }
+    }
+
+    private var headerLogo: some View {
         ZStack {
-            // Outermost glow ring — slow pulse
-            Circle()
-                .stroke(
-                    AngularGradient(
-                        colors: [FVColor.cyan.opacity(lockGlowPulse ? 0.55 : 0.18),
-                                 FVColor.violet.opacity(lockGlowPulse ? 0.35 : 0.10),
-                                 FVColor.cyan.opacity(lockGlowPulse ? 0.55 : 0.18)],
-                        center: .center
-                    ),
-                    style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
-                )
-                .frame(width: 140, height: 140)
-                .rotationEffect(.degrees(particlePhase * 60))
-                .scaleEffect(lockGlowPulse ? 1.06 : 1.0)
-
-            // Mid glow ring — filled, blurred
-            Circle()
-                .fill(RadialGradient(
-                    colors: [FVColor.cyan.opacity(lockGlowPulse ? 0.22 : 0.10), .clear],
-                    center: .center, startRadius: 30, endRadius: 80))
-                .frame(width: 160, height: 160)
-                .scaleEffect(lockGlowPulse ? 1.1 : 0.95)
-                .blur(radius: 16)
-
-            // Inner ring border
-            Circle()
-                .stroke(
-                    LinearGradient(
-                        colors: [FVColor.cyan.opacity(0.6), FVColor.violet.opacity(0.4)],
-                        startPoint: .topLeading, endPoint: .bottomTrailing),
-                    lineWidth: 1.5
-                )
-                .frame(width: 108, height: 108)
-
-            // Icon backing circle
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [FVColor.deepSlate.opacity(0.9), FVColor.abyss],
-                        center: .center, startRadius: 10, endRadius: 52)
-                )
-                .frame(width: 100, height: 100)
-                .shadow(color: FVColor.cyan.opacity(0.3), radius: 20)
-
-            // Gradient lock icon
-            Image(systemName: "lock.shield.fill")
-                .font(.system(size: 44, weight: .bold))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [FVColor.cyan, FVColor.cyanLight, FVColor.violet],
-                        startPoint: .topLeading, endPoint: .bottomTrailing)
-                )
-
-            // Scan line that sweeps across the icon
-            scanLine
+            logoGlowShadow
+            logoSquare
+            logoIcon
         }
-        .frame(width: 160, height: 160)
-        .offset(y: lockFloat)
     }
 
-    private var scanLine: some View {
-        RoundedRectangle(cornerRadius: 2)
-            .fill(
-                LinearGradient(
-                    colors: [.clear, FVColor.cyan.opacity(0.55), .clear],
-                    startPoint: .leading, endPoint: .trailing)
-            )
-            .frame(width: 80, height: 2)
-            .offset(y: lockScanOffset)
-            .clipShape(Circle().scale(1.3))
-            .blendMode(.screen)
+    private var logoGlowShadow: some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(FVColor.cyan.opacity(glowPulse ? 0.12 : 0.04))
+            .frame(width: 70, height: 70)
+            .blur(radius: 10)
     }
 
-    private var titleBlock: some View {
+    private var logoSquare: some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(FVGradient.cyanToViolet)
+            .frame(width: 56, height: 56)
+            .scaleEffect(glowPulse ? 1.02 : 1.0)
+            .shadow(color: FVColor.cyan.opacity(glowPulse ? 0.25 : 0.12), radius: 16, y: 4)
+    }
+
+    private var logoIcon: some View {
+        Image(systemName: "lock.fill")
+            .font(.system(size: 22, weight: .bold))
+            .foregroundStyle(.white)
+    }
+
+    private var headerTitles: some View {
         VStack(spacing: 6) {
-            Text("COFFRE VERROUILLÉ")
-                .font(FVFont.display(22))
-                .kerning(4)
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [FVColor.cyan, FVColor.cyanLight],
-                        startPoint: .leading, endPoint: .trailing)
-                )
+            Text("Déverrouiller ton coffre")
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
 
-            Text("Vault locked for your security")
-                .font(FVFont.body(13))
-                .foregroundStyle(FVColor.mist.opacity(0.65))
-                .kerning(0.3)
+            headerEmail
+        }
+    }
+
+    @ViewBuilder
+    private var headerEmail: some View {
+        let email = authManager.currentEmail
+        if !email.isEmpty {
+            Text(email)
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(FVColor.cyan)
+                .lineLimit(1)
+        }
+    }
+
+    // MARK: - Glass Card
+
+    private var glassCard: some View {
+        VStack(spacing: 0) {
+            lockIconSection
+            cardLabel
+            cardFormContent
+        }
+        .background(glassCardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(glassCardBorder)
+        .shadow(color: .black.opacity(0.25), radius: 20, y: 10)
+        .padding(.horizontal, 24)
+    }
+
+    private var glassCardBackground: some View {
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(Color.white.opacity(0.04))
+    }
+
+    private var glassCardBorder: some View {
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
+    }
+
+    // MARK: - Lock Icon Section
+
+    private var lockIconSection: some View {
+        ZStack {
+            lockPulseRing
+            lockCircleBackground
+            lockCircleBorder
+            lockImage
+        }
+        .offset(y: lockFloat)
+        .padding(.top, 28)
+        .padding(.bottom, 16)
+    }
+
+    private var lockPulseRing: some View {
+        Circle()
+            .stroke(FVColor.cyan.opacity(pulseRing ? 0 : 0.20), lineWidth: 1)
+            .frame(width: 72, height: 72)
+            .scaleEffect(pulseRing ? 1.4 : 1.0)
+    }
+
+    private var lockCircleBackground: some View {
+        Circle()
+            .fill(Color.white.opacity(0.03))
+            .frame(width: 72, height: 72)
+    }
+
+    private var lockCircleBorder: some View {
+        Circle()
+            .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
+            .frame(width: 72, height: 72)
+    }
+
+    private var lockImage: some View {
+        Image(systemName: "lock.shield.fill")
+            .font(.system(size: 26, weight: .semibold))
+            .foregroundStyle(FVGradient.cyanToViolet)
+    }
+
+    // MARK: - Card Label
+
+    private var cardLabel: some View {
+        Text("MOT DE PASSE MAÎTRE")
+            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .tracking(3)
+            .foregroundStyle(FVColor.smoke)
+            .padding(.bottom, 18)
+    }
+
+    // MARK: - Card Form Content
+
+    private var cardFormContent: some View {
+        VStack(spacing: 12) {
+            biometricSection
+            passwordFieldSection
+            errorSection
+            unlockButtonSection
+            recoverySection
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 28)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showRecoveryKeyEntry)
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: masterUnlockError)
+    }
+
+    // MARK: - Biometric Section
+
+    @ViewBuilder
+    private var biometricSection: some View {
+        if biometricAvailable {
+            biometricButton
+            biometricDivider
         }
     }
 
     private var biometricButton: some View {
         Button {
             fvHaptic(.medium)
-            biometricPressed = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                biometricPressed = false
-            }
             Task { _ = await appLock.unlockWithBiometrics() }
         } label: {
-            ZStack {
-                // Background
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(FVGradient.cyanToViolet)
-
-                // Shimmer overlay
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [.white.opacity(0.12), .clear, .white.opacity(0.05)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
-
-                // Border
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .strokeBorder(.white.opacity(0.2), lineWidth: 1)
-
-                HStack(spacing: 16) {
-                    Image(systemName: biometricIcon)
-                        .font(.system(size: 40, weight: .medium))
-                        .foregroundStyle(.white)
-                        .shadow(color: FVColor.cyan.opacity(0.5), radius: 10)
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(biometricLabel)
-                            .font(FVFont.label(17))
-                            .foregroundStyle(.white)
-                        Text(String(localized: "lock.button.biometric"))
-                            .font(FVFont.body(12))
-                            .foregroundStyle(.white.opacity(0.7))
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "arrow.right.circle.fill")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.75))
-                }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 18)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 80)
+            biometricButtonLabel
         }
         .buttonStyle(.plain)
-        .shadow(color: FVColor.cyan.opacity(0.35), radius: 24, y: 8)
-        .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
-        .scaleEffect(biometricPressed ? 0.96 : 1.0)
-        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: biometricPressed)
+        .shadow(color: FVColor.cyan.opacity(0.20), radius: 12, y: 4)
     }
 
-    private var formCard: some View {
-        VStack(spacing: 0) {
+    private var biometricButtonLabel: some View {
+        HStack(spacing: 12) {
+            biometricIconView
+            Text("Continuer avec \(biometricLabel)")
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+            Spacer()
+            Image(systemName: "arrow.right")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(.white.opacity(0.5))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(FVGradient.cyanToViolet)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(biometricButtonBorder)
+    }
 
-            // Error banner (lock-level)
-            if !appLock.lockError.isEmpty {
-                HStack(spacing: 10) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(FVColor.danger)
-                    Text(appLock.lockError)
-                        .font(FVFont.body(13))
-                        .foregroundStyle(FVColor.danger.opacity(0.9))
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(FVColor.danger.opacity(0.08))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(FVColor.danger.opacity(0.2), lineWidth: 1)
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .padding(.bottom, 18)
-            }
+    private var biometricIconView: some View {
+        Image(systemName: biometricIcon)
+            .font(.system(size: 18, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 32, height: 32)
+            .background(.white.opacity(0.12))
+            .clipShape(Circle())
+    }
 
-            // Divider label
-            HStack(spacing: 10) {
-                Rectangle()
-                    .fill(Color.white.opacity(0.06))
-                    .frame(height: 1)
-                Text("OU MOT DE PASSE")
-                    .font(FVFont.caption(10))
-                    .kerning(2)
-                    .foregroundStyle(FVColor.smoke)
-                    .fixedSize()
-                Rectangle()
-                    .fill(Color.white.opacity(0.06))
-                    .frame(height: 1)
-            }
-            .padding(.bottom, 18)
+    private var biometricButtonBorder: some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+    }
 
-            // Master password field
-            FVTextField(
-                title: String(localized: "lock.field.master_password"),
-                text: $masterPassword,
-                secure: true,
-                icon: "key.fill"
-            )
+    private var biometricDivider: some View {
+        HStack(spacing: 10) {
+            Rectangle().fill(Color.white.opacity(0.06)).frame(height: 1)
+            Text("ou")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.25))
+            Rectangle().fill(Color.white.opacity(0.06)).frame(height: 1)
+        }
+        .padding(.vertical, 4)
+    }
 
-            if !masterUnlockError.isEmpty {
-                HStack(spacing: 8) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(FVColor.danger)
-                    Text(masterUnlockError)
-                        .font(FVFont.caption(12))
-                        .foregroundStyle(FVColor.danger.opacity(0.9))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 6)
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
+    // MARK: - Password Field
 
-            Spacer().frame(height: 14)
+    private var passwordFieldBorderColor: Color {
+        if !masterUnlockError.isEmpty {
+            return FVColor.danger.opacity(0.50)
+        }
+        return passwordFieldFocused
+            ? FVColor.cyan.opacity(0.40)
+            : Color.white.opacity(0.08)
+    }
 
-            FVButton(
-                title: String(localized: "lock.button.password"),
-                icon: "lock.open.fill"
-            ) {
-                fvHaptic(.medium)
-                if authManager.verifyMasterPasswordForVaultUnlock(masterPassword) {
-                    fvHaptic(.success)
-                    appLock.forceUnlock()
-                    masterPassword = ""
-                    masterUnlockError = ""
-                } else {
-                    fvHaptic(.error)
-                    withAnimation(.spring(response: 0.3)) {
-                        masterUnlockError = String(localized: "lock.error.wrong_password")
-                    }
-                }
-            }
+    private var passwordFieldSection: some View {
+        HStack(spacing: 10) {
+            passwordFieldIcon
+            passwordFieldInput
+            passwordToggleButton
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.white.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(passwordFieldBorder)
+        .offset(x: shakeOffset)
+    }
 
-            // Recovery section
-            VStack(spacing: 14) {
-                if showRecoveryKeyEntry {
-                    Spacer().frame(height: 4)
+    private var passwordFieldIcon: some View {
+        Image(systemName: "key.fill")
+            .font(.system(size: 13, weight: .medium))
+            .foregroundStyle(FVColor.cyan.opacity(0.7))
+            .frame(width: 16)
+    }
 
-                    // Recovery divider
-                    HStack(spacing: 10) {
-                        Rectangle()
-                            .fill(FVColor.violet.opacity(0.18))
-                            .frame(height: 1)
-                        Text("CLÉ DE RÉCUPÉRATION")
-                            .font(FVFont.caption(10))
-                            .kerning(2)
-                            .foregroundStyle(FVColor.violet.opacity(0.7))
-                            .fixedSize()
-                        Rectangle()
-                            .fill(FVColor.violet.opacity(0.18))
-                            .frame(height: 1)
-                    }
-
-                    FVTextField(
-                        title: String(localized: "lock.field.recovery_key"),
-                        text: $recoveryKeyInput,
-                        icon: "key.horizontal.fill"
-                    )
-
-                    if !recoveryKeyError.isEmpty {
-                        HStack(spacing: 8) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(FVColor.danger)
-                            Text(recoveryKeyError)
-                                .font(FVFont.caption(12))
-                                .foregroundStyle(FVColor.danger.opacity(0.9))
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-
-                    FVButton(
-                        title: String(localized: "lock.button.recovery"),
-                        icon: "checkmark.shield.fill",
-                        style: .secondary
-                    ) {
-                        fvHaptic(.medium)
-                        if authManager.unlockWithRecoveryKey(recoveryKeyInput) {
-                            fvHaptic(.success)
-                            appLock.forceUnlock()
-                            recoveryKeyInput = ""
-                            recoveryKeyError = ""
-                        } else {
-                            fvHaptic(.error)
-                            withAnimation(.spring(response: 0.3)) {
-                                recoveryKeyError = String(localized: "lock.error.invalid_recovery")
-                            }
-                        }
-                    }
-                }
-
-                // Toggle recovery key entry
-                Button {
-                    fvHaptic(.light)
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
-                        showRecoveryKeyEntry.toggle()
-                        recoveryKeyError = ""
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: showRecoveryKeyEntry
-                              ? "xmark.circle.fill"
-                              : "key.horizontal.fill")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text(showRecoveryKeyEntry
-                             ? String(localized: "lock.button.cancel_recovery")
-                             : String(localized: "lock.button.use_recovery"))
-                            .font(FVFont.body(13))
-                    }
-                    .foregroundStyle(FVColor.violet.opacity(0.85))
-                    .padding(.top, 4)
-                }
-                .buttonStyle(.plain)
+    @ViewBuilder
+    private var passwordFieldInput: some View {
+        Group {
+            if revealPassword {
+                TextField("Mot de passe maître", text: $masterPassword)
+            } else {
+                SecureField("Mot de passe maître", text: $masterPassword)
             }
         }
-        .padding(22)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(.ultraThinMaterial.opacity(0.35))
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(FVGradient.cardGlass)
-            }
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            FVColor.cyan.opacity(0.28),
-                            Color.white.opacity(0.06),
-                            FVColor.violet.opacity(0.18)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1.2
-                )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-        .shadow(color: FVColor.cyan.opacity(0.12), radius: 28, y: 8)
-        .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
+        .focused($isPasswordFocused)
+        .font(.system(size: 15, design: .rounded))
+        .foregroundStyle(.white)
+        .tint(FVColor.cyan)
+        .onSubmit { attemptPasswordUnlock() }
     }
 
-    private var backToLoginLink: some View {
+    private var passwordToggleButton: some View {
+        Button {
+            revealPassword.toggle()
+            fvHaptic(.light)
+        } label: {
+            Image(systemName: revealPassword ? "eye.slash" : "eye")
+                .font(.system(size: 14))
+                .foregroundStyle(.white.opacity(0.35))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var passwordFieldBorder: some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .strokeBorder(
+                passwordFieldBorderColor,
+                lineWidth: passwordFieldFocused ? 1.5 : 1
+            )
+    }
+
+    // MARK: - Error Section
+
+    @ViewBuilder
+    private var errorSection: some View {
+        if !masterUnlockError.isEmpty {
+            errorBanner
+                .transition(.opacity.combined(with: .move(edge: .top)))
+        }
+    }
+
+    private var errorBanner: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.circle.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(FVColor.danger)
+            Text(masterUnlockError)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(FVColor.danger.opacity(0.9))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(FVColor.danger.opacity(0.10))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    // MARK: - Unlock Button
+
+    private var unlockButtonSection: some View {
+        Button {
+            fvHaptic(.medium)
+            attemptPasswordUnlock()
+        } label: {
+            unlockButtonLabel
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var unlockButtonLabel: some View {
+        HStack(spacing: 7) {
+            Image(systemName: "lock.open.fill")
+                .font(.system(size: 13, weight: .semibold))
+            Text("Déverrouiller")
+                .font(.system(size: 15, weight: .bold, design: .rounded))
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity)
+        .frame(height: 52)
+        .background(unlockButtonBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .shadow(color: FVColor.cyan.opacity(0.18), radius: 12, y: 4)
+    }
+
+    private var unlockButtonBackground: some View {
+        ZStack {
+            FVGradient.cyanToViolet
+            unlockButtonShimmer
+        }
+    }
+
+    private var unlockButtonShimmer: some View {
+        LinearGradient(
+            colors: [.clear, .white.opacity(0.12), .clear],
+            startPoint: UnitPoint(x: shimmerOffset, y: 0.5),
+            endPoint: UnitPoint(x: shimmerOffset + 0.4, y: 0.5)
+        )
+    }
+
+    // MARK: - Recovery Section
+
+    @ViewBuilder
+    private var recoverySection: some View {
+        if showRecoveryKeyEntry {
+            VStack(spacing: 10) {
+                recoveryKeyField
+                recoveryErrorView
+                recoverySubmitButton
+            }
+            .transition(.opacity.combined(with: .move(edge: .top)))
+        }
+    }
+
+    private var recoveryKeyField: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "key.horizontal.fill")
+                .font(.system(size: 13))
+                .foregroundStyle(FVColor.violet.opacity(0.8))
+                .frame(width: 16)
+            TextField("Clé de récupération", text: $recoveryKeyInput)
+                .font(.system(size: 14, design: .rounded))
+                .foregroundStyle(.white)
+                .tint(FVColor.violet)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 13)
+        .background(Color.white.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(recoveryKeyFieldBorder)
+    }
+
+    private var recoveryKeyFieldBorder: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .strokeBorder(FVColor.violet.opacity(0.30), lineWidth: 1)
+    }
+
+    @ViewBuilder
+    private var recoveryErrorView: some View {
+        if !recoveryKeyError.isEmpty {
+            HStack(spacing: 6) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 11))
+                    .foregroundStyle(FVColor.danger)
+                Text(recoveryKeyError)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(FVColor.danger.opacity(0.9))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var recoverySubmitButton: some View {
+        Button {
+            fvHaptic(.medium)
+            if authManager.unlockWithRecoveryKey(recoveryKeyInput) {
+                fvHaptic(.success); appLock.forceUnlock()
+            } else {
+                fvHaptic(.error)
+                withAnimation { recoveryKeyError = "Clé de récupération invalide." }
+            }
+        } label: {
+            recoverySubmitLabel
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var recoverySubmitLabel: some View {
+        Text("Valider la clé de récupération")
+            .font(.system(size: 14, weight: .semibold, design: .rounded))
+            .foregroundStyle(FVColor.violet)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(FVColor.violet.opacity(0.10))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(FVColor.violet.opacity(0.25), lineWidth: 1)
+            )
+    }
+
+    // MARK: - Footer Links
+
+    private var footerLinks: some View {
+        HStack(spacing: 16) {
+            recoveryFooterButton
+            Circle().fill(.white.opacity(0.15)).frame(width: 3, height: 3)
+            logoutFooterButton
+        }
+    }
+
+    private var recoveryFooterButton: some View {
+        Button {
+            fvHaptic(.light)
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                showRecoveryKeyEntry.toggle()
+                recoveryKeyError = ""
+            }
+        } label: {
+            Text(showRecoveryKeyEntry ? "Annuler" : "Clé de récupération")
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(FVColor.violet.opacity(0.50))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var logoutFooterButton: some View {
         Button {
             fvHaptic(.light)
             authManager.logout()
             appLock.forceUnlock()
         } label: {
-            HStack(spacing: 5) {
-                Image(systemName: "arrow.left")
-                    .font(.system(size: 11, weight: .semibold))
-                Text(String(localized: "lock.button.back_to_login"))
-                    .font(FVFont.body(13))
-            }
-            .foregroundStyle(FVColor.mist.opacity(0.55))
+            Text("Changer de compte")
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.25))
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: - Animation Setup
+    // MARK: - Security Badge
 
-    private func startAllAnimations() {
-        // Floating lock icon
-        withAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true)) {
-            lockFloat = -10
+    private var securityBadge: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "shield.checkered")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.15))
+            Text("Powered by AES-256-GCM")
+                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.15))
         }
+    }
 
-        // Pulsing glow ring
-        withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
-            lockGlowPulse = true
-        }
+    // MARK: - Animations
 
-        // Scan line sweep
-        withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: false)) {
-            lockScanOffset = 50
-        }
+    private func onAppearSetup() {
+        detectBiometricType()
+        startFloatAnimation()
+        startGlowPulse()
+        startPulseRing()
+        startEntrance()
+        startShimmer()
+    }
 
-        // Particle / dashed ring rotation
-        withAnimation(.linear(duration: 12).repeatForever(autoreverses: false)) {
-            particlePhase = 1
+    private func startFloatAnimation() {
+        withAnimation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true)) {
+            lockFloat = -6
         }
+    }
 
-        // Orb drifts
-        withAnimation(.easeInOut(duration: 9).repeatForever(autoreverses: true)) {
-            orb1Offset = CGSize(width: 60, height: -100)
-            orb1Scale = 1.15
+    private func startGlowPulse() {
+        withAnimation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true)) {
+            glowPulse = true
         }
-        withAnimation(.easeInOut(duration: 11).repeatForever(autoreverses: true)) {
-            orb2Offset = CGSize(width: -80, height: 90)
-            orb2Scale = 0.88
+    }
+
+    private func startPulseRing() {
+        withAnimation(.easeOut(duration: 2.0).repeatForever(autoreverses: false)) {
+            pulseRing = true
         }
-        withAnimation(.easeInOut(duration: 7).repeatForever(autoreverses: true)) {
-            orb3Offset = CGSize(width: 100, height: 110)
+    }
+
+    private func startEntrance() {
+        withAnimation(.spring(response: 0.7, dampingFraction: 0.82).delay(0.15)) {
+            appeared = true
         }
-        withAnimation(.easeInOut(duration: 13).repeatForever(autoreverses: true)) {
-            orb4Offset = CGSize(width: -110, height: -60)
+    }
+
+    private func startShimmer() {
+        withAnimation(
+            .linear(duration: 3.0)
+            .repeatForever(autoreverses: false)
+            .delay(1.0)
+        ) {
+            shimmerOffset = 1.6
+        }
+    }
+
+    private func triggerShake() {
+        withAnimation(.spring(response: 0.08, dampingFraction: 0.3)) {
+            shakeOffset = 10
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            withAnimation(.spring(response: 0.08, dampingFraction: 0.3)) {
+                shakeOffset = -8
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) {
+            withAnimation(.spring(response: 0.08, dampingFraction: 0.3)) {
+                shakeOffset = 5
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.24) {
+            withAnimation(.spring(response: 0.1, dampingFraction: 0.5)) {
+                shakeOffset = 0
+            }
+        }
+    }
+
+    // MARK: - Functions
+
+    private func attemptPasswordUnlock() {
+        if authManager.verifyMasterPasswordForVaultUnlock(masterPassword) {
+            fvHaptic(.success)
+            appLock.forceUnlock()
+            masterPassword = ""
+            masterUnlockError = ""
+        } else {
+            fvHaptic(.error)
+            triggerShake()
+            withAnimation(.spring(response: 0.3)) {
+                masterUnlockError = String(localized: "lock.error.wrong_password")
+            }
         }
     }
 
     private func detectBiometricType() {
         let context = LAContext()
         var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else { return }
+        biometricAvailable = context.canEvaluatePolicy(
+            .deviceOwnerAuthenticationWithBiometrics, error: &error
+        )
+        guard biometricAvailable else { return }
         switch context.biometryType {
-        case .faceID:
-            biometricIcon = "faceid"
-            biometricLabel = "Face ID"
-        case .touchID:
-            biometricIcon = "touchid"
-            biometricLabel = "Touch ID"
-        case .opticID:
-            biometricIcon = "opticid"
-            biometricLabel = "Optic ID"
-        default:
-            biometricIcon = "faceid"
-            biometricLabel = "Biométrie"
+        case .faceID:  biometricIcon = "faceid";  biometricLabel = "Face ID"
+        case .touchID: biometricIcon = "touchid"; biometricLabel = "Touch ID"
+        case .opticID: biometricIcon = "opticid"; biometricLabel = "Optic ID"
+        default:       biometricIcon = "faceid";  biometricLabel = "biométrie"
         }
     }
 }

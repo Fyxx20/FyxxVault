@@ -95,8 +95,26 @@ enum VaultCategory: String, Codable, CaseIterable, Identifiable {
     case softwareLicense = "softwareLicense"
     case passport = "passport"
     case bankAccount = "bankAccount"
+    case server = "server"
+    case other = "other"
 
     var id: String { rawValue }
+
+    /// Custom decoder that handles web app values (e.g. "wifi" → .wifiPassword)
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        // Map web values to iOS cases
+        switch raw {
+        case "wifi": self = .wifiPassword
+        default:
+            if let known = VaultCategory(rawValue: raw) {
+                self = known
+            } else {
+                self = .other
+            }
+        }
+    }
 
     var label: String {
         switch self {
@@ -108,6 +126,8 @@ enum VaultCategory: String, Codable, CaseIterable, Identifiable {
         case .softwareLicense: String(localized: "category.softwareLicense")
         case .passport: String(localized: "category.passport")
         case .bankAccount: String(localized: "category.bankAccount")
+        case .server: "Serveur"
+        case .other: "Autre"
         }
     }
 
@@ -121,6 +141,8 @@ enum VaultCategory: String, Codable, CaseIterable, Identifiable {
         case .softwareLicense: "app.badge"
         case .passport: "airplane"
         case .bankAccount: "banknote"
+        case .server: "server.rack"
+        case .other: "archivebox"
         }
     }
 
@@ -134,6 +156,8 @@ enum VaultCategory: String, Codable, CaseIterable, Identifiable {
         case .softwareLicense: FVColor.rose
         case .passport: FVColor.cyan
         case .bankAccount: FVColor.gold
+        case .server: FVColor.danger
+        case .other: FVColor.mist
         }
     }
 
@@ -147,6 +171,8 @@ enum VaultCategory: String, Codable, CaseIterable, Identifiable {
         case .softwareLicense: [String(localized: "field.licenseKey"), String(localized: "field.version"), String(localized: "field.purchaseDate")]
         case .passport: [String(localized: "field.number"), String(localized: "field.country"), String(localized: "field.expirationDate"), String(localized: "field.birthDate")]
         case .bankAccount: ["IBAN", "BIC", String(localized: "field.accountNumber"), String(localized: "field.bank")]
+        case .server: ["IP", "Port", "SSH Key"]
+        case .other: []
         }
     }
 }
@@ -234,10 +260,37 @@ struct PasswordVersion: Codable, Hashable, Identifiable {
     var password: String
     var createdAt: Date
 
+    private enum CodingKeys: String, CodingKey {
+        case id, password, createdAt, changedAt
+    }
+
     init(id: UUID = UUID(), password: String, createdAt: Date = Date()) {
         self.id = id
         self.password = password
         self.createdAt = createdAt
+    }
+
+    /// Custom decoder: handles web format {password, changedAt} and iOS format {id, password, createdAt}
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        password = try container.decode(String.self, forKey: .password)
+        // id: optional — web doesn't send it
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        // Date: try createdAt first, then changedAt (web format)
+        if let date = try container.decodeIfPresent(Date.self, forKey: .createdAt) {
+            createdAt = date
+        } else if let date = try container.decodeIfPresent(Date.self, forKey: .changedAt) {
+            createdAt = date
+        } else {
+            createdAt = Date()
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(password, forKey: .password)
+        try container.encode(createdAt, forKey: .createdAt)
     }
 }
 
@@ -478,6 +531,144 @@ struct BackupEnvelope: Codable {
 struct TOTPSnapshot {
     let code: String
     let remainingSeconds: Int
+}
+
+// MARK: - FyxxMail Models
+
+struct FyxxEmailAlias: Identifiable, Equatable {
+    var id: String
+    var address: String
+    var label: String
+    var isActive: Bool
+    var emailsReceived: Int
+    var createdAt: String
+
+    init?(from dict: [String: Any]) {
+        guard let id = dict["id"] as? String,
+              let address = dict["address"] as? String else { return nil }
+        self.id = id
+        self.address = address
+        self.label = dict["label"] as? String ?? ""
+        self.isActive = dict["is_active"] as? Bool ?? true
+        self.emailsReceived = dict["emails_received"] as? Int ?? 0
+        self.createdAt = dict["created_at"] as? String ?? ""
+    }
+}
+
+struct FyxxEmail: Identifiable, Equatable {
+    var id: String
+    var aliasId: String
+    var fromAddress: String
+    var fromName: String
+    var subject: String
+    var bodyText: String
+    var folder: String
+    var isRead: Bool
+    var isStarred: Bool
+    var receivedAt: String
+
+    init?(from dict: [String: Any]) {
+        guard let id = dict["id"] as? String else { return nil }
+        self.id = id
+        self.aliasId = dict["alias_id"] as? String ?? ""
+        self.fromAddress = dict["from_address"] as? String ?? ""
+        self.fromName = dict["from_name"] as? String ?? ""
+        self.subject = dict["subject"] as? String ?? "(Sans objet)"
+        self.bodyText = dict["body_text"] as? String ?? ""
+        self.folder = dict["folder"] as? String ?? "inbox"
+        self.isRead = dict["is_read"] as? Bool ?? false
+        self.isStarred = dict["is_starred"] as? Bool ?? false
+        self.receivedAt = dict["received_at"] as? String ?? ""
+    }
+}
+
+// MARK: - Announcements Models
+
+struct FVAnnouncement: Identifiable {
+    var id: String
+    var title: String
+    var content: String
+    var type: String // info, warning, success, new
+    var createdAt: String
+
+    var isRead: Bool {
+        UserDefaults.standard.bool(forKey: "fv.announcement.read.\(id)")
+    }
+
+    func markAsRead() {
+        UserDefaults.standard.set(true, forKey: "fv.announcement.read.\(id)")
+    }
+
+    init?(from dict: [String: Any]) {
+        guard let id = dict["id"] as? String,
+              let title = dict["title"] as? String else { return nil }
+        self.id = id
+        self.title = title
+        self.content = dict["content"] as? String ?? ""
+        self.type = dict["type"] as? String ?? "info"
+        self.createdAt = dict["created_at"] as? String ?? ""
+    }
+}
+
+// MARK: - Support Models
+
+struct SupportTicket: Identifiable {
+    var id: String
+    var userEmail: String
+    var subject: String
+    var status: String // open, waiting, resolved, closed
+    var createdAt: String
+    var updatedAt: String
+
+    init?(from dict: [String: Any]) {
+        guard let id = dict["id"] as? String else { return nil }
+        self.id = id
+        self.userEmail = dict["user_email"] as? String ?? ""
+        self.subject = dict["subject"] as? String ?? ""
+        self.status = dict["status"] as? String ?? "open"
+        self.createdAt = dict["created_at"] as? String ?? ""
+        self.updatedAt = dict["updated_at"] as? String ?? ""
+    }
+}
+
+struct SupportMessage: Identifiable {
+    var id: String
+    var ticketId: String
+    var senderType: String // user, ai, admin
+    var senderName: String
+    var content: String
+    var createdAt: String
+
+    init?(from dict: [String: Any]) {
+        guard let id = dict["id"] as? String else { return nil }
+        self.id = id
+        self.ticketId = dict["ticket_id"] as? String ?? ""
+        self.senderType = dict["sender_type"] as? String ?? "user"
+        self.senderName = dict["sender_name"] as? String ?? ""
+        self.content = dict["content"] as? String ?? ""
+        self.createdAt = dict["created_at"] as? String ?? ""
+    }
+}
+
+// MARK: - Generated Identity
+
+struct GeneratedIdentity {
+    var firstName: String
+    var lastName: String
+    var email: String
+    var phone: String
+    var address: String
+    var city: String
+    var zip: String
+    var country: String
+    var birthDate: String
+    var gender: String
+    // Virtual card
+    var cardNumber: String
+    var cardHolder: String
+    var cardExpiry: String
+    var cardCVV: String
+    var cardType: String // visa, mastercard
 }
 
 // MARK: - Notifications

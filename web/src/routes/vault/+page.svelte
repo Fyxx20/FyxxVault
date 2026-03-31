@@ -7,6 +7,7 @@
 	import { passwordStrength } from '$lib/crypto';
 	import { generateTOTP, getTOTPRemaining } from '$lib/totp';
 	import { createShareLink } from '$lib/sharing';
+	import { t } from '$lib/i18n.svelte';
 
 	const vault = getVaultState();
 	const auth = getAuthState();
@@ -71,20 +72,20 @@
 		}
 	}
 
-	const filters = [
-		{ key: 'all', label: 'Tous' },
-		{ key: 'favorites', label: 'Favoris' },
-		{ key: 'login', label: 'Login' },
-		{ key: 'creditCard', label: 'Cartes' },
-		{ key: 'identity', label: 'Identité' },
-		{ key: 'secureNote', label: 'Notes' },
-		{ key: 'bankAccount', label: 'Banque' },
-		{ key: 'wifi', label: 'Wi-Fi' },
-		{ key: 'softwareLicense', label: 'Licence' },
-		{ key: 'passport', label: 'Passeport' },
-		{ key: 'server', label: 'Serveur' },
-		{ key: 'other', label: 'Autre' }
-	];
+	const filters = $derived([
+		{ key: 'all', label: t('vault.all') },
+		{ key: 'favorites', label: t('vault.favorites') },
+		{ key: 'login', label: t('vault.category.login') },
+		{ key: 'creditCard', label: t('vault.category.creditCard') },
+		{ key: 'identity', label: t('vault.category.identity') },
+		{ key: 'secureNote', label: t('vault.category.secureNote') },
+		{ key: 'bankAccount', label: t('vault.category.bankAccount') },
+		{ key: 'wifi', label: t('vault.category.wifi') },
+		{ key: 'softwareLicense', label: t('vault.category.softwareLicense') },
+		{ key: 'passport', label: t('vault.category.passport') },
+		{ key: 'server', label: t('vault.category.server') },
+		{ key: 'other', label: t('vault.category.other') }
+	]);
 
 	function selectEntry(entry: VaultEntry) {
 		vault.selectedEntryId = entry.id;
@@ -106,7 +107,7 @@
 		try {
 			await navigator.clipboard.writeText(text);
 			copiedField = fieldId;
-			showToast('Copié !');
+			showToast(t('common.copied'));
 			setTimeout(() => { copiedField = null; }, 2000);
 
 			// Auto-clear clipboard after 30s for sensitive fields
@@ -164,11 +165,11 @@
 			const minutes = Math.floor(diff / 60000);
 			const hours = Math.floor(diff / 3600000);
 			const days = Math.floor(diff / 86400000);
-			if (minutes < 1) return "à l'instant";
-			if (minutes < 60) return `il y a ${minutes} min`;
-			if (hours < 24) return `il y a ${hours}h`;
-			if (days < 7) return `il y a ${days}j`;
-			if (days < 30) return `il y a ${Math.floor(days / 7)} sem.`;
+			if (minutes < 1) return t('time.now');
+			if (minutes < 60) return t('time.minutes_ago').replace('{n}', String(minutes));
+			if (hours < 24) return t('time.hours_ago').replace('{n}', String(hours));
+			if (days < 7) return t('time.days_ago').replace('{n}', String(days));
+			if (days < 30) return t('vault.weeks_ago').replace('{n}', String(Math.floor(days / 7)));
 			return formatDate(dateStr);
 		} catch {
 			return formatDate(dateStr);
@@ -227,41 +228,41 @@
 	function getCategoryFields(entry: VaultEntry): { label: string; value: string; sensitive?: boolean; fieldId: string }[] {
 		const fields: { label: string; value: string; sensitive?: boolean; fieldId: string }[] = [];
 
-		if (entry.username) fields.push({ label: 'Identifiant', value: entry.username, fieldId: `user-${entry.id}` });
-		if (entry.password) fields.push({ label: 'Mot de passe', value: entry.password, sensitive: true, fieldId: `pass-${entry.id}` });
-		if (entry.website) fields.push({ label: 'Site web', value: entry.website, fieldId: `web-${entry.id}` });
+		if (entry.username) fields.push({ label: t('vault.field.username'), value: entry.username, fieldId: `user-${entry.id}` });
+		if (entry.password) fields.push({ label: t('vault.field.password'), value: entry.password, sensitive: true, fieldId: `pass-${entry.id}` });
+		if (entry.website) fields.push({ label: t('vault.field.website'), value: entry.website, fieldId: `web-${entry.id}` });
 
 		// Category specific
 		if (entry.category === 'creditCard') {
-			if (entry.cardholderName) fields.push({ label: 'Titulaire', value: entry.cardholderName, fieldId: `ch-${entry.id}` });
-			if (entry.cardNumber) fields.push({ label: 'Numéro', value: entry.cardNumber, sensitive: true, fieldId: `cn-${entry.id}` });
-			if (entry.cardExpiry) fields.push({ label: 'Expiration', value: entry.cardExpiry, fieldId: `ce-${entry.id}` });
-			if (entry.cardCVV) fields.push({ label: 'CVV', value: entry.cardCVV, sensitive: true, fieldId: `cv-${entry.id}` });
+			if (entry.cardholderName) fields.push({ label: t('vault.field.cardholder'), value: entry.cardholderName, fieldId: `ch-${entry.id}` });
+			if (entry.cardNumber) fields.push({ label: t('vault.field.card_number'), value: entry.cardNumber, sensitive: true, fieldId: `cn-${entry.id}` });
+			if (entry.cardExpiry) fields.push({ label: t('vault.field.expiry'), value: entry.cardExpiry, fieldId: `ce-${entry.id}` });
+			if (entry.cardCVV) fields.push({ label: t('vault.field.cvv'), value: entry.cardCVV, sensitive: true, fieldId: `cv-${entry.id}` });
 		} else if (entry.category === 'identity') {
-			if (entry.firstName || entry.lastName) fields.push({ label: 'Nom', value: `${entry.firstName || ''} ${entry.lastName || ''}`.trim(), fieldId: `name-${entry.id}` });
-			if (entry.dateOfBirth) fields.push({ label: 'Date de naissance', value: entry.dateOfBirth, fieldId: `dob-${entry.id}` });
-			if (entry.address) fields.push({ label: 'Adresse', value: entry.address, fieldId: `addr-${entry.id}` });
-			if (entry.phone) fields.push({ label: 'Téléphone', value: entry.phone, fieldId: `ph-${entry.id}` });
-			if (entry.email) fields.push({ label: 'Email', value: entry.email, fieldId: `em-${entry.id}` });
+			if (entry.firstName || entry.lastName) fields.push({ label: t('vault.field.name'), value: `${entry.firstName || ''} ${entry.lastName || ''}`.trim(), fieldId: `name-${entry.id}` });
+			if (entry.dateOfBirth) fields.push({ label: t('vault.field.dob'), value: entry.dateOfBirth, fieldId: `dob-${entry.id}` });
+			if (entry.address) fields.push({ label: t('vault.field.address'), value: entry.address, fieldId: `addr-${entry.id}` });
+			if (entry.phone) fields.push({ label: t('vault.field.phone'), value: entry.phone, fieldId: `ph-${entry.id}` });
+			if (entry.email) fields.push({ label: t('vault.field.email'), value: entry.email, fieldId: `em-${entry.id}` });
 		} else if (entry.category === 'wifi') {
-			if (entry.networkName) fields.push({ label: 'Réseau', value: entry.networkName, fieldId: `net-${entry.id}` });
-			if (entry.securityType) fields.push({ label: 'Sécurité', value: entry.securityType, fieldId: `sec-${entry.id}` });
+			if (entry.networkName) fields.push({ label: t('vault.field.network'), value: entry.networkName, fieldId: `net-${entry.id}` });
+			if (entry.securityType) fields.push({ label: t('vault.field.security_type'), value: entry.securityType, fieldId: `sec-${entry.id}` });
 		} else if (entry.category === 'softwareLicense') {
-			if (entry.softwareName) fields.push({ label: 'Logiciel', value: entry.softwareName, fieldId: `sw-${entry.id}` });
-			if (entry.licenseKey) fields.push({ label: 'Clé de licence', value: entry.licenseKey, sensitive: true, fieldId: `lk-${entry.id}` });
-			if (entry.licenseEmail) fields.push({ label: 'Email', value: entry.licenseEmail, fieldId: `le-${entry.id}` });
-			if (entry.softwareVersion) fields.push({ label: 'Version', value: entry.softwareVersion, fieldId: `sv-${entry.id}` });
+			if (entry.softwareName) fields.push({ label: t('vault.field.software'), value: entry.softwareName, fieldId: `sw-${entry.id}` });
+			if (entry.licenseKey) fields.push({ label: t('vault.field.license_key'), value: entry.licenseKey, sensitive: true, fieldId: `lk-${entry.id}` });
+			if (entry.licenseEmail) fields.push({ label: t('vault.field.license_email'), value: entry.licenseEmail, fieldId: `le-${entry.id}` });
+			if (entry.softwareVersion) fields.push({ label: t('vault.field.version'), value: entry.softwareVersion, fieldId: `sv-${entry.id}` });
 		} else if (entry.category === 'passport') {
-			if (entry.passportFullName) fields.push({ label: 'Nom complet', value: entry.passportFullName, fieldId: `pn-${entry.id}` });
-			if (entry.passportNumber) fields.push({ label: 'Numéro', value: entry.passportNumber, sensitive: true, fieldId: `pp-${entry.id}` });
-			if (entry.passportCountry) fields.push({ label: 'Pays', value: entry.passportCountry, fieldId: `pc-${entry.id}` });
-			if (entry.passportExpiry) fields.push({ label: 'Expiration', value: entry.passportExpiry, fieldId: `pe-${entry.id}` });
-			if (entry.passportDOB) fields.push({ label: 'Naissance', value: entry.passportDOB, fieldId: `pd-${entry.id}` });
+			if (entry.passportFullName) fields.push({ label: t('vault.field.passport_full_name'), value: entry.passportFullName, fieldId: `pn-${entry.id}` });
+			if (entry.passportNumber) fields.push({ label: t('vault.field.passport_number'), value: entry.passportNumber, sensitive: true, fieldId: `pp-${entry.id}` });
+			if (entry.passportCountry) fields.push({ label: t('vault.field.passport_country'), value: entry.passportCountry, fieldId: `pc-${entry.id}` });
+			if (entry.passportExpiry) fields.push({ label: t('vault.field.passport_expiry'), value: entry.passportExpiry, fieldId: `pe-${entry.id}` });
+			if (entry.passportDOB) fields.push({ label: t('vault.field.passport_dob'), value: entry.passportDOB, fieldId: `pd-${entry.id}` });
 		} else if (entry.category === 'bankAccount') {
-			if (entry.bankName) fields.push({ label: 'Banque', value: entry.bankName, fieldId: `bn-${entry.id}` });
-			if (entry.iban) fields.push({ label: 'IBAN', value: entry.iban, sensitive: true, fieldId: `ib-${entry.id}` });
-			if (entry.bic) fields.push({ label: 'BIC', value: entry.bic, fieldId: `bc-${entry.id}` });
-			if (entry.accountNumber) fields.push({ label: 'Numéro de compte', value: entry.accountNumber, sensitive: true, fieldId: `an-${entry.id}` });
+			if (entry.bankName) fields.push({ label: t('vault.field.bank'), value: entry.bankName, fieldId: `bn-${entry.id}` });
+			if (entry.iban) fields.push({ label: t('vault.field.iban'), value: entry.iban, sensitive: true, fieldId: `ib-${entry.id}` });
+			if (entry.bic) fields.push({ label: t('vault.field.bic'), value: entry.bic, fieldId: `bc-${entry.id}` });
+			if (entry.accountNumber) fields.push({ label: t('vault.field.account_number'), value: entry.accountNumber, sensitive: true, fieldId: `an-${entry.id}` });
 		}
 
 		return fields;
@@ -269,18 +270,18 @@
 </script>
 
 <svelte:head>
-	<title>Coffre — FyxxVault</title>
+	<title>{t('vault.page_title')}</title>
 </svelte:head>
 
 <div class="max-w-7xl mx-auto">
 	<!-- Header -->
 	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
 		<div>
-			<h1 class="vault-title text-3xl font-extrabold text-white tracking-tight">Coffre-fort</h1>
+			<h1 class="vault-title text-3xl font-extrabold text-white tracking-tight">{t('vault.title')}</h1>
 			<div class="flex items-center gap-3 mt-2">
-				<span class="vault-count-pill">{vault.entries.length} element{vault.entries.length !== 1 ? 's' : ''}</span>
+				<span class="vault-count-pill">{vault.entries.length} {vault.entries.length !== 1 ? t('vault.elements_count_plural') : t('vault.elements_count')}</span>
 				{#if !auth.isPro}
-					<span class="text-[10px] text-[var(--fv-ash)]">{vault.entries.length}/{FREE_LIMIT} gratuit</span>
+					<span class="text-[10px] text-[var(--fv-ash)]">{t('vault.free_count').replace('{n}', String(vault.entries.length)).replace('{limit}', String(FREE_LIMIT))}</span>
 				{/if}
 			</div>
 		</div>
@@ -291,14 +292,14 @@
 					<polyline points="17 8 12 3 7 8"/>
 					<line x1="12" y1="3" x2="12" y2="15"/>
 				</svg>
-				Importer
+				{t('vault.import')}
 			</a>
 			<a href={canAdd ? '/vault/add' : '/vault/settings'} class="fv-btn {canAdd ? 'fv-btn-primary' : 'fv-btn-gold'} !py-2.5 !px-5 text-sm inline-flex items-center gap-2 w-fit">
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
 					<line x1="12" y1="5" x2="12" y2="19"/>
 					<line x1="5" y1="12" x2="19" y2="12"/>
 				</svg>
-				{canAdd ? 'Ajouter' : 'Passer a Pro'}
+				{canAdd ? t('vault.add_entry') : t('vault.upgrade_pro')}
 			</a>
 		</div>
 	</div>
@@ -311,7 +312,7 @@
 		</svg>
 		<input
 			type="text"
-			placeholder="Rechercher par titre, identifiant, site..."
+			placeholder={t('vault.search_full_placeholder')}
 			bind:value={vault.searchQuery}
 			class="vault-search-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none transition-all duration-300"
 		/>
@@ -373,14 +374,14 @@
 						{/if}
 					</div>
 					{#if vault.searchQuery}
-						<h2 class="text-xl font-extrabold text-white mb-3">Aucun resultat</h2>
-						<p class="text-sm text-[var(--fv-smoke)] max-w-xs mx-auto leading-relaxed">Aucun element ne correspond a "{vault.searchQuery}". Essaie un autre terme.</p>
+						<h2 class="text-xl font-extrabold text-white mb-3">{t('vault.no_results')}</h2>
+						<p class="text-sm text-[var(--fv-smoke)] max-w-xs mx-auto leading-relaxed">{t('vault.empty_search_desc').replace('{q}', vault.searchQuery)}</p>
 					{:else}
-						<h2 class="text-xl font-extrabold text-white mb-3">Ton coffre est vide</h2>
-						<p class="text-sm text-[var(--fv-smoke)] max-w-sm mx-auto mb-8 leading-relaxed">Ajoute ton premier mot de passe, ta carte bancaire ou toute autre donnee sensible en toute securite.</p>
+						<h2 class="text-xl font-extrabold text-white mb-3">{t('vault.empty')}</h2>
+						<p class="text-sm text-[var(--fv-smoke)] max-w-sm mx-auto mb-8 leading-relaxed">{t('vault.empty_full_desc')}</p>
 						<a href="/vault/add" class="fv-btn fv-btn-primary text-sm !py-3.5 !px-8">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-							Ajouter un premier element
+							{t('vault.add_first')}
 						</a>
 					{/if}
 				</div>
@@ -409,7 +410,7 @@
 							<!-- Info -->
 							<div class="flex-1 min-w-0">
 								<div class="flex items-center gap-2">
-									<p class="text-[15px] font-bold text-white truncate">{entry.title || 'Sans titre'}</p>
+									<p class="text-[15px] font-bold text-white truncate">{entry.title || t('vault.untitled')}</p>
 									{#if entry.isFavorite}
 										<span class="text-[var(--fv-gold)] text-xs">&#9733;</span>
 									{/if}
@@ -454,7 +455,7 @@
 								{CATEGORY_META[entry.category]?.icon ?? '📦'}
 							</div>
 							<div>
-								<h2 class="text-base font-bold text-white">{entry.title || 'Sans titre'}</h2>
+								<h2 class="text-base font-bold text-white">{entry.title || t('vault.untitled')}</h2>
 								<p class="text-xs text-[var(--fv-smoke)]">{CATEGORY_META[entry.category]?.label ?? ''}</p>
 							</div>
 						</div>
@@ -479,7 +480,7 @@
 										<button
 											onclick={() => { showPassword[field.fieldId] = !showPassword[field.fieldId]; }}
 											class="p-1 rounded hover:bg-white/10 text-[var(--fv-smoke)] hover:text-white transition-colors shrink-0"
-											title="Afficher/Masquer"
+											title={t('vault.show_hide')}
 										>
 											{#if showPassword[field.fieldId]}
 												<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -487,7 +488,7 @@
 												<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
 											{/if}
 										</button>
-									{:else if field.label === 'Site web'}
+									{:else if field.label === t('vault.field.website')}
 										<a
 											href={field.value.startsWith('http') ? field.value : `https://${field.value}`}
 											target="_blank"
@@ -501,7 +502,7 @@
 											target="_blank"
 											rel="noopener noreferrer"
 											class="p-1 rounded hover:bg-white/10 text-[var(--fv-smoke)] hover:text-white transition-colors shrink-0"
-											title="Ouvrir"
+											title={t('vault.open')}
 										>
 											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
 										</a>
@@ -511,7 +512,7 @@
 									<button
 										onclick={() => copyToClipboard(field.value, field.fieldId)}
 										class="p-1 rounded hover:bg-white/10 text-[var(--fv-smoke)] hover:text-white transition-colors shrink-0"
-										title="Copier"
+										title={t('common.copy')}
 									>
 										{#if copiedField === field.fieldId}
 											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -536,7 +537,7 @@
 						<!-- TOTP display -->
 						{#if entry.mfaEnabled && totpCode}
 							<div>
-								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">Code TOTP</label>
+								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">{t('vault.field.totp_code')}</label>
 								<div class="flex items-center gap-2 bg-[var(--fv-cyan)]/5 border border-[var(--fv-cyan)]/20 rounded-lg px-3 py-2.5">
 									<span class="flex-1 text-lg font-mono font-bold text-[var(--fv-cyan)] tracking-[0.3em]">
 										{totpCode.slice(0, 3)} {totpCode.slice(3)}
@@ -569,7 +570,7 @@
 						<!-- Notes -->
 						{#if entry.notes}
 							<div>
-								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">Notes</label>
+								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">{t('vault.field.notes')}</label>
 								<div class="bg-white/5 rounded-lg px-3 py-2.5">
 									<p class="text-sm text-[var(--fv-mist)] whitespace-pre-wrap">{entry.notes}</p>
 								</div>
@@ -579,7 +580,7 @@
 						<!-- Tags -->
 						{#if entry.tags.length > 0}
 							<div>
-								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">Tags</label>
+								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">{t('vault.field.tags')}</label>
 								<div class="flex flex-wrap gap-1.5">
 									{#each entry.tags as tag}
 										<span class="px-2 py-1 rounded-md bg-[var(--fv-cyan)]/10 text-[10px] text-[var(--fv-cyan)]">{tag}</span>
@@ -591,7 +592,7 @@
 						<!-- Folder -->
 						{#if entry.folder}
 							<div>
-								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">Dossier</label>
+								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">{t('vault.field.folder')}</label>
 								<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 text-xs text-[var(--fv-smoke)]">
 									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
 									{entry.folder}
@@ -606,7 +607,7 @@
 									onclick={() => showPasswordHistory = !showPasswordHistory}
 									class="flex items-center gap-2 text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider hover:text-[var(--fv-smoke)] transition-colors"
 								>
-									Historique ({entry.passwordHistory.length})
+									{t('vault.history')} ({entry.passwordHistory.length})
 									<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
 										class="transition-transform {showPasswordHistory ? 'rotate-180' : ''}">
 										<polyline points="6 9 12 15 18 9"/>
@@ -637,7 +638,7 @@
 						<button
 							onclick={() => toggleFavorite(entry.id)}
 							class="fv-btn fv-btn-ghost text-xs !py-2.5 !px-3"
-							title={entry.isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+							title={entry.isFavorite ? t('vault.remove_favorite') : t('vault.add_favorite')}
 						>
 							{entry.isFavorite ? '★' : '☆'}
 						</button>
@@ -645,13 +646,13 @@
 							onclick={() => goto(`/vault/add?edit=${entry.id}`)}
 							class="flex-1 fv-btn fv-btn-ghost text-xs !py-2.5"
 						>
-							Modifier
+							{t('common.edit')}
 						</button>
 						{#if auth.isPro}
 						<button
 							onclick={() => { showSharePanel = !showSharePanel; shareLink = ''; }}
 							class="fv-btn fv-btn-ghost text-xs !py-2.5 !px-3"
-							title="Partager"
+							title={t('vault.share')}
 						>
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
 						</button>
@@ -667,24 +668,24 @@
 					<!-- Share panel -->
 					{#if showSharePanel}
 						<div class="mt-3 p-4 rounded-xl bg-[var(--fv-abyss)]/60 border border-white/5 space-y-3">
-							<h3 class="text-xs font-bold text-white">Partage sécurisé</h3>
+							<h3 class="text-xs font-bold text-white">{t('vault.share_secure')}</h3>
 							<div class="grid grid-cols-2 gap-2">
 								<div>
-									<label class="block text-[10px] text-[var(--fv-smoke)] mb-1">Expiration</label>
+									<label class="block text-[10px] text-[var(--fv-smoke)] mb-1">{t('vault.share_expiry')}</label>
 									<select bind:value={shareExpiry} class="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none">
-										<option value="1h">1 heure</option>
-										<option value="6h">6 heures</option>
-										<option value="24h">24 heures</option>
-										<option value="72h">72 heures</option>
+										<option value="1h">{t('vault.share_1h')}</option>
+										<option value="6h">{t('vault.share_6h')}</option>
+										<option value="24h">{t('vault.share_24h')}</option>
+										<option value="72h">{t('vault.share_72h')}</option>
 									</select>
 								</div>
 								<div>
-									<label class="block text-[10px] text-[var(--fv-smoke)] mb-1">Max. vues</label>
+									<label class="block text-[10px] text-[var(--fv-smoke)] mb-1">{t('vault.share_max_views')}</label>
 									<select bind:value={shareMaxViews} class="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none">
-										<option value={1}>1 vue</option>
-										<option value={3}>3 vues</option>
-										<option value={5}>5 vues</option>
-										<option value={10}>10 vues</option>
+										<option value={1}>{t('vault.share_1_view')}</option>
+										<option value={3}>{t('vault.share_3_views')}</option>
+										<option value={5}>{t('vault.share_5_views')}</option>
+										<option value={10}>{t('vault.share_10_views')}</option>
 									</select>
 								</div>
 							</div>
@@ -693,17 +694,17 @@
 								<div class="flex gap-2">
 									<input type="text" readonly value={shareLink} class="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-[10px] font-mono truncate" />
 									<button onclick={copyShareLink} class="fv-btn fv-btn-primary text-xs !py-2 !px-3">
-										{shareCopied ? '✓' : 'Copier'}
+										{shareCopied ? '✓' : t('common.copy')}
 									</button>
 								</div>
-								<p class="text-[9px] text-[var(--fv-ash)]">Le lien est chiffré de bout en bout. La clé n'est jamais envoyée au serveur.</p>
+								<p class="text-[9px] text-[var(--fv-ash)]">{t('vault.share_e2e')}</p>
 							{:else}
 								<button
 									onclick={() => handleShare(entry)}
 									disabled={shareLoading}
 									class="fv-btn fv-btn-primary w-full text-xs !py-2.5 {shareLoading ? 'opacity-60' : ''}"
 								>
-									{shareLoading ? 'Génération...' : 'Générer le lien'}
+									{shareLoading ? t('vault.share_generating') : t('vault.share_generate')}
 								</button>
 							{/if}
 						</div>
@@ -712,18 +713,18 @@
 					<!-- Delete confirm -->
 					{#if showDeleteConfirm === entry.id}
 						<div class="mt-3 p-3 rounded-xl bg-[var(--fv-danger)]/10 border border-[var(--fv-danger)]/20">
-							<p class="text-xs text-[var(--fv-danger)] mb-2">Supprimer cet élément ?</p>
+							<p class="text-xs text-[var(--fv-danger)] mb-2">{t('vault.confirm_delete_entry')}</p>
 							<div class="flex gap-2">
-								<button onclick={() => handleDelete(entry.id)} class="flex-1 fv-btn text-xs !py-2 bg-[var(--fv-danger)] text-white hover:bg-[var(--fv-danger)]/80">Oui, supprimer</button>
-								<button onclick={() => showDeleteConfirm = null} class="flex-1 fv-btn fv-btn-ghost text-xs !py-2">Annuler</button>
+								<button onclick={() => handleDelete(entry.id)} class="flex-1 fv-btn text-xs !py-2 bg-[var(--fv-danger)] text-white hover:bg-[var(--fv-danger)]/80">{t('vault.yes_delete')}</button>
+								<button onclick={() => showDeleteConfirm = null} class="flex-1 fv-btn fv-btn-ghost text-xs !py-2">{t('common.cancel')}</button>
 							</div>
 						</div>
 					{/if}
 
 					<!-- Meta -->
 					<div class="mt-4 pt-3 border-t border-white/5 space-y-1">
-						<p class="text-[10px] text-[var(--fv-ash)]">Créé le {formatDate(entry.createdAt)}</p>
-						<p class="text-[10px] text-[var(--fv-ash)]">Modifié le {formatDate(entry.lastModifiedAt)}</p>
+						<p class="text-[10px] text-[var(--fv-ash)]">{t('vault.created_at')} {formatDate(entry.createdAt)}</p>
+						<p class="text-[10px] text-[var(--fv-ash)]">{t('vault.modified_at')} {formatDate(entry.lastModifiedAt)}</p>
 					</div>
 				</div>
 			</div>
@@ -756,7 +757,7 @@
 							{/if}
 						</div>
 						<div class="flex-1">
-							<h2 class="text-lg font-bold text-white">{entry.title || 'Sans titre'}</h2>
+							<h2 class="text-lg font-bold text-white">{entry.title || t('vault.untitled')}</h2>
 							<p class="text-xs text-[var(--fv-smoke)]">{CATEGORY_META[entry.category]?.label ?? ''}</p>
 						</div>
 						<button
@@ -780,7 +781,7 @@
 										<button onclick={() => { showPassword[field.fieldId] = !showPassword[field.fieldId]; }} class="p-1.5 rounded hover:bg-white/10 text-[var(--fv-smoke)]">
 											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
 										</button>
-									{:else if field.label === 'Site web'}
+									{:else if field.label === t('vault.field.website')}
 										<a href={field.value.startsWith('http') ? field.value : `https://${field.value}`} target="_blank" rel="noopener noreferrer"
 											class="flex-1 text-sm text-[var(--fv-cyan)] truncate">{getDomain(field.value)}</a>
 										<a href={field.value.startsWith('http') ? field.value : `https://${field.value}`} target="_blank" rel="noopener noreferrer"
@@ -804,7 +805,7 @@
 						<!-- TOTP on mobile -->
 						{#if entry.mfaEnabled && totpCode}
 							<div>
-								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">Code TOTP</label>
+								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">{t('vault.field.totp_code')}</label>
 								<div class="flex items-center gap-2 bg-[var(--fv-cyan)]/5 border border-[var(--fv-cyan)]/20 rounded-lg px-3 py-3">
 									<span class="flex-1 text-xl font-mono font-bold text-[var(--fv-cyan)] tracking-[0.3em]">{totpCode.slice(0, 3)} {totpCode.slice(3)}</span>
 									<span class="text-xs text-[var(--fv-smoke)] font-bold">{totpRemaining}s</span>
@@ -818,7 +819,7 @@
 						<!-- Notes on mobile -->
 						{#if entry.notes}
 							<div>
-								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">Notes</label>
+								<label class="block text-[10px] font-semibold text-[var(--fv-ash)] uppercase tracking-wider mb-1">{t('vault.field.notes')}</label>
 								<div class="bg-white/5 rounded-lg px-3 py-2.5">
 									<p class="text-sm text-[var(--fv-mist)] whitespace-pre-wrap">{entry.notes}</p>
 								</div>
@@ -837,19 +838,19 @@
 
 					<!-- Mobile actions -->
 					<div class="flex gap-2 mt-6">
-						<button onclick={() => { closeDetail(); goto(`/vault/add?edit=${entry.id}`); }} class="flex-1 fv-btn fv-btn-primary text-xs !py-2.5">Modifier</button>
+						<button onclick={() => { closeDetail(); goto(`/vault/add?edit=${entry.id}`); }} class="flex-1 fv-btn fv-btn-primary text-xs !py-2.5">{t('common.edit')}</button>
 						<button
 							onclick={() => showDeleteConfirm = entry.id}
 							class="fv-btn fv-btn-ghost text-xs !py-2.5 !px-4 !text-[var(--fv-danger)]"
-						>Supprimer</button>
+						>{t('common.delete')}</button>
 					</div>
 
 					{#if showDeleteConfirm === entry.id}
 						<div class="mt-3 p-3 rounded-xl bg-[var(--fv-danger)]/10 border border-[var(--fv-danger)]/20">
-							<p class="text-xs text-[var(--fv-danger)] mb-2">Supprimer cet élément ?</p>
+							<p class="text-xs text-[var(--fv-danger)] mb-2">{t('vault.confirm_delete_entry')}</p>
 							<div class="flex gap-2">
-								<button onclick={() => handleDelete(entry.id)} class="flex-1 fv-btn text-xs !py-2 bg-[var(--fv-danger)] text-white">Confirmer</button>
-								<button onclick={() => showDeleteConfirm = null} class="flex-1 fv-btn fv-btn-ghost text-xs !py-2">Annuler</button>
+								<button onclick={() => handleDelete(entry.id)} class="flex-1 fv-btn text-xs !py-2 bg-[var(--fv-danger)] text-white">{t('vault.confirm')}</button>
+								<button onclick={() => showDeleteConfirm = null} class="flex-1 fv-btn fv-btn-ghost text-xs !py-2">{t('common.cancel')}</button>
 							</div>
 						</div>
 					{/if}

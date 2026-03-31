@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { getAuthState, logout, changeMasterPassword } from '$lib/stores/auth.svelte';
+	import { getAuthState, logout, changeMasterPassword, refreshProStatus } from '$lib/stores/auth.svelte';
 	import { exportCSV, resetVault, getVaultState } from '$lib/stores/vault.svelte';
+	import { t } from '$lib/i18n.svelte';
 
 	const auth = getAuthState();
 	const vault = getVaultState();
@@ -21,13 +23,13 @@
 	// Subscription
 	let selectedPlan = $state<'monthly' | 'yearly'>('yearly');
 	let checkoutLoading = $state(false);
-	const proFeatures = [
-		'Comptes illimites',
-		'Surveillance Dark Web',
-		'Emails masques',
-		'Partage securise',
-		'Support prioritaire'
-	];
+	const proFeatures = $derived([
+		t('settings.feature.unlimited'),
+		t('settings.feature.dark_web'),
+		t('settings.feature.emails'),
+		t('settings.feature.sharing'),
+		t('settings.feature.support')
+	]);
 
 	// Settings
 	let autoLockTimeout = $state(5);
@@ -53,36 +55,84 @@
 		localStorage.setItem('fv_clipboard_clear', value.toString());
 	}
 
+	let billingLoading = $state(false);
+	let proSyncMessage = $state('');
+
 	async function handleCheckout() {
 		checkoutLoading = true;
 		try {
 			const res = await fetch('/api/checkout', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ plan: selectedPlan, email: auth.user?.email })
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${auth.session?.access_token}`
+				},
+				body: JSON.stringify({ plan: selectedPlan })
 			});
 			const data = await res.json();
 			if (data.url) {
 				window.location.href = data.url;
 			} else {
-				alert(data.error || 'Erreur lors de la creation du paiement.');
+				alert(data.error || t('settings.error.payment'));
 			}
 		} catch (e: any) {
-			alert(e.message || 'Erreur reseau.');
+			alert(e.message || t('settings.error.network'));
 		} finally {
 			checkoutLoading = false;
+		}
+	}
+
+	async function syncProStatusAfterSuccess() {
+		proSyncMessage = t('settings.payment_checking');
+		for (let i = 0; i < 12; i++) {
+			const isPro = await refreshProStatus();
+			if (isPro) {
+				proSyncMessage = t('settings.payment_confirmed');
+				setTimeout(() => { proSyncMessage = ''; }, 4000);
+				return;
+			}
+			await new Promise(resolve => setTimeout(resolve, 2000));
+		}
+		proSyncMessage = t('settings.payment_pending');
+	}
+
+	onMount(() => {
+		const params = new URLSearchParams(window.location.search);
+		if (params.get('success') === 'true') {
+			syncProStatusAfterSuccess();
+		}
+	});
+
+	async function handleManageBilling() {
+		billingLoading = true;
+		try {
+			const res = await fetch('/api/billing-portal', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email: auth.user?.email })
+			});
+			const data = await res.json();
+			if (data.url) {
+				window.location.href = data.url;
+			} else {
+				alert(data.error || t('settings.error.portal'));
+			}
+		} catch (e: any) {
+			alert(e.message || t('settings.error.network'));
+		} finally {
+			billingLoading = false;
 		}
 	}
 
 	async function handleChangePassword() {
 		changeError = '';
 
-		if (!currentPassword) { changeError = 'Mot de passe actuel requis.'; return; }
-		if (newPassword.length < 12) { changeError = 'Min 12 caracteres.'; return; }
-		if (!/[A-Z]/.test(newPassword)) { changeError = '1 majuscule requise.'; return; }
-		if (!/[0-9]/.test(newPassword)) { changeError = '1 chiffre requis.'; return; }
-		if (!/[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/\\]/.test(newPassword)) { changeError = '1 caractere special requis.'; return; }
-		if (newPassword !== confirmNewPassword) { changeError = 'Les mots de passe ne correspondent pas.'; return; }
+		if (!currentPassword) { changeError = t('settings.error.current_required'); return; }
+		if (newPassword.length < 12) { changeError = t('settings.error.min_chars'); return; }
+		if (!/[A-Z]/.test(newPassword)) { changeError = t('settings.error.uppercase'); return; }
+		if (!/[0-9]/.test(newPassword)) { changeError = t('settings.error.digit'); return; }
+		if (!/[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/\\]/.test(newPassword)) { changeError = t('settings.error.special'); return; }
+		if (newPassword !== confirmNewPassword) { changeError = t('settings.error.match'); return; }
 
 		changeLoading = true;
 
@@ -98,10 +148,10 @@
 					showChangePassword = false;
 				}, 3000);
 			} else {
-				changeError = result.error || 'Echec du changement.';
+				changeError = result.error || t('settings.error.change_failed');
 			}
 		} catch (e: any) {
-			changeError = e.message || 'Erreur inconnue.';
+			changeError = e.message || t('settings.error.unknown');
 		} finally {
 			changeLoading = false;
 		}
@@ -140,11 +190,16 @@
 </script>
 
 <svelte:head>
-	<title>Parametres — FyxxVault</title>
+	<title>{t('settings.page_title')}</title>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto">
-	<h1 class="text-2xl font-extrabold text-white mb-8 tracking-tight">Parametres</h1>
+	<h1 class="text-2xl font-extrabold text-white mb-8 tracking-tight">{t('settings.title')}</h1>
+	{#if proSyncMessage}
+		<div class="mb-4 p-3 rounded-xl bg-[var(--fv-gold)]/10 border border-[var(--fv-gold)]/25">
+			<p class="text-xs text-[var(--fv-gold)] font-medium">{proSyncMessage}</p>
+		</div>
+	{/if}
 
 	<!-- Account info card with avatar -->
 	<div class="settings-card p-6 mb-4">
@@ -154,23 +209,167 @@
 			</div>
 			<div class="flex-1">
 				<p class="text-sm font-bold text-white">{auth.user?.email ?? ''}</p>
-				<span class="inline-flex items-center gap-1.5 mt-1 px-3 py-0.5 rounded-full text-[10px] font-bold {auth.isPro ? 'bg-[var(--fv-gold)]/10 text-[var(--fv-gold)]' : 'bg-white/10 text-[var(--fv-smoke)]'}">
-					{auth.isPro ? '&#128081; Plan Pro' : 'Plan Gratuit'}
-				</span>
+				<div class="flex items-center gap-2 mt-1 flex-wrap">
+					<span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold {auth.isPro ? 'bg-[var(--fv-gold)]/10 text-[var(--fv-gold)]' : 'bg-white/10 text-[var(--fv-smoke)]'}">
+						{auth.isPro ? `\u{1F451} ${t('settings.plan_pro')}` : t('settings.plan_free')}
+					</span>
+				</div>
 			</div>
 		</div>
 		<div class="settings-card-border-left" style="background: var(--fv-cyan);"></div>
 		<div class="space-y-3">
 			<div class="flex items-center justify-between py-2">
-				<span class="text-sm text-[var(--fv-smoke)]">Elements</span>
+				<span class="text-sm text-[var(--fv-smoke)]">{t('settings.entries')}</span>
 				<span class="text-sm text-white font-semibold tabular-nums">{vault.entries.length}</span>
 			</div>
 			<div class="settings-separator"></div>
 			<div class="flex items-center justify-between py-2">
-				<span class="text-sm text-[var(--fv-smoke)]">Chiffrement</span>
+				<span class="text-sm text-[var(--fv-smoke)]">{t('settings.encryption')}</span>
 				<span class="px-3 py-1 rounded-full bg-[var(--fv-success)]/10 text-xs font-bold text-[var(--fv-success)]">AES-256-GCM</span>
 			</div>
 		</div>
+	</div>
+
+	<!-- Subscription management -->
+	<div class="settings-card p-6 mb-4">
+		<div class="settings-card-border-left" style="background: var(--fv-gold);"></div>
+		<h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+			<div class="w-7 h-7 rounded-lg bg-[var(--fv-gold)]/15 flex items-center justify-center">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-gold)" stroke-width="2"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg>
+			</div>
+			{t('settings.section.subscription')}
+		</h2>
+
+		{#if auth.isPro}
+			<!-- Pro user: manage subscription -->
+			<div class="p-4 rounded-xl bg-[var(--fv-gold)]/[0.04] border border-[var(--fv-gold)]/10 mb-4">
+				<div class="flex items-center justify-between mb-1">
+					<span class="text-sm font-bold text-[var(--fv-gold)]">{'\u{1F451}'} FyxxVault Pro</span>
+					<span class="px-2.5 py-0.5 rounded-full bg-[var(--fv-success)]/10 text-[10px] font-bold text-[var(--fv-success)]">{t('common.active')}</span>
+				</div>
+				<p class="text-[11px] text-[var(--fv-smoke)]">{t('settings.pro_desc')}</p>
+			</div>
+
+			<div>
+				<button
+					onclick={handleManageBilling}
+					disabled={billingLoading}
+					class="w-full settings-sub-action p-3 rounded-xl hover:bg-white/[0.04] transition-all duration-200"
+				>
+					<div class="settings-sub-left">
+						<div class="settings-sub-icon">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+						</div>
+						<div class="settings-sub-text">
+							<span class="settings-sub-title">{billingLoading ? t('common.loading') : t('settings.payment_method')}</span>
+							<p class="text-[10px] text-[var(--fv-ash)]">{t('settings.update_card')}</p>
+						</div>
+					</div>
+					<svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+				</button>
+
+				<button
+					onclick={handleManageBilling}
+					disabled={billingLoading}
+					class="w-full settings-sub-action p-3 rounded-xl hover:bg-white/[0.04] transition-all duration-200"
+				>
+					<div class="settings-sub-left">
+						<div class="settings-sub-icon">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+						</div>
+						<div class="settings-sub-text">
+							<span class="settings-sub-title">{t('settings.change_plan')}</span>
+							<p class="text-[10px] text-[var(--fv-ash)]">{t('settings.change_plan_desc')}</p>
+						</div>
+					</div>
+					<svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+				</button>
+
+				<button
+					onclick={handleManageBilling}
+					disabled={billingLoading}
+					class="w-full settings-sub-action p-3 rounded-xl hover:bg-white/[0.04] transition-all duration-200"
+				>
+					<div class="settings-sub-left">
+						<div class="settings-sub-icon">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+						</div>
+						<div class="settings-sub-text">
+							<span class="settings-sub-title">{t('settings.invoices')}</span>
+							<p class="text-[10px] text-[var(--fv-ash)]">{t('settings.invoices_desc')}</p>
+						</div>
+					</div>
+					<svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+				</button>
+
+				<div class="settings-separator my-2"></div>
+
+				<button
+					onclick={handleManageBilling}
+					disabled={billingLoading}
+					class="w-full settings-sub-action p-3 rounded-xl hover:bg-[var(--fv-danger)]/[0.04] transition-all duration-200 group"
+				>
+					<div class="settings-sub-left">
+						<div class="settings-sub-icon">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-danger)" stroke-width="2" opacity="0.7"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+						</div>
+						<div class="settings-sub-text">
+							<span class="settings-sub-title text-[var(--fv-smoke)] group-hover:text-[var(--fv-danger)] transition-colors">{t('settings.cancel_sub')}</span>
+						</div>
+					</div>
+					<svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+				</button>
+			</div>
+		{:else}
+			<!-- Free user: upgrade prompt -->
+			<div class="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] mb-4">
+				<div class="flex items-center justify-between mb-1">
+					<span class="text-sm font-bold text-[var(--fv-smoke)]">{t('settings.plan_free')}</span>
+					<span class="px-2.5 py-0.5 rounded-full bg-white/10 text-[10px] font-bold text-[var(--fv-ash)]">{t('settings.free_limit')}</span>
+				</div>
+				<p class="text-[11px] text-[var(--fv-ash)]">{t('settings.upgrade_prompt')}</p>
+			</div>
+
+			<div class="space-y-3">
+				<!-- Plan selector -->
+				<div class="flex gap-2">
+					<button
+						onclick={() => selectedPlan = 'monthly'}
+						class="flex-1 p-3 rounded-xl text-center transition-all duration-200 {selectedPlan === 'monthly' ? 'bg-[var(--fv-gold)]/10 border border-[var(--fv-gold)]/30 text-[var(--fv-gold)]' : 'bg-white/[0.03] border border-white/[0.06] text-[var(--fv-smoke)]'}"
+					>
+						<div class="text-lg font-extrabold">4,99{'\u20AC'}</div>
+						<div class="text-[10px] font-medium opacity-70">{t('settings.per_month')}</div>
+					</button>
+					<button
+						onclick={() => selectedPlan = 'yearly'}
+						class="flex-1 p-3 rounded-xl text-center transition-all duration-200 relative {selectedPlan === 'yearly' ? 'bg-[var(--fv-gold)]/10 border border-[var(--fv-gold)]/30 text-[var(--fv-gold)]' : 'bg-white/[0.03] border border-white/[0.06] text-[var(--fv-smoke)]'}"
+					>
+						<span class="absolute -top-2 right-2 px-2 py-0.5 rounded-full bg-[var(--fv-success)] text-[8px] font-bold text-[#050a15]">{t('settings.discount')}</span>
+						<div class="text-lg font-extrabold">49,99{'\u20AC'}</div>
+						<div class="text-[10px] font-medium opacity-70">{t('settings.per_year')}</div>
+					</button>
+				</div>
+
+				<!-- Features included -->
+				<div class="space-y-2 px-1">
+					{#each [t('settings.feature.unlimited'), t('settings.feature.dark_web'), t('settings.feature.emails'), t('settings.feature.sharing'), t('settings.feature.support')] as feature}
+						<div class="flex items-center gap-2">
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-gold)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+							<span class="text-xs text-[var(--fv-smoke)]">{feature}</span>
+						</div>
+					{/each}
+				</div>
+
+				<button
+					onclick={handleCheckout}
+					disabled={checkoutLoading}
+					class="w-full py-3 rounded-xl text-sm font-bold transition-all duration-200 {checkoutLoading ? 'opacity-60' : 'hover:translate-y-[-1px] hover:shadow-lg hover:shadow-[var(--fv-gold)]/20'}"
+					style="background: linear-gradient(135deg, var(--fv-gold), var(--fv-gold-light, #ffda6b)); color: #1a1a2e;"
+				>
+					{checkoutLoading ? t('settings.redirecting') : selectedPlan === 'monthly' ? t('settings.upgrade_monthly') : t('settings.upgrade_yearly')}
+				</button>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Security -->
@@ -180,7 +379,7 @@
 			<div class="w-7 h-7 rounded-lg bg-[var(--fv-violet)]/15 flex items-center justify-center">
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-violet)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
 			</div>
-			Securite
+			{t('settings.section.security')}
 		</h2>
 
 		<!-- Change password -->
@@ -193,7 +392,7 @@
 					<rect x="3" y="11" width="18" height="11" rx="2"/>
 					<path d="M7 11V7a5 5 0 0 1 10 0v4"/>
 				</svg>
-				<span class="text-sm text-[var(--fv-mist)]">Changer le mot de passe maitre</span>
+				<span class="text-sm text-[var(--fv-mist)]">{t('settings.change_password')}</span>
 			</div>
 			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"
 				class="transition-transform duration-200 {showChangePassword ? 'rotate-180' : ''}">
@@ -205,19 +404,19 @@
 			<div class="mt-3 p-4 rounded-xl bg-[var(--fv-abyss)]/60 border border-white/[0.06] space-y-3">
 				{#if changeSuccess}
 					<div class="p-3 rounded-xl bg-[var(--fv-success)]/10 border border-[var(--fv-success)]/20 text-center">
-						<p class="text-sm text-[var(--fv-success)]">Mot de passe modifie avec succes !</p>
+						<p class="text-sm text-[var(--fv-success)]">{t('settings.password_changed')}</p>
 					</div>
 				{:else}
 					<div>
-						<label class="block text-xs text-[var(--fv-smoke)] mb-1.5 font-medium">Mot de passe actuel</label>
+						<label class="block text-xs text-[var(--fv-smoke)] mb-1.5 font-medium">{t('settings.current_password')}</label>
 						<input type="password" bind:value={currentPassword} class="settings-input" />
 					</div>
 					<div>
-						<label class="block text-xs text-[var(--fv-smoke)] mb-1.5 font-medium">Nouveau mot de passe</label>
+						<label class="block text-xs text-[var(--fv-smoke)] mb-1.5 font-medium">{t('settings.new_password')}</label>
 						<input type="password" bind:value={newPassword} class="settings-input" />
 					</div>
 					<div>
-						<label class="block text-xs text-[var(--fv-smoke)] mb-1.5 font-medium">Confirmer le nouveau mot de passe</label>
+						<label class="block text-xs text-[var(--fv-smoke)] mb-1.5 font-medium">{t('settings.confirm_password')}</label>
 						<input type="password" bind:value={confirmNewPassword} class="settings-input" />
 					</div>
 
@@ -228,7 +427,7 @@
 					{/if}
 
 					<button onclick={handleChangePassword} disabled={changeLoading} class="fv-btn fv-btn-primary w-full text-sm !py-2.5 !rounded-xl {changeLoading ? 'opacity-60' : ''}">
-						{changeLoading ? 'Modification...' : 'Modifier le mot de passe'}
+						{changeLoading ? t('settings.updating') : t('settings.update_password')}
 					</button>
 				{/if}
 			</div>
@@ -240,8 +439,8 @@
 				<div class="flex items-center gap-3">
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 					<div>
-						<span class="text-sm text-[var(--fv-mist)]">Verrouillage automatique</span>
-						<p class="text-[10px] text-[var(--fv-ash)]">Verrouille le coffre apres inactivite</p>
+						<span class="text-sm text-[var(--fv-mist)]">{t('settings.auto_lock')}</span>
+						<p class="text-[10px] text-[var(--fv-ash)]">{t('settings.auto_lock_desc')}</p>
 					</div>
 				</div>
 				<select
@@ -249,39 +448,16 @@
 					onchange={(e: Event) => saveAutoLockTimeout(parseInt((e.target as HTMLSelectElement).value))}
 					class="settings-select"
 				>
-					<option value={1}>1 min</option>
-					<option value={5}>5 min</option>
-					<option value={15}>15 min</option>
-					<option value={30}>30 min</option>
-					<option value={60}>1 heure</option>
-					<option value={0}>Jamais</option>
+					<option value={1}>{t('settings.auto_lock_1min')}</option>
+					<option value={5}>{t('settings.auto_lock_5min')}</option>
+					<option value={15}>{t('settings.auto_lock_15min')}</option>
+					<option value={30}>{t('settings.auto_lock_30min')}</option>
+					<option value={60}>{t('settings.auto_lock_1h')}</option>
+					<option value={0}>{t('settings.auto_lock_never')}</option>
 				</select>
 			</div>
 		</div>
 
-		<!-- Clipboard auto-clear -->
-		<div class="p-3 rounded-xl hover:bg-white/[0.04] transition-all duration-200">
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
-					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-					<div>
-						<span class="text-sm text-[var(--fv-mist)]">Nettoyage du presse-papier</span>
-						<p class="text-[10px] text-[var(--fv-ash)]">Efface le presse-papier automatiquement</p>
-					</div>
-				</div>
-				<select
-					value={clipboardAutoClear}
-					onchange={(e: Event) => saveClipboardClear(parseInt((e.target as HTMLSelectElement).value))}
-					class="settings-select"
-				>
-					<option value={10}>10 sec</option>
-					<option value={30}>30 sec</option>
-					<option value={60}>1 min</option>
-					<option value={120}>2 min</option>
-					<option value={0}>Jamais</option>
-				</select>
-			</div>
-		</div>
 	</div>
 
 	<!-- Data -->
@@ -291,7 +467,7 @@
 			<div class="w-7 h-7 rounded-lg bg-[var(--fv-cyan)]/15 flex items-center justify-center">
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 			</div>
-			Donnees
+			{t('settings.section.data')}
 		</h2>
 
 		<!-- Export -->
@@ -306,8 +482,8 @@
 				<line x1="12" y1="15" x2="12" y2="3"/>
 			</svg>
 			<div class="text-left">
-				<span class="text-sm text-[var(--fv-mist)]">Exporter le coffre (CSV)</span>
-				<p class="text-[10px] text-[var(--fv-ash)]">Telecharge toutes tes donnees en clair</p>
+				<span class="text-sm text-[var(--fv-mist)]">{t('settings.export')}</span>
+				<p class="text-[10px] text-[var(--fv-ash)]">{t('settings.export_desc')}</p>
 			</div>
 		</button>
 
@@ -322,8 +498,8 @@
 				<line x1="12" y1="3" x2="12" y2="15"/>
 			</svg>
 			<div class="text-left">
-				<span class="text-sm text-[var(--fv-mist)]">Importer des donnees</span>
-				<p class="text-[10px] text-[var(--fv-ash)]">Bitwarden, 1Password ou CSV</p>
+				<span class="text-sm text-[var(--fv-mist)]">{t('settings.import')}</span>
+				<p class="text-[10px] text-[var(--fv-ash)]">{t('settings.import_desc')}</p>
 			</div>
 		</a>
 	</div>
@@ -335,7 +511,7 @@
 			<div class="w-7 h-7 rounded-lg bg-[#3b82f6]/15 flex items-center justify-center">
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
 			</div>
-			Applications
+			{t('settings.section.apps')}
 		</h2>
 		<div class="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
 			<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--fv-cyan)] to-[var(--fv-violet)] flex items-center justify-center">
@@ -345,94 +521,34 @@
 				</svg>
 			</div>
 			<div class="flex-1">
-				<p class="text-sm text-white font-medium">FyxxVault pour iOS</p>
-				<p class="text-[10px] text-[var(--fv-smoke)]">Face ID, AutoFill, widgets</p>
+				<p class="text-sm text-white font-medium">{t('settings.ios_app')}</p>
+				<p class="text-[10px] text-[var(--fv-smoke)]">{t('settings.ios_features')}</p>
 			</div>
-			<span class="px-3 py-1.5 rounded-full bg-white/5 text-[10px] text-[var(--fv-smoke)] font-medium">Bientot</span>
+			<span class="px-3 py-1.5 rounded-full bg-white/5 text-[10px] text-[var(--fv-smoke)] font-medium">{t('common.coming_soon')}</span>
 		</div>
 	</div>
 
 	<!-- Legal -->
 	<div class="settings-card p-6 mb-4">
 		<div class="settings-card-border-left" style="background: var(--fv-smoke);"></div>
-		<h2 class="text-sm font-bold text-white mb-4">Informations</h2>
+		<h2 class="text-sm font-bold text-white mb-4">{t('settings.section.info')}</h2>
 		<div class="space-y-1">
 			<a href="/privacy" class="flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] transition-all duration-200">
-				<span class="text-sm text-[var(--fv-mist)]">Politique de confidentialite</span>
+				<span class="text-sm text-[var(--fv-mist)]">{t('settings.privacy')}</span>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
 			</a>
 			<a href="/terms" class="flex items-center justify-between p-3 rounded-xl hover:bg-white/[0.04] transition-all duration-200">
-				<span class="text-sm text-[var(--fv-mist)]">Conditions d'utilisation</span>
+				<span class="text-sm text-[var(--fv-mist)]">{t('settings.terms')}</span>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
 			</a>
 		</div>
 	</div>
 
-	<!-- Danger zone -->
-	<div class="settings-card settings-card-danger p-6">
-		<div class="settings-card-border-left" style="background: var(--fv-danger);"></div>
-		<h2 class="text-sm font-bold text-[var(--fv-danger)] mb-4 flex items-center gap-2">
-			<div class="w-7 h-7 rounded-lg bg-[var(--fv-danger)]/15 flex items-center justify-center">
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-danger)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-			</div>
-			Zone de danger
-		</h2>
-
-		<button
-			onclick={handleLogout}
-			class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--fv-danger)]/5 transition-all duration-200"
-		>
-			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-				<polyline points="16 17 21 12 16 7"/>
-				<line x1="21" y1="12" x2="9" y2="12"/>
-			</svg>
-			<div class="text-left">
-				<span class="text-sm text-[var(--fv-danger)]">Deconnexion</span>
-				<p class="text-[10px] text-[var(--fv-ash)]">Efface le VEK de la memoire et deconnecte</p>
-			</div>
-		</button>
-
-		<button
-			onclick={() => showDeleteAccount = !showDeleteAccount}
-			class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--fv-danger)]/5 transition-all duration-200 mt-1"
-		>
-			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polyline points="3 6 5 6 21 6"/>
-				<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-				<line x1="10" y1="11" x2="10" y2="17"/>
-				<line x1="14" y1="11" x2="14" y2="17"/>
-			</svg>
-			<div class="text-left">
-				<span class="text-sm text-[var(--fv-danger)]">Supprimer le compte</span>
-				<p class="text-[10px] text-[var(--fv-ash)]">Cette action est irreversible</p>
-			</div>
-		</button>
-
-		{#if showDeleteAccount}
-			<div class="mt-3 p-4 rounded-xl bg-[var(--fv-danger)]/5 border border-[var(--fv-danger)]/20 space-y-3">
-				<p class="text-xs text-[var(--fv-danger)]">Cette action supprimera definitivement ton compte et toutes tes donnees. Tape <strong>SUPPRIMER</strong> pour confirmer.</p>
-				<input
-					type="text"
-					bind:value={deleteAccountConfirm}
-					placeholder="SUPPRIMER"
-					class="settings-input !border-[var(--fv-danger)]/20 focus:!border-[var(--fv-danger)]/50"
-				/>
-				<button
-					onclick={handleDeleteAccount}
-					disabled={deleteAccountConfirm !== 'SUPPRIMER'}
-					class="w-full py-2.5 rounded-xl bg-[var(--fv-danger)] text-white text-sm font-bold transition-all duration-200 {deleteAccountConfirm !== 'SUPPRIMER' ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[var(--fv-danger)]/80'}"
-				>
-					Supprimer definitivement
-				</button>
-			</div>
-		{/if}
-	</div>
 
 	<!-- Footer -->
 	<div class="text-center mt-10 mb-4">
-		<p class="text-[10px] text-[var(--fv-ash)]">FyxxVault v1.0.0 — Chiffrement AES-256-GCM, PBKDF2 SHA-256</p>
-		<p class="text-[10px] text-[var(--fv-ash)] mt-1">Zero-knowledge: tes donnees ne quittent jamais cet appareil en clair.</p>
+		<p class="text-[10px] text-[var(--fv-ash)]">{t('settings.version')}</p>
+		<p class="text-[10px] text-[var(--fv-ash)] mt-1">{t('settings.zero_knowledge')}</p>
 	</div>
 </div>
 
@@ -505,5 +621,37 @@
 	}
 	.settings-select:focus {
 		border-color: rgba(0, 212, 255, 0.3);
+	}
+
+	/* Subscription action rows (fixed alignment) */
+	.settings-sub-action {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: center;
+		column-gap: 12px;
+	}
+	.settings-sub-left {
+		display: grid;
+		grid-template-columns: 20px minmax(0, 1fr);
+		align-items: center;
+		column-gap: 12px;
+		min-width: 0;
+	}
+	.settings-sub-icon {
+		width: 20px;
+		height: 20px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+	}
+	.settings-sub-text {
+		min-width: 0;
+		text-align: left;
+	}
+	.settings-sub-title {
+		display: block;
+		font-size: 14px;
+		color: var(--fv-mist);
 	}
 </style>

@@ -53,25 +53,22 @@ struct AddVaultEntryView: View {
                                     } label: {
                                         VStack(spacing: 6) {
                                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                                .fill(
-                                                    category == cat
-                                                        ? LinearGradient(colors: [cat.iconColor.opacity(0.4), FVColor.violet.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                                        : LinearGradient(colors: [Color.white.opacity(0.06), Color.white.opacity(0.03)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                                )
+                                                .fill(category == cat
+                                                      ? cat.iconColor.opacity(0.15)
+                                                      : Color.white.opacity(0.04))
                                                 .frame(width: 50, height: 50)
                                                 .overlay(
                                                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                                                         .strokeBorder(
-                                                            category == cat ? cat.iconColor.opacity(0.5) : Color.white.opacity(0.1),
-                                                            lineWidth: category == cat ? 1.5 : 1
+                                                            category == cat ? cat.iconColor.opacity(0.4) : Color.white.opacity(0.06),
+                                                            lineWidth: 1
                                                         )
                                                 )
                                                 .overlay {
                                                     Image(systemName: cat.iconName)
                                                         .font(.system(size: 18, weight: .medium))
-                                                        .foregroundStyle(category == cat ? .white : FVColor.mist)
+                                                        .foregroundStyle(category == cat ? cat.iconColor : FVColor.smoke)
                                                 }
-                                                .scaleEffect(category == cat ? 1.08 : 1.0)
 
                                             Text(cat.label)
                                                 .font(FVFont.caption(9))
@@ -333,6 +330,17 @@ struct AddVaultEntryView: View {
             FVTextField(title: String(localized: "vault.field.bic.swift"), text: fieldBinding("BIC"))
             FVTextField(title: String(localized: "vault.field.account.number"), text: fieldBinding("Numéro de compte"))
             FVTextField(title: String(localized: "vault.field.cardholder"), text: $username)
+
+        case .server:
+            FVTextField(title: String(localized: "vault.field.account.name"), text: $title)
+            FVTextField(title: String(localized: "vault.field.website"), text: $website)
+            FVTextField(title: "IP", text: fieldBinding("IP"))
+            FVTextField(title: "Port", text: fieldBinding("Port"))
+            FVTextField(title: "SSH Key", text: fieldBinding("SSH Key"))
+
+        case .other:
+            FVTextField(title: String(localized: "vault.field.account.name"), text: $title)
+            FVTextField(title: String(localized: "vault.field.website"), text: $website)
         }
     }
 }

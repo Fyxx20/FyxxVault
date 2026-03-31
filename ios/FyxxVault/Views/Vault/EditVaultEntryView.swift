@@ -298,6 +298,17 @@ struct EditVaultEntryView: View {
             FVTextField(title: String(localized: "vault.field.bic.swift"), text: fieldBinding("BIC"))
             FVTextField(title: String(localized: "vault.field.account.number"), text: fieldBinding("Numéro de compte"))
             FVTextField(title: String(localized: "vault.field.cardholder"), text: $username)
+
+        case .server:
+            FVTextField(title: String(localized: "vault.field.account.name"), text: $title)
+            FVTextField(title: String(localized: "vault.field.website"), text: $website)
+            FVTextField(title: "IP", text: fieldBinding("IP"))
+            FVTextField(title: "Port", text: fieldBinding("Port"))
+            FVTextField(title: "SSH Key", text: fieldBinding("SSH Key"))
+
+        case .other:
+            FVTextField(title: String(localized: "vault.field.account.name"), text: $title)
+            FVTextField(title: String(localized: "vault.field.website"), text: $website)
         }
     }
 }

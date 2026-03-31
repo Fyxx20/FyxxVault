@@ -30,6 +30,24 @@ export function getVEK(): Uint8Array | null {
 	return _vek;
 }
 
+export async function refreshProStatus(): Promise<boolean> {
+	if (!_user) return false;
+	try {
+		const { data: profile, error } = await supabase
+			.from('profiles')
+			.select('is_pro')
+			.eq('id', _user.id)
+			.single();
+
+		if (!error) {
+			_isPro = profile?.is_pro === true;
+		}
+	} catch {
+		// ignore network errors; keep previous local state
+	}
+	return _isPro;
+}
+
 // ─── Browser Extension Bridge ───
 // Sends session and VEK to the FyxxVault extension automatically.
 // Uses both postMessage (for content script in isolated world) and custom events.
@@ -65,20 +83,29 @@ export function initAuth() {
 	if (_initialized) return;
 	_initialized = true;
 
-	supabase.auth.getSession().then(({ data: { session } }) => {
+	// onAuthStateChange fires INITIAL_SESSION first (reads from localStorage),
+	// then TOKEN_REFRESHED, SIGNED_IN, SIGNED_OUT etc.
+	// This is the recommended way to restore sessions in Supabase v2.
+	const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
 		_session = session;
 		_user = session?.user ?? null;
 		_isAuthenticated = !!session;
 		_loading = false;
-	});
 
-	supabase.auth.onAuthStateChange((_event, session) => {
-		_session = session;
-		_user = session?.user ?? null;
-		_isAuthenticated = !!session;
-		_loading = false;
+		// If session expired, try to refresh it
+		if (event === 'TOKEN_REFRESHED' && session) {
+			_isAuthenticated = true;
+		}
+
 		if (session) bridgeToExtension();
 	});
+
+	// Fallback: if onAuthStateChange hasn't fired after 2s, stop loading
+	setTimeout(() => {
+		if (_loading) {
+			_loading = false;
+		}
+	}, 2000);
 }
 
 // ─── Unlock vault with master password ───
@@ -156,6 +183,13 @@ async function bootstrapProfile(masterPassword: string): Promise<{ success: bool
 	} catch (e: any) {
 		return { success: false, error: e.message || 'Erreur lors de la création du profil.' };
 	}
+}
+
+// ─── Lock vault (keep session, clear VEK) ───
+export function lockVault() {
+	_vek = null;
+	_isUnlocked = false;
+	_masterPassword = null;
 }
 
 // ─── Logout ───

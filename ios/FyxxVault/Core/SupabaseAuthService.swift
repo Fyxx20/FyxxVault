@@ -12,10 +12,12 @@ final class SupabaseAuthService: ObservableObject {
     private let anonKey = SupabaseConfig.anonKey
 
     @Published var accessToken: String?
+    @Published var refreshToken: String?
     @Published var userId: String?
     @Published var isAuthenticated = false
 
     private static let tokenKeychainKey = "fyxxvault.supabase.auth.token"
+    private static let refreshKeychainKey = "fyxxvault.supabase.auth.refresh"
     private static let userIdKeychainKey = "fyxxvault.supabase.auth.userid"
 
     // MARK: - Sign Up
@@ -43,6 +45,7 @@ final class SupabaseAuthService: ObservableObject {
             if let session = json?["session"] as? [String: Any],
                let token = session["access_token"] as? String {
                 self.accessToken = token
+                self.refreshToken = session["refresh_token"] as? String
                 if let user = json?["user"] as? [String: Any],
                    let id = user["id"] as? String {
                     self.userId = id
@@ -94,12 +97,14 @@ final class SupabaseAuthService: ObservableObject {
             let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
             if let token = json?["access_token"] as? String {
                 self.accessToken = token
+                self.refreshToken = json?["refresh_token"] as? String
                 if let user = json?["user"] as? [String: Any],
                    let id = user["id"] as? String {
                     self.userId = id
                 }
                 self.isAuthenticated = true
                 persistSession()
+                print("[SupabaseAuth] signIn OK — token=\(token.prefix(20))… refresh=\(self.refreshToken != nil ? "yes" : "no")")
             }
         } else if httpResponse.statusCode == 400 {
             throw AuthServiceError.invalidCredentials
@@ -112,6 +117,7 @@ final class SupabaseAuthService: ObservableObject {
 
     func signOut() {
         accessToken = nil
+        refreshToken = nil
         userId = nil
         isAuthenticated = false
         clearPersistedSession()
@@ -138,15 +144,33 @@ final class SupabaseAuthService: ObservableObject {
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
                 let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
                 self.accessToken = token
+                if let refreshData = KeychainService.loadOptionalData(for: Self.refreshKeychainKey),
+                   let refresh = String(data: refreshData, encoding: .utf8) {
+                    self.refreshToken = refresh
+                }
                 self.userId = json?["id"] as? String
                 self.isAuthenticated = true
+                print("[SupabaseAuth] restoreSession OK — refresh=\(self.refreshToken != nil ? "yes" : "no")")
             } else {
-                // Token expired or invalid — clear it
-                clearPersistedSession()
+                // Token expired or invalid — try refresh before giving up
+                if let refreshData = KeychainService.loadOptionalData(for: Self.refreshKeychainKey),
+                   let refresh = String(data: refreshData, encoding: .utf8) {
+                    self.refreshToken = refresh
+                    print("[SupabaseAuth] restoreSession: token invalid, but refresh token available")
+                    // Don't clear — SyncService can use refresh token
+                    self.accessToken = token
+                    self.isAuthenticated = true
+                } else {
+                    clearPersistedSession()
+                }
             }
         } catch {
             // Network error (offline) — keep the token optimistically
             self.accessToken = token
+            if let refreshData = KeychainService.loadOptionalData(for: Self.refreshKeychainKey),
+               let refresh = String(data: refreshData, encoding: .utf8) {
+                self.refreshToken = refresh
+            }
             if let uidData = KeychainService.loadOptionalData(for: Self.userIdKeychainKey),
                let uid = String(data: uidData, encoding: .utf8) {
                 self.userId = uid
@@ -161,6 +185,9 @@ final class SupabaseAuthService: ObservableObject {
         if let token = accessToken {
             try? KeychainService.save(data: Data(token.utf8), key: Self.tokenKeychainKey)
         }
+        if let refresh = refreshToken {
+            try? KeychainService.save(data: Data(refresh.utf8), key: Self.refreshKeychainKey)
+        }
         if let uid = userId {
             try? KeychainService.save(data: Data(uid.utf8), key: Self.userIdKeychainKey)
         }
@@ -168,6 +195,7 @@ final class SupabaseAuthService: ObservableObject {
 
     private func clearPersistedSession() {
         KeychainService.delete(key: Self.tokenKeychainKey)
+        KeychainService.delete(key: Self.refreshKeychainKey)
         KeychainService.delete(key: Self.userIdKeychainKey)
     }
 

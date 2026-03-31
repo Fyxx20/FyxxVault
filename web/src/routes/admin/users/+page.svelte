@@ -642,6 +642,123 @@
 					{/if}
 				</div>
 
+				<!-- Email Stats Section -->
+				<div class="fv-glass p-4 rounded-xl">
+					<h3 class="text-xs font-bold text-[var(--fv-violet-light)] uppercase tracking-wider mb-3 flex items-center gap-2">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+							<polyline points="22,6 12,13 2,6"/>
+						</svg>
+						Messagerie alias
+					</h3>
+					<div class="grid grid-cols-3 gap-3">
+						<div class="p-3 rounded-xl bg-white/5">
+							<p class="text-[10px] text-[var(--fv-ash)] uppercase tracking-wider mb-1">Aliases crees</p>
+							<p class="text-xl text-white font-bold">{selectedUser.email_aliases_count ?? 0}</p>
+						</div>
+						<div class="p-3 rounded-xl bg-white/5">
+							<p class="text-[10px] text-[var(--fv-ash)] uppercase tracking-wider mb-1">Aliases actifs</p>
+							<p class="text-xl text-white font-bold">{selectedUser.active_email_aliases_count ?? 0}</p>
+						</div>
+						<div class="p-3 rounded-xl bg-white/5">
+							<p class="text-[10px] text-[var(--fv-ash)] uppercase tracking-wider mb-1">Emails recus</p>
+							<p class="text-xl text-white font-bold">{selectedUser.emails_received_count ?? 0}</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Support Tickets Section -->
+				<div class="fv-glass p-4 rounded-xl">
+					<h3 class="text-xs font-bold text-[var(--fv-violet-light)] uppercase tracking-wider mb-3 flex items-center gap-2">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+						</svg>
+						Support ({selectedUser.support_tickets_count ?? 0} tickets)
+					</h3>
+					{#if selectedUser.support_tickets?.length > 0}
+						<div class="space-y-2">
+							{#each selectedUser.support_tickets as ticket}
+								<div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/8 transition-all">
+									<div class="w-2 h-2 rounded-full flex-shrink-0"
+										style="background: {ticket.status === 'open' ? 'var(--fv-cyan)' : ticket.status === 'waiting' ? 'var(--fv-warning)' : ticket.status === 'resolved' ? 'var(--fv-success)' : 'var(--fv-smoke)'}">
+									</div>
+									<div class="flex-1 min-w-0">
+										<p class="text-xs text-white font-medium truncate">{ticket.subject || 'Sans sujet'}</p>
+										<p class="text-[10px] text-[var(--fv-ash)]">{formatDateFull(ticket.created_at)}</p>
+									</div>
+									<span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full flex-shrink-0
+										{ticket.status === 'open' ? 'bg-[var(--fv-cyan)]/15 text-[var(--fv-cyan)]'
+										: ticket.status === 'waiting' ? 'bg-[var(--fv-warning)]/15 text-[var(--fv-warning)]'
+										: ticket.status === 'resolved' ? 'bg-[var(--fv-success)]/15 text-[var(--fv-success)]'
+										: 'bg-white/10 text-[var(--fv-smoke)]'}">
+										{ticket.status}
+									</span>
+								</div>
+							{/each}
+						</div>
+						{#if selectedUser.support_messages_count}
+							<p class="text-[10px] text-[var(--fv-ash)] mt-2">{selectedUser.support_messages_count} messages au total</p>
+						{/if}
+					{:else}
+						<p class="text-xs text-[var(--fv-ash)] py-2">Aucun ticket de support</p>
+					{/if}
+				</div>
+
+				<!-- Activity Timeline -->
+				<div class="fv-glass p-4 rounded-xl">
+					<h3 class="text-xs font-bold text-[var(--fv-violet-light)] uppercase tracking-wider mb-3 flex items-center gap-2">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<circle cx="12" cy="12" r="10"/>
+							<polyline points="12 6 12 12 16 14"/>
+						</svg>
+						Activite
+					</h3>
+					<div class="space-y-3">
+						<div class="flex items-start gap-3">
+							<div class="w-6 h-6 rounded-full bg-[var(--fv-violet)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+								<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--fv-violet-light)" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+							</div>
+							<div>
+								<p class="text-xs text-white font-medium">Inscription</p>
+								<p class="text-[10px] text-[var(--fv-ash)]">{formatDateFull(selectedUser.created_at)}</p>
+							</div>
+						</div>
+						{#if selectedUser.last_sign_in_at}
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 rounded-full bg-[var(--fv-cyan)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+									<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+								</div>
+								<div>
+									<p class="text-xs text-white font-medium">Derniere connexion</p>
+									<p class="text-[10px] text-[var(--fv-ash)]">{formatDateFull(selectedUser.last_sign_in_at)} ({relativeTime(selectedUser.last_sign_in_at)})</p>
+								</div>
+							</div>
+						{/if}
+						{#if selectedUser.sync_metadata?.last_sync}
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 rounded-full bg-[var(--fv-success)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+									<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+								</div>
+								<div>
+									<p class="text-xs text-white font-medium">Derniere sync</p>
+									<p class="text-[10px] text-[var(--fv-ash)]">{relativeTime(selectedUser.sync_metadata.last_sync)} — {selectedUser.sync_metadata.device_name || 'Appareil inconnu'}</p>
+								</div>
+							</div>
+						{/if}
+						{#if selectedUser.support_tickets?.length > 0}
+							<div class="flex items-start gap-3">
+								<div class="w-6 h-6 rounded-full bg-[var(--fv-warning)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+									<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--fv-warning)" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+								</div>
+								<div>
+									<p class="text-xs text-white font-medium">Dernier ticket support</p>
+									<p class="text-[10px] text-[var(--fv-ash)]">{formatDateFull(selectedUser.support_tickets[0].created_at)} — {selectedUser.support_tickets[0].subject || 'Sans sujet'}</p>
+								</div>
+							</div>
+						{/if}
+					</div>
+				</div>
+
 				<!-- Recovery Key Info -->
 				<div class="fv-glass p-4 rounded-xl">
 					<h3 class="text-xs font-bold text-[var(--fv-violet-light)] uppercase tracking-wider mb-3 flex items-center gap-2">

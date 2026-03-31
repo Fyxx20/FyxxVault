@@ -84,9 +84,11 @@ struct VaultSettingsView: View {
     @ObservedObject var syncService: SyncService
     @ObservedObject var maskedEmailService: MaskedEmailService
     @ObservedObject var subscriptionService: SubscriptionService
+    @ObservedObject var announcementsService: AnnouncementsService
 
     // MARK: - Sheet / Alert State
 
+    @State private var showAnnouncements = false
     @State private var showMaskedEmails = false
     @State private var showPaywall = false
     @State private var showTrash = false
@@ -122,6 +124,7 @@ struct VaultSettingsView: View {
     @AppStorage("fyxxvault.hide.mfa.default") private var hideMFACodeByDefault = false
     @AppStorage("fyxxvault.haptics.enabled") private var hapticsEnabled = true
     @AppStorage("fyxxvault.screenshot.lock.enabled") private var screenshotLockEnabled = true
+    @AppStorage("fv-lang") private var appLanguage = "fr"
 
     // MARK: - Collapsible Section States
 
@@ -203,6 +206,7 @@ struct VaultSettingsView: View {
             .scrollIndicators(.hidden)
             .navigationTitle(String(localized: "settings.nav.title"))
             .fvInlineNavTitle()
+            .sheet(isPresented: $showAnnouncements) { AnnouncementsView(announcementsService: announcementsService) }
             .sheet(isPresented: $showTrash) { VaultTrashView(vaultStore: vaultStore) }
             .sheet(isPresented: $showActivityLog) { ActivityLogView(vaultStore: vaultStore) }
             .sheet(isPresented: $showReorder) { VaultReorderView(vaultStore: vaultStore) }
@@ -574,6 +578,48 @@ struct VaultSettingsView: View {
 
     @ViewBuilder
     private var advancedContent: some View {
+        // Language toggle
+        HStack {
+            Image(systemName: "globe")
+                .foregroundStyle(FVColor.cyan)
+                .frame(width: 20)
+            Text("Langue")
+                .font(FVFont.body(14))
+                .foregroundStyle(.white)
+            Spacer()
+            Picker("", selection: $appLanguage) {
+                Text("🇫🇷 Français").tag("fr")
+                Text("🇬🇧 English").tag("en")
+            }
+            .pickerStyle(.menu)
+            .tint(FVColor.cyan)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(FVColor.cyan.opacity(0.04))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(FVColor.cyan.opacity(0.12), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+        // Announcements
+        Button {
+            showAnnouncements = true
+        } label: {
+            HStack {
+                Text("Annonces")
+                if announcementsService.unreadCount > 0 {
+                    Spacer()
+                    Text("\(announcementsService.unreadCount) nouveau\(announcementsService.unreadCount > 1 ? "x" : "")")
+                        .font(FVFont.caption(11))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(FVColor.gold.opacity(0.8))
+                        .clipShape(Capsule())
+                }
+            }
+        }
+        .buttonStyle(FVSettingsButton(tint: FVColor.gold))
+
         Button(String(localized: "settings.advanced.rotate_key")) { showRotateKeyConfirm = true }
             .buttonStyle(FVSettingsButton(tint: FVColor.violet))
         Button(String(localized: "settings.advanced.export_csv")) { pendingCSVType = 0; showCSVExportWarning = true }

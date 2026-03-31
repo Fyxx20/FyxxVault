@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { newVaultEntry, type VaultEntry, type VaultCategory, CATEGORY_META } from '$lib/types';
 	import { addEntry, getVaultState } from '$lib/stores/vault.svelte';
+	import { t } from '$lib/i18n.svelte';
 
 	const vault = getVaultState();
 
@@ -43,7 +44,7 @@
 
 	function handleFile(f: File) {
 		if (!f.name.endsWith('.csv') && !f.name.endsWith('.json')) {
-			parseError = 'Format non supporté. Utilisez un fichier CSV ou JSON.';
+			parseError = t('import.error.format');
 			return;
 		}
 		file = f;
@@ -56,7 +57,7 @@
 			try {
 				parseCSV(content);
 			} catch (err: any) {
-				parseError = err.message || 'Erreur lors de l\'analyse du fichier.';
+				parseError = err.message || t('import.error.format');
 			}
 		};
 		reader.readAsText(f);
@@ -65,7 +66,7 @@
 	function parseCSV(content: string) {
 		const lines = content.split('\n').filter(l => l.trim());
 		if (lines.length < 2) {
-			parseError = 'Le fichier est vide ou invalide.';
+			parseError = t('import.error.empty');
 			return;
 		}
 
@@ -122,7 +123,7 @@
 				folder: row['folder'] || '',
 				category: mapBitwardenType(row['type'] || ''),
 				isFavorite: row['favorite'] === '1',
-				tags: row['tags'] ? row['tags'].split(',').map(t => t.trim()) : []
+				tags: row['tags'] ? row['tags'].split(',').map(s => s.trim()) : []
 			});
 		} else if (fmt === '1password') {
 			return newVaultEntry({
@@ -249,7 +250,7 @@
 </script>
 
 <svelte:head>
-	<title>Importer — FyxxVault</title>
+	<title>{t('import.title')} — FyxxVault</title>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto">
@@ -262,8 +263,8 @@
 			</svg>
 		</button>
 		<div>
-			<h1 class="text-xl font-bold text-white">Importer des données</h1>
-			<p class="text-xs text-[var(--fv-smoke)]">Bitwarden, 1Password ou CSV générique</p>
+			<h1 class="text-xl font-bold text-white">{t('import.title')}</h1>
+			<p class="text-xs text-[var(--fv-smoke)]">{t('import.subtitle')}</p>
 		</div>
 	</div>
 
@@ -273,29 +274,29 @@
 			<div class="w-16 h-16 rounded-full bg-[var(--fv-success)]/15 flex items-center justify-center mx-auto mb-4">
 				<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 			</div>
-			<p class="text-white font-semibold mb-2">Import terminé</p>
+			<p class="text-white font-semibold mb-2">{t('import.complete')}</p>
 			<div class="flex justify-center gap-6 text-xs">
-				<span class="text-[var(--fv-success)]">{importResult.imported} importé{importResult.imported > 1 ? 's' : ''}</span>
+				<span class="text-[var(--fv-success)]">{importResult.imported} {t('import.imported')}{importResult.imported > 1 ? 's' : ''}</span>
 				{#if importResult.skipped > 0}
-					<span class="text-[var(--fv-smoke)]">{importResult.skipped} ignoré{importResult.skipped > 1 ? 's' : ''}</span>
+					<span class="text-[var(--fv-smoke)]">{importResult.skipped} {t('import.skipped')}{importResult.skipped > 1 ? 's' : ''}</span>
 				{/if}
 				{#if importResult.errors > 0}
-					<span class="text-[var(--fv-danger)]">{importResult.errors} erreur{importResult.errors > 1 ? 's' : ''}</span>
+					<span class="text-[var(--fv-danger)]">{importResult.errors} {t('import.error')}{importResult.errors > 1 ? 's' : ''}</span>
 				{/if}
 			</div>
-			<button onclick={() => goto('/vault')} class="fv-btn fv-btn-primary text-sm !py-2.5 mt-6">Retour au coffre</button>
+			<button onclick={() => goto('/vault')} class="fv-btn fv-btn-primary text-sm !py-2.5 mt-6">{t('import.back_to_vault')}</button>
 		</div>
 	{:else if parsedEntries.length > 0}
 		<!-- Preview -->
 		<div class="fv-glass p-5 mb-4">
 			<div class="flex items-center justify-between mb-4">
 				<div>
-					<h2 class="text-sm font-bold text-white">Aperçu de l'import</h2>
-					<p class="text-[10px] text-[var(--fv-smoke)]">{detectedFormat === 'bitwarden' ? 'Bitwarden' : detectedFormat === '1password' ? '1Password' : 'CSV générique'} — {parsedEntries.length} élément{parsedEntries.length > 1 ? 's' : ''}</p>
+					<h2 class="text-sm font-bold text-white">{t('import.preview')}</h2>
+					<p class="text-[10px] text-[var(--fv-smoke)]">{detectedFormat === 'bitwarden' ? t('import.format_bitwarden') : detectedFormat === '1password' ? t('import.format_1password') : t('import.format_csv')} — {parsedEntries.length} {parsedEntries.length > 1 ? t('import.items') : t('import.item')}</p>
 				</div>
 				<label class="flex items-center gap-2 text-xs text-[var(--fv-smoke)] cursor-pointer">
 					<input type="checkbox" checked={selectedEntries.size === parsedEntries.length} onchange={toggleAll} class="accent-[var(--fv-cyan)]" />
-					Tout
+					{t('import.select_all')}
 				</label>
 			</div>
 
@@ -310,7 +311,7 @@
 						/>
 						<span class="text-base shrink-0">{CATEGORY_META[entry.category]?.icon ?? '📦'}</span>
 						<div class="flex-1 min-w-0">
-							<p class="text-sm text-white truncate">{entry.title || 'Sans titre'}</p>
+							<p class="text-sm text-white truncate">{entry.title || t('import.untitled')}</p>
 							<p class="text-[10px] text-[var(--fv-smoke)] truncate">{entry.username || entry.website || ''}</p>
 						</div>
 						<span class="text-[9px] text-[var(--fv-ash)] shrink-0">{CATEGORY_META[entry.category]?.label}</span>
@@ -321,12 +322,12 @@
 
 		<!-- Options -->
 		<div class="fv-glass p-5 mb-4">
-			<h2 class="text-sm font-bold text-white mb-3">Gestion des doublons</h2>
+			<h2 class="text-sm font-bold text-white mb-3">{t('import.duplicates')}</h2>
 			<div class="flex gap-2">
 				{#each [
-					{ key: 'skip', label: 'Ignorer' },
-					{ key: 'overwrite', label: 'Écraser' },
-					{ key: 'keep', label: 'Garder les deux' }
+					{ key: 'skip', label: t('import.skip') },
+					{ key: 'overwrite', label: t('import.overwrite') },
+					{ key: 'keep', label: t('import.keep_both') }
 				] as option}
 					<button
 						type="button"
@@ -344,7 +345,7 @@
 
 		<!-- Import button -->
 		<div class="flex gap-3">
-			<button onclick={() => { parsedEntries = []; file = null; }} class="fv-btn fv-btn-ghost flex-1 !py-3.5">Annuler</button>
+			<button onclick={() => { parsedEntries = []; file = null; }} class="fv-btn fv-btn-ghost flex-1 !py-3.5">{t('add.cancel')}</button>
 			<button
 				onclick={handleImport}
 				disabled={importing || selectedEntries.size === 0}
@@ -352,9 +353,9 @@
 			>
 				{#if importing}
 					<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-					Import en cours...
+					{t('import.importing')}
 				{:else}
-					Importer {selectedEntries.size} élément{selectedEntries.size > 1 ? 's' : ''}
+					{t('import.import')} {selectedEntries.size} {selectedEntries.size > 1 ? t('import.items') : t('import.item')}
 				{/if}
 			</button>
 		</div>
@@ -380,13 +381,13 @@
 					<line x1="12" y1="3" x2="12" y2="15"/>
 				</svg>
 			</div>
-			<p class="text-sm text-white mb-2">Glisse ton fichier ici</p>
-			<p class="text-xs text-[var(--fv-smoke)] mb-4">ou clique pour parcourir</p>
+			<p class="text-sm text-white mb-2">{t('import.drag')}</p>
+			<p class="text-xs text-[var(--fv-smoke)] mb-4">{t('import.or_click')}</p>
 
 			<div class="flex justify-center gap-4 text-[10px] text-[var(--fv-ash)]">
-				<span>Bitwarden CSV</span>
-				<span>1Password CSV</span>
-				<span>CSV générique</span>
+				<span>{t('import.format_bitwarden')} CSV</span>
+				<span>{t('import.format_1password')} CSV</span>
+				<span>{t('import.format_csv')}</span>
 			</div>
 		</div>
 
@@ -398,27 +399,27 @@
 
 		<!-- Format info -->
 		<div class="fv-glass p-5 mt-4">
-			<h2 class="text-sm font-bold text-white mb-3">Formats supportés</h2>
+			<h2 class="text-sm font-bold text-white mb-3">{t('import.supported_formats')}</h2>
 			<div class="space-y-3">
 				<div class="flex items-start gap-3">
 					<span class="text-base">🔒</span>
 					<div>
-						<p class="text-xs text-white font-medium">Bitwarden</p>
-						<p class="text-[10px] text-[var(--fv-smoke)]">Paramètres &gt; Exporter le coffre &gt; Format CSV</p>
+						<p class="text-xs text-white font-medium">{t('import.format_bitwarden')}</p>
+						<p class="text-[10px] text-[var(--fv-smoke)]">{t('import.bitwarden_path')}</p>
 					</div>
 				</div>
 				<div class="flex items-start gap-3">
 					<span class="text-base">🔐</span>
 					<div>
-						<p class="text-xs text-white font-medium">1Password</p>
-						<p class="text-[10px] text-[var(--fv-smoke)]">Fichier &gt; Exporter &gt; Format CSV</p>
+						<p class="text-xs text-white font-medium">{t('import.format_1password')}</p>
+						<p class="text-[10px] text-[var(--fv-smoke)]">{t('import.1password_path')}</p>
 					</div>
 				</div>
 				<div class="flex items-start gap-3">
 					<span class="text-base">📄</span>
 					<div>
-						<p class="text-xs text-white font-medium">CSV générique</p>
-						<p class="text-[10px] text-[var(--fv-smoke)]">Colonnes: title, username, password, url, notes</p>
+						<p class="text-xs text-white font-medium">{t('import.format_csv')}</p>
+						<p class="text-[10px] text-[var(--fv-smoke)]">{t('import.csv_format')}</p>
 					</div>
 				</div>
 			</div>

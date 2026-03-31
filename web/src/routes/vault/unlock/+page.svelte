@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { getAuthState, unlockVault, initAuth } from '$lib/stores/auth.svelte';
+	import { t } from '$lib/i18n.svelte';
 
 	const auth = getAuthState();
 
@@ -30,7 +31,7 @@
 	async function handleUnlock() {
 		error = '';
 		if (!masterPassword) {
-			error = 'Mot de passe maitre requis.';
+			error = t('unlock.error.required');
 			errorKey++;
 			return;
 		}
@@ -43,16 +44,16 @@
 				unlockSuccess = true;
 				setTimeout(() => goto('/vault'), 800);
 			} else {
-				error = result.error || 'Echec du deverrouillage.';
+				error = result.error || t('unlock.error.failed');
 				errorKey++;
 			}
 		} catch (e: any) {
 			if (e?.message?.includes('Web Crypto API')) {
-				error = 'Web Crypto API non disponible. Utilise HTTPS ou localhost.';
+				error = t('unlock.error.crypto');
 			} else if (e?.name === 'OperationError' || e?.message?.includes('decrypt') || e?.message?.includes('importKey')) {
-				error = 'Mot de passe incorrect ou erreur de dechiffrement.';
+				error = t('unlock.error.decrypt');
 			} else {
-				error = e.message || 'Erreur inconnue.';
+				error = e.message || t('unlock.error.unknown');
 			}
 			errorKey++;
 		} finally {
@@ -62,7 +63,7 @@
 </script>
 
 <svelte:head>
-	<title>Deverrouiller — FyxxVault</title>
+	<title>{t('unlock.title')} — FyxxVault</title>
 </svelte:head>
 
 <div class="unlock-page min-h-screen flex items-center justify-center px-6 py-20">
@@ -86,9 +87,9 @@
 					</svg>
 				</div>
 			</div>
-			<h1 class="text-2xl font-extrabold text-white tracking-tight">Deverrouiller ton coffre</h1>
+			<h1 class="text-2xl font-extrabold text-white tracking-tight">{t('unlock.title')}</h1>
 			<p class="text-sm text-[var(--fv-smoke)] mt-2">
-				Connecte en tant que <span class="text-[var(--fv-cyan)]">{auth.user?.email ?? ''}</span>
+				{t('unlock.connected_as')} <span class="text-[var(--fv-cyan)]">{auth.user?.email ?? ''}</span>
 			</p>
 		</div>
 
@@ -98,8 +99,8 @@
 				<div class="w-20 h-20 rounded-full bg-[var(--fv-success)]/15 flex items-center justify-center mx-auto mb-4">
 					<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12" class="fv-check-draw"/></svg>
 				</div>
-				<p class="text-white font-semibold text-lg">Coffre deverrouille</p>
-				<p class="text-sm text-[var(--fv-smoke)] mt-1">Redirection en cours...</p>
+				<p class="text-white font-semibold text-lg">{t('unlock.success')}</p>
+				<p class="text-sm text-[var(--fv-smoke)] mt-1">{t('unlock.redirecting')}</p>
 			</div>
 		{:else}
 			<!-- Unlock form -->
@@ -118,7 +119,7 @@
 
 					<!-- Master password -->
 					<div>
-						<label for="master-password" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Mot de passe maitre</label>
+						<label for="master-password" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">{t('unlock.master_password')}</label>
 						<input
 							id="master-password"
 							type="password"
@@ -145,16 +146,22 @@
 					<button type="submit" disabled={loading} class="unlock-submit-btn w-full py-4 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all duration-250 {loading ? 'opacity-60 cursor-not-allowed' : ''}">
 						{#if loading}
 							<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-							Deverrouillage...
+							{t('unlock.submitting')}
 						{:else}
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-							Deverrouiller
+							{t('unlock.submit')}
 						{/if}
 					</button>
+
+					<div class="text-center">
+						<a href="/forgot-password" class="text-xs text-[var(--fv-cyan)] hover:underline transition-colors duration-200">
+							{t('unlock.forgot')}
+						</a>
+					</div>
 				</form>
 
 				<p class="text-center text-xs text-[var(--fv-ash)] mt-5">
-					Le dechiffrement se fait localement. Ton mot de passe ne quitte jamais cet appareil.
+					{t('unlock.local_info')}
 				</p>
 			</div>
 		{/if}

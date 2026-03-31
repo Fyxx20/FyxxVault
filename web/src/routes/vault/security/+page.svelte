@@ -4,6 +4,7 @@
 	import { passwordStrength } from '$lib/crypto';
 	import { CATEGORY_META } from '$lib/types';
 	import { checkPasswordsBatch } from '$lib/hibp';
+	import { t } from '$lib/i18n.svelte';
 
 	const vault = getVaultState();
 	const auth = getAuthState();
@@ -48,10 +49,10 @@
 	}
 
 	function scoreLabel(score: number): string {
-		if (score >= 80) return 'Excellent';
-		if (score >= 60) return 'Bon';
-		if (score >= 40) return 'Moyen';
-		return 'Faible';
+		if (score >= 80) return t('security.score_excellent');
+		if (score >= 60) return t('security.score_good');
+		if (score >= 40) return t('security.score_medium');
+		return t('security.score_weak');
 	}
 
 	// SVG circle params — larger gauge
@@ -77,12 +78,12 @@
 
 	const recommendations = $derived(() => {
 		const recs: { icon: string; text: string; severity: 'danger' | 'warning' | 'info' }[] = [];
-		if (stats.weak > 0) recs.push({ icon: '&#9888;&#65039;', text: `${stats.weak} mot${stats.weak > 1 ? 's' : ''} de passe faible${stats.weak > 1 ? 's' : ''} — remplace-les par des mots de passe generes.`, severity: 'danger' });
-		if (stats.reused > 0) recs.push({ icon: '&#128260;', text: `${stats.reused} mot${stats.reused > 1 ? 's' : ''} de passe reutilise${stats.reused > 1 ? 's' : ''} — utilise un mot de passe unique par compte.`, severity: 'danger' });
-		if (hibpDone && hibpResults.size > 0) recs.push({ icon: '&#127760;', text: `${hibpResults.size} mot${hibpResults.size > 1 ? 's' : ''} de passe compromis trouve${hibpResults.size > 1 ? 's' : ''} dans des fuites de donnees — change-les immediatement.`, severity: 'danger' });
-		if (stats.noMfa > 0) recs.push({ icon: '&#128274;', text: `${stats.noMfa} compte${stats.noMfa > 1 ? 's' : ''} sans MFA — active l'authentification a deux facteurs.`, severity: 'warning' });
-		if (stats.expired > 0) recs.push({ icon: '&#9203;', text: `${stats.expired} mot${stats.expired > 1 ? 's' : ''} de passe non modifie${stats.expired > 1 ? 's' : ''} depuis 6 mois.`, severity: 'info' });
-		if (recs.length === 0) recs.push({ icon: '&#9989;', text: 'Ton coffre est bien securise. Continue comme ca !', severity: 'info' });
+		if (stats.weak > 0) recs.push({ icon: '&#9888;&#65039;', text: `${stats.weak} ${stats.weak > 1 ? t('security.rec_weak_plural') : t('security.rec_weak')}`, severity: 'danger' });
+		if (stats.reused > 0) recs.push({ icon: '&#128260;', text: `${stats.reused} ${stats.reused > 1 ? t('security.rec_reused_plural') : t('security.rec_reused')}`, severity: 'danger' });
+		if (hibpDone && hibpResults.size > 0) recs.push({ icon: '&#127760;', text: `${hibpResults.size} ${hibpResults.size > 1 ? t('security.rec_breach_plural') : t('security.rec_breach')}`, severity: 'danger' });
+		if (stats.noMfa > 0) recs.push({ icon: '&#128274;', text: `${stats.noMfa} ${stats.noMfa > 1 ? t('security.rec_mfa_plural') : t('security.rec_mfa')}`, severity: 'warning' });
+		if (stats.expired > 0) recs.push({ icon: '&#9203;', text: `${stats.expired} ${stats.expired > 1 ? t('security.rec_expired_plural') : t('security.rec_expired')}`, severity: 'info' });
+		if (recs.length === 0) recs.push({ icon: '&#9989;', text: t('security.rec_all_good'), severity: 'info' });
 		return recs;
 	});
 
@@ -159,22 +160,22 @@
 	});
 
 	const statCards = $derived([
-		{ label: 'Faibles', value: displayWeak, real: stats.weak, color: stats.weak > 0 ? 'var(--fv-danger)' : 'var(--fv-success)', icon: 'alert' },
-		{ label: 'Reutilises', value: displayReused, real: stats.reused, color: stats.reused > 0 ? 'var(--fv-danger)' : 'var(--fv-success)', icon: 'repeat' },
-		{ label: 'Sans MFA', value: displayNoMfa, real: stats.noMfa, color: stats.noMfa > 0 ? 'var(--fv-gold)' : 'var(--fv-success)', icon: 'shield' },
-		{ label: 'Expires', value: displayExpired, real: stats.expired, color: stats.expired > 0 ? 'var(--fv-gold)' : 'var(--fv-success)', icon: 'clock' }
+		{ label: t('security.weak_passwords'), value: displayWeak, real: stats.weak, color: stats.weak > 0 ? 'var(--fv-danger)' : 'var(--fv-success)', icon: 'alert' },
+		{ label: t('security.reused_passwords'), value: displayReused, real: stats.reused, color: stats.reused > 0 ? 'var(--fv-danger)' : 'var(--fv-success)', icon: 'repeat' },
+		{ label: t('security.no_mfa'), value: displayNoMfa, real: stats.noMfa, color: stats.noMfa > 0 ? 'var(--fv-gold)' : 'var(--fv-success)', icon: 'shield' },
+		{ label: t('security.expired'), value: displayExpired, real: stats.expired, color: stats.expired > 0 ? 'var(--fv-gold)' : 'var(--fv-success)', icon: 'clock' }
 	]);
 </script>
 
 <svelte:head>
-	<title>Securite — FyxxVault</title>
+	<title>{t('security.page_title')}</title>
 </svelte:head>
 
 <div class="security-page max-w-3xl mx-auto">
 	<!-- Subtle mesh background -->
 	<div class="security-mesh"></div>
 
-	<h1 class="text-2xl font-extrabold text-white mb-8 tracking-tight relative z-10">Tableau de securite</h1>
+	<h1 class="text-2xl font-extrabold text-white mb-8 tracking-tight relative z-10">{t('security.title')}</h1>
 
 	<!-- Score gauge — larger -->
 	<div class="score-gauge-card p-8 mb-8 flex flex-col items-center fv-animate-in relative z-10">
@@ -207,7 +208,7 @@
 				<span class="text-sm font-bold mt-1 transition-colors duration-300" style="color: {scoreColor(displayScore)};">{scoreLabel(displayScore)}</span>
 			</div>
 		</div>
-		<p class="text-sm text-[var(--fv-smoke)]">Score de securite global</p>
+		<p class="text-sm text-[var(--fv-smoke)]">{t('security.score_label')}</p>
 	</div>
 
 	<!-- Stats grid — bento style -->
@@ -240,17 +241,17 @@
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
 			</div>
 			<div>
-				<h2 class="text-sm font-bold text-white">Surveillance Dark Web</h2>
-				<p class="text-[10px] text-[var(--fv-smoke)]">Verifie si tes mots de passe sont dans des fuites</p>
+				<h2 class="text-sm font-bold text-white">{t('security.dark_web')}</h2>
+				<p class="text-[10px] text-[var(--fv-smoke)]">{t('security.dark_web_desc')}</p>
 			</div>
 		</div>
 		<div class="p-4 rounded-xl bg-[var(--fv-gold)]/5 border border-[var(--fv-gold)]/20 flex items-center gap-3">
 			<span>&#128081;</span>
 			<div class="flex-1">
-				<p class="text-xs font-semibold text-[var(--fv-gold)]">Fonctionnalite Pro</p>
-				<p class="text-[10px] text-[var(--fv-smoke)]">Passe au plan Pro pour scanner le dark web</p>
+				<p class="text-xs font-semibold text-[var(--fv-gold)]">{t('security.pro_feature')}</p>
+				<p class="text-[10px] text-[var(--fv-smoke)]">{t('security.pro_upgrade')}</p>
 			</div>
-			<a href="/vault/settings" class="px-3 py-1.5 rounded-lg bg-[var(--fv-gold)] text-[#1a1a2e] text-[10px] font-bold transition-all duration-200 hover:shadow-lg hover:shadow-[var(--fv-gold)]/20">Upgrade</a>
+			<a href="/vault/settings" class="px-3 py-1.5 rounded-lg bg-[var(--fv-gold)] text-[#1a1a2e] text-[10px] font-bold transition-all duration-200 hover:shadow-lg hover:shadow-[var(--fv-gold)]/20">{t('security.upgrade')}</a>
 		</div>
 	</div>
 	{:else}
@@ -261,8 +262,8 @@
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
 				</div>
 				<div>
-					<h2 class="text-sm font-bold text-white">Surveillance Dark Web</h2>
-					<p class="text-[10px] text-[var(--fv-smoke)]">Verifie si tes mots de passe sont dans des fuites de donnees (HIBP)</p>
+					<h2 class="text-sm font-bold text-white">{t('security.dark_web')}</h2>
+					<p class="text-[10px] text-[var(--fv-smoke)]">{t('security.dark_web_full')}</p>
 				</div>
 			</div>
 			{#if !hibpScanning}
@@ -271,7 +272,7 @@
 					class="fv-btn fv-btn-primary text-xs !py-2 !px-4 !rounded-xl"
 					disabled={vault.entries.length === 0}
 				>
-					{hibpDone ? 'Rescanner' : 'Scanner'}
+					{hibpDone ? t('security.rescan') : t('security.scan')}
 				</button>
 			{/if}
 		</div>
@@ -280,7 +281,7 @@
 			<!-- Progress bar with gradient -->
 			<div class="space-y-2">
 				<div class="flex items-center justify-between text-xs text-[var(--fv-smoke)]">
-					<span>Verification en cours...</span>
+					<span>{t('security.checking')}</span>
 					<span class="tabular-nums">{hibpProgress}/{hibpTotal}</span>
 				</div>
 				<div class="h-2.5 rounded-full bg-white/5 overflow-hidden">
@@ -289,22 +290,22 @@
 						style="width: {hibpTotal > 0 ? (hibpProgress / hibpTotal * 100) : 0}%;"
 					></div>
 				</div>
-				<p class="text-[10px] text-[var(--fv-ash)]">Les mots de passe sont verifies de maniere anonyme (k-anonymity). Seuls les 5 premiers caracteres du hash SHA-1 sont envoyes.</p>
+				<p class="text-[10px] text-[var(--fv-ash)]">{t('security.k_anonymity')}</p>
 			</div>
 		{:else if hibpDone}
 			{#if hibpResults.size === 0}
 				<div class="p-4 rounded-xl bg-[var(--fv-success)]/5 border border-[var(--fv-success)]/10 text-center">
-					<p class="text-sm text-[var(--fv-success)] font-medium">Aucun mot de passe compromis trouve !</p>
-					<p class="text-[10px] text-[var(--fv-smoke)] mt-1">Tes mots de passe n'apparaissent dans aucune fuite de donnees connue.</p>
+					<p class="text-sm text-[var(--fv-success)] font-medium">{t('security.no_breaches')}</p>
+					<p class="text-[10px] text-[var(--fv-smoke)] mt-1">{t('security.no_breaches_desc')}</p>
 				</div>
 			{:else}
 				<div class="space-y-2">
 					<div class="p-3 rounded-xl bg-[var(--fv-danger)]/5 border border-[var(--fv-danger)]/10 mb-3">
-						<p class="text-xs text-[var(--fv-danger)] font-semibold">{hibpResults.size} mot{hibpResults.size > 1 ? 's' : ''} de passe compromis</p>
-						<p class="text-[10px] text-[var(--fv-smoke)] mt-0.5">Ces mots de passe apparaissent dans des fuites de donnees. Change-les immediatement.</p>
+						<p class="text-xs text-[var(--fv-danger)] font-semibold">{hibpResults.size} {hibpResults.size > 1 ? t('security.compromised_plural') : t('security.compromised')}</p>
+						<p class="text-[10px] text-[var(--fv-smoke)] mt-0.5">{t('security.change_now')}</p>
 					</div>
 					{#if lastScanTime}
-					<p class="text-[10px] text-[var(--fv-ash)] mb-3">Derniere analyse : {lastScanTime}</p>
+					<p class="text-[10px] text-[var(--fv-ash)] mb-3">{t('security.last_scan')} {lastScanTime}</p>
 				{/if}
 				<div class="max-h-[300px] overflow-y-auto space-y-2 pr-1">
 				{#each getBreachedEntries() as entry}
@@ -316,7 +317,7 @@
 								<p class="text-[10px] text-[var(--fv-smoke)]">{entry.username}</p>
 							</div>
 							<span class="px-2 py-1 rounded-full bg-[var(--fv-danger)]/10 text-[10px] text-[var(--fv-danger)] font-semibold shrink-0">
-								{count.toLocaleString()} fuite{count > 1 ? 's' : ''}
+								{count.toLocaleString()} {count > 1 ? t('security.breaches') : t('security.breach')}
 							</span>
 						</a>
 					{/each}
@@ -324,14 +325,14 @@
 				</div>
 			{/if}
 		{:else}
-			<p class="text-xs text-[var(--fv-ash)] text-center py-2">Clique sur "Scanner" pour verifier tes mots de passe.</p>
+			<p class="text-xs text-[var(--fv-ash)] text-center py-2">{t('security.click_scan')}</p>
 		{/if}
 	</div>
 	{/if}
 
 	<!-- Recommendations -->
 	<div class="sec-glass-card p-6 mb-6 fv-animate-in relative z-10" style="animation-delay: 300ms;">
-		<h2 class="text-sm font-bold text-white mb-5">Recommandations</h2>
+		<h2 class="text-sm font-bold text-white mb-5">{t('security.recommendations')}</h2>
 		<div class="space-y-3">
 			{#each recommendations() as rec, idx}
 				<div class="rec-card flex items-start gap-3 p-4 rounded-xl transition-all duration-200 fv-animate-in
@@ -352,11 +353,11 @@
 						<p class="text-xs text-[var(--fv-mist)] leading-relaxed">{rec.text}</p>
 					</div>
 					{#if rec.severity === 'danger'}
-						<span class="text-[9px] px-2 py-0.5 rounded-full bg-[var(--fv-danger)]/15 text-[var(--fv-danger)] font-bold shrink-0 uppercase">Critique</span>
+						<span class="text-[9px] px-2 py-0.5 rounded-full bg-[var(--fv-danger)]/15 text-[var(--fv-danger)] font-bold shrink-0 uppercase">{t('security.critical')}</span>
 					{:else if rec.severity === 'warning'}
-						<span class="text-[9px] px-2 py-0.5 rounded-full bg-[var(--fv-gold)]/15 text-[var(--fv-gold)] font-bold shrink-0 uppercase">Moyen</span>
+						<span class="text-[9px] px-2 py-0.5 rounded-full bg-[var(--fv-gold)]/15 text-[var(--fv-gold)] font-bold shrink-0 uppercase">{t('security.medium')}</span>
 					{:else}
-						<span class="text-[9px] px-2 py-0.5 rounded-full bg-[var(--fv-success)]/15 text-[var(--fv-success)] font-bold shrink-0 uppercase">Info</span>
+						<span class="text-[9px] px-2 py-0.5 rounded-full bg-[var(--fv-success)]/15 text-[var(--fv-success)] font-bold shrink-0 uppercase">{t('security.info')}</span>
 					{/if}
 				</div>
 			{/each}
@@ -366,11 +367,11 @@
 	<!-- Reused passwords section -->
 	{#if reusedPasswords().length > 0}
 		<div class="sec-glass-card p-6 mb-6 relative z-10">
-			<h2 class="text-sm font-bold text-white mb-4">Mots de passe reutilises</h2>
+			<h2 class="text-sm font-bold text-white mb-4">{t('security.reused_title')}</h2>
 			<div class="space-y-3">
 				{#each reusedPasswords() as [_, titles]}
 					<div class="p-3 rounded-xl bg-[var(--fv-danger)]/5 border border-[var(--fv-danger)]/10">
-						<p class="text-xs text-[var(--fv-danger)] font-medium mb-1">Meme mot de passe partage par :</p>
+						<p class="text-xs text-[var(--fv-danger)] font-medium mb-1">{t('security.shared_by')}</p>
 						<div class="flex flex-wrap gap-1.5">
 							{#each titles as title}
 								<span class="px-2 py-0.5 rounded bg-white/5 text-[10px] text-[var(--fv-smoke)]">{title}</span>
@@ -385,7 +386,7 @@
 	<!-- Weak entries list -->
 	{#if weakEntries.length > 0}
 		<div class="sec-glass-card p-6 relative z-10">
-			<h2 class="text-sm font-bold text-white mb-4">Mots de passe faibles</h2>
+			<h2 class="text-sm font-bold text-white mb-4">{t('security.weak_title')}</h2>
 			<div class="space-y-2">
 				{#each weakEntries as entry}
 					{@const s = passwordStrength(entry.password)}

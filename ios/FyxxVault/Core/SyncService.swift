@@ -182,6 +182,8 @@ final class SyncService: ObservableObject {
 
     func unlockCloud(masterPassword: String) async throws {
         guard accessToken != nil else { throw SyncError.notAuthenticated }
+        // Ensure token is fresh before fetching profile
+        if let fresh = await getValidAccessToken() { accessToken = fresh }
 
         // Fetch profile
         let profileData = try await getJSON(path: "/rest/v1/profiles?select=*&limit=1")
@@ -202,11 +204,19 @@ final class SyncService: ObservableObject {
         do {
             self.vek = try CloudKeyManager.unwrapVEK(wrappedVEK, with: kek)
             self.isCloudAuthenticated = true
-            self.state = .idle
-            // Read cloud Pro status (set by Stripe webhook on the web)
-            if let isPro = profile["is_pro"] as? Bool {
-                self.cloudIsProUser = isPro
+            // Read is_pro — handle Bool, Int (1/0), String ("true"/"false")
+            let rawPro = profile["is_pro"]
+            if let boolVal = rawPro as? Bool {
+                self.cloudIsProUser = boolVal
+            } else if let intVal = rawPro as? Int {
+                self.cloudIsProUser = intVal == 1
+            } else if let strVal = rawPro as? String {
+                self.cloudIsProUser = strVal == "true" || strVal == "1"
+            } else {
+                self.cloudIsProUser = false
             }
+            print("[SyncService] unlockCloud: is_pro raw=\(String(describing: rawPro)) → cloudIsProUser=\(self.cloudIsProUser)")
+            self.state = .idle
         } catch {
             throw SyncError.encryptionError("Mot de passe maître incorrect pour le cloud")
         }
@@ -215,10 +225,12 @@ final class SyncService: ObservableObject {
     /// Configure SyncService with a token already obtained by SupabaseAuthService,
     /// then unlock the cloud vault with the master password.
     /// This avoids a redundant /auth/v1/token call when SupabaseAuthService already signed in.
-    func configureWithToken(_ token: String, email: String?, masterPassword: String) async throws {
+    func configureWithToken(_ token: String, refresh: String? = nil, email: String?, masterPassword: String) async throws {
         self.accessToken = token
+        if let refresh { self.refreshToken = refresh }
         self.cloudEmail = email
         saveSession()
+        print("[SyncService] configureWithToken: token=\(token.prefix(20))… refresh=\(self.refreshToken != nil ? "yes" : "no") email=\(email ?? "nil")")
 
         // Unlock cloud vault (fetches profile, derives KEK, unwraps VEK)
         try await unlockCloud(masterPassword: masterPassword)
@@ -234,11 +246,54 @@ final class SyncService: ObservableObject {
         clearSession()
     }
 
+    // MARK: - Cloud Pro Status
+
+    /// Refresh Pro status from Supabase profile (Stripe webhook sets is_pro)
+    func refreshCloudProStatus() async {
+        guard let token = await getValidAccessToken() else {
+            print("[SyncService] refreshCloudProStatus: no valid token")
+            return
+        }
+        do {
+            let url = URL(string: baseURL + "/rest/v1/profiles?select=is_pro&limit=1")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.setValue(anonKey, forHTTPHeaderField: "apikey")
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let httpCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let rawBody = String(data: data, encoding: .utf8) ?? ""
+            print("[SyncService] refreshCloudProStatus: HTTP \(httpCode) body=\(rawBody)")
+            guard httpCode < 400 else { return }
+            if let json = try JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+               let profile = json.first {
+                let rawPro = profile["is_pro"]
+                var isPro = false
+                if let b = rawPro as? Bool { isPro = b }
+                else if let i = rawPro as? Int { isPro = i == 1 }
+                else if let s = rawPro as? String { isPro = s == "true" || s == "1" }
+                print("[SyncService] refreshCloudProStatus: raw=\(String(describing: rawPro)) → isPro=\(isPro)")
+                cloudIsProUser = isPro
+            }
+        } catch {
+            print("[SyncService] refreshCloudProStatus error: \(error)")
+        }
+    }
+
     // MARK: - Sync Operations
 
     func sync(localEntries: [VaultEntry]) async throws -> [VaultEntry] {
-        guard let vek else { throw SyncError.notUnlocked }
-        guard accessToken != nil else { throw SyncError.notAuthenticated }
+        guard let vek else {
+            print("[SyncService] sync: VEK is nil — vault not unlocked")
+            throw SyncError.notUnlocked
+        }
+        // Ensure we have a valid (non-expired) token
+        guard let validToken = await getValidAccessToken() else {
+            print("[SyncService] sync: no valid token available")
+            throw SyncError.notAuthenticated
+        }
+        // Update accessToken for REST calls
+        accessToken = validToken
 
         state = .syncing
 
@@ -254,38 +309,64 @@ final class SyncService: ObservableObject {
             var remoteEntries: [(id: String, entry: VaultEntry, updatedAt: Date, deleted: Bool)] = []
             let dateFormatter = ISO8601DateFormatter()
             dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            var decryptionFailures = 0
+            var activeRemoteCount = 0
 
             for item in remoteItems {
                 guard let remoteId = item["id"] as? String,
-                      let blobRaw = item["encrypted_blob"] as? String,
-                      let updatedAtStr = item["updated_at"] as? String,
-                      let blob = decodeSupabaseBytes(blobRaw) else { continue }
+                      let updatedAtStr = item["updated_at"] as? String else { continue }
 
                 let isDeleted = item["deleted_at"] != nil && !(item["deleted_at"] is NSNull)
                 let updatedAt = dateFormatter.date(from: updatedAtStr) ?? Date.distantPast
 
-                if !isDeleted {
-                    if let entry = try? CloudKeyManager.decryptEntry(blob, with: vek) {
-                        remoteEntries.append((id: remoteId, entry: entry, updatedAt: updatedAt, deleted: false))
-                    }
-                } else {
-                    // Create placeholder for deleted entries
+                if isDeleted {
+                    // Deleted entry — no need for blob, just track for removal
                     remoteEntries.append((id: remoteId, entry: VaultEntry(title: "", username: "", password: "", website: "", notes: ""), updatedAt: updatedAt, deleted: true))
+                } else {
+                    activeRemoteCount += 1
+                    // Active entry — needs blob + decryption
+                    guard let blobRaw = item["encrypted_blob"] as? String else {
+                        print("[SyncService] ⚠️ Missing encrypted_blob for entry \(remoteId)")
+                        decryptionFailures += 1
+                        continue
+                    }
+                    guard let blob = decodeSupabaseBytes(blobRaw) else {
+                        print("[SyncService] ⚠️ Failed to decode BYTEA for entry \(remoteId) — raw prefix: \(blobRaw.prefix(30))")
+                        decryptionFailures += 1
+                        continue
+                    }
+                    do {
+                        let entry = try CloudKeyManager.decryptEntry(blob, with: vek)
+                        remoteEntries.append((id: remoteId, entry: entry, updatedAt: updatedAt, deleted: false))
+                    } catch {
+                        print("[SyncService] ⚠️ Decryption failed for entry \(remoteId): \(error)")
+                        decryptionFailures += 1
+                    }
                 }
             }
+            let activeDecrypted = remoteEntries.filter { !$0.deleted }.count
+            print("[SyncService] sync: \(remoteItems.count) remote items → \(activeDecrypted) active decrypted, \(remoteEntries.filter { $0.deleted }.count) deleted, \(decryptionFailures) decrypt failures")
 
-            // 3. Merge: last-write-wins
+            // SAFETY: If remote has active entries but ALL failed decryption, don't wipe local vault
+            if activeRemoteCount > 0 && activeDecrypted == 0 {
+                print("[SyncService] ⚠️ ALL \(activeRemoteCount) active entries failed decryption — keeping local vault intact (\(localEntries.count) entries)")
+                state = .error("Échec déchiffrement cloud")
+                return localEntries
+            }
+
+            // 3. Merge: last-write-wins (case-insensitive UUID comparison)
             var merged = localEntries
-            _ = Set(localEntries.map { $0.id.uuidString })
 
             for remote in remoteEntries {
+                let remoteIdUpper = remote.id.uppercased()
+
                 if remote.deleted {
                     // Remove locally if remote was deleted
-                    merged.removeAll { $0.id.uuidString == remote.id }
+                    merged.removeAll { $0.id.uuidString.uppercased() == remoteIdUpper }
                     continue
                 }
 
-                if let localIdx = merged.firstIndex(where: { $0.id.uuidString == remote.id }) {
+                if let localIdx = merged.firstIndex(where: { $0.id.uuidString.uppercased() == remoteIdUpper }) {
                     // Exists locally — last-write-wins
                     if remote.updatedAt > merged[localIdx].lastModifiedAt {
                         merged[localIdx] = remote.entry
@@ -296,17 +377,19 @@ final class SyncService: ObservableObject {
                 }
             }
 
+            print("[SyncService] sync: after merge → \(merged.count) entries (was \(localEntries.count) local)")
+
             // 4. Push local entries that don't exist remotely
-            let remoteIDs = Set(remoteEntries.map { $0.id })
+            let remoteIDs = Set(remoteEntries.map { $0.id.uppercased() })
             for entry in merged {
-                if !remoteIDs.contains(entry.id.uuidString) {
+                if !remoteIDs.contains(entry.id.uuidString.uppercased()) {
                     try await pushEntry(entry)
                 }
             }
 
             // 5. Update local entries that are newer than remote
             for entry in merged {
-                if let remote = remoteEntries.first(where: { $0.id == entry.id.uuidString }),
+                if let remote = remoteEntries.first(where: { $0.id.uppercased() == entry.id.uuidString.uppercased() }),
                    !remote.deleted,
                    entry.lastModifiedAt > remote.updatedAt {
                     try await pushEntry(entry)
@@ -315,9 +398,6 @@ final class SyncService: ObservableObject {
 
             // 6. Update sync metadata
             try await updateSyncMetadata()
-
-            // 7. Refresh Pro status (in case it changed since last session)
-            await refreshProStatus()
 
             state = .idle
             lastSyncDate = Date()
@@ -330,6 +410,8 @@ final class SyncService: ObservableObject {
 
     func pushEntry(_ entry: VaultEntry) async throws {
         guard let vek else { throw SyncError.notUnlocked }
+        // Ensure fresh token
+        if let fresh = await getValidAccessToken() { accessToken = fresh }
 
         let encrypted = try CloudKeyManager.encryptEntry(entry, with: vek)
         let now = ISO8601DateFormatter().string(from: Date())
@@ -353,19 +435,6 @@ final class SyncService: ObservableObject {
         let now = ISO8601DateFormatter().string(from: Date())
         let body: [String: Any] = ["deleted_at": now]
         _ = try await patchJSON(path: "/rest/v1/vault_items?id=eq.\(id.uuidString)", body: body)
-    }
-
-    // MARK: - Pro Status
-
-    private func refreshProStatus() async {
-        guard accessToken != nil else { return }
-        guard let profileData = try? await getJSON(path: "/rest/v1/profiles?select=is_pro&limit=1"),
-              let profiles = profileData as? [[String: Any]],
-              let profile = profiles.first,
-              let isPro = profile["is_pro"] as? Bool else { return }
-        if isPro != cloudIsProUser {
-            cloudIsProUser = isPro
-        }
     }
 
     // MARK: - Supabase BYTEA Helpers
@@ -481,6 +550,69 @@ final class SyncService: ObservableObject {
             auth: true,
             extraHeaders: ["Prefer": "resolution=merge-duplicates"]
         )
+    }
+
+    // MARK: - Token Refresh
+
+    /// Refreshes the Supabase access token using the stored refresh token.
+    /// Updates both in-memory and keychain tokens.
+    func refreshAccessToken() async -> Bool {
+        guard let refreshData = KeychainService.loadOptionalData(for: "fyxxvault.cloud.refresh.token"),
+              let refresh = String(data: refreshData, encoding: .utf8) else {
+            print("[SyncService] No refresh token available")
+            return false
+        }
+        do {
+            let body: [String: Any] = ["refresh_token": refresh]
+            let url = URL(string: baseURL + "/auth/v1/token?grant_type=refresh_token")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(anonKey, forHTTPHeaderField: "apikey")
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, http.statusCode < 400 else {
+                print("[SyncService] Token refresh failed: HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
+                return false
+            }
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let newAccess = json["access_token"] as? String else {
+                return false
+            }
+            accessToken = newAccess
+            if let newRefresh = json["refresh_token"] as? String {
+                refreshToken = newRefresh
+            }
+            saveSession()
+            print("[SyncService] Token refreshed successfully")
+            return true
+        } catch {
+            print("[SyncService] Token refresh error: \(error)")
+            return false
+        }
+    }
+
+    /// Check if current JWT is expired by decoding the exp claim
+    var isTokenExpired: Bool {
+        guard let token = accessToken else { return true }
+        let parts = token.split(separator: ".")
+        guard parts.count >= 2 else { return true }
+        var base64 = String(parts[1])
+        while base64.count % 4 != 0 { base64.append("=") }
+        guard let data = Data(base64Encoded: base64),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let exp = json["exp"] as? TimeInterval else { return true }
+        // Consider expired if less than 60 seconds remaining
+        return Date().timeIntervalSince1970 >= (exp - 60)
+    }
+
+    /// Returns a valid access token, refreshing if needed. Updates keychain.
+    func getValidAccessToken() async -> String? {
+        if isTokenExpired {
+            let success = await refreshAccessToken()
+            if !success { return nil }
+        }
+        return accessToken
     }
 
     // MARK: - Session Persistence (tokens only, never VEK)

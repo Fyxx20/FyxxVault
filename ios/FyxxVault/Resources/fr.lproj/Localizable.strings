@@ -555,3 +555,5 @@
 /* Missing keys */
 "auth.divider.or" = "ou";
 "vault.bulk.count %lld" = "%lld entrée(s)";
+"lock.title" = "COFFRE VERROUILLÉ";
+"lock.subtitle" = "Coffre verrouillé pour ta sécurité";

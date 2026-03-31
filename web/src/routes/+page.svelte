@@ -1,9 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { supabase } from '$lib/supabase';
+	import { goto } from '$app/navigation';
 	import Navbar from '$lib/components/landing/Navbar.svelte';
 
 	let mounted = $state(false);
 	let heroVisible = $state(false);
+	let hasSession = $state(false);
+	let sessionChecked = $state(false);
+	let sessionEmail = $state('');
+	let showLanding = $state(false);
 	let revealedSections = $state(new Set<string>());
 	let openFaq = $state<number | null>(null);
 	let scrollY = $state(0);
@@ -32,7 +38,15 @@
 
 	const ctaFullText = 'Pret a securiser tes comptes ?';
 
-	onMount(() => {
+	onMount(async () => {
+		// Check for existing session before showing landing
+		const { data: { session } } = await supabase.auth.getSession();
+		if (session) {
+			hasSession = true;
+			sessionEmail = session.user?.email ?? '';
+		}
+		sessionChecked = true;
+
 		mounted = true;
 		setTimeout(() => heroVisible = true, 200);
 
@@ -266,12 +280,12 @@
 			title: 'Chiffrement militaire',
 			description: 'AES-256-GCM avec derivation de cle PBKDF2. Tes donnees sont illisibles sans ton mot de passe maitre.',
 			color: 'var(--fv-cyan)',
-			size: 'large',
+			size: 'medium',
 		},
 		{
-			icon: 'zap',
-			title: 'AutoFill intelligent',
-			description: 'Remplissage automatique dans Safari et toutes tes apps iOS. Un tap et c\'est fait.',
+			icon: 'mail',
+			title: 'Emails masques @fyxxmail.com',
+			description: 'Cree des alias jetables et recois les messages directement dans la messagerie FyxxVault sans exposer ton vrai email.',
 			color: 'var(--fv-violet)',
 			size: 'medium',
 		},
@@ -452,6 +466,50 @@
 	<meta name="description" content="FyxxVault — Le gestionnaire de mots de passe nouvelle generation. Chiffrement AES-256, zero-knowledge, surveillance dark web." />
 </svelte:head>
 
+<!-- Welcome back overlay (shown when session exists) -->
+{#if hasSession && !showLanding && sessionChecked}
+	<div style="position:fixed;inset:0;z-index:9999;background:#050a15;display:flex;align-items:center;justify-content:center;padding:1.5rem;">
+		<div style="position:absolute;top:25%;left:25%;width:500px;height:500px;border-radius:50%;background:#00d4ff;opacity:0.04;filter:blur(120px);"></div>
+		<div style="position:absolute;bottom:25%;right:25%;width:400px;height:400px;border-radius:50%;background:#8a5cf6;opacity:0.04;filter:blur(120px);"></div>
+
+		<div style="position:relative;z-index:10;width:100%;max-width:28rem;text-align:center;animation:wbFadeIn 0.6s ease both;">
+			<div style="display:inline-flex;align-items:center;justify-content:center;width:5rem;height:5rem;border-radius:1rem;background:linear-gradient(135deg,#00d4ff,#8a5cf6);margin-bottom:2rem;box-shadow:0 0 40px rgba(0,212,255,0.2),0 0 80px rgba(138,92,246,0.1);">
+				<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+					<rect x="3" y="11" width="18" height="11" rx="2"/>
+					<path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+				</svg>
+			</div>
+
+			<h1 style="font-size:1.875rem;font-weight:800;color:white;margin-bottom:0.5rem;letter-spacing:-0.025em;">Bon retour</h1>
+			<p style="font-size:0.875rem;color:#788a9f;margin-bottom:2.5rem;">
+				Connecte en tant que <span style="color:#00d4ff;">{sessionEmail}</span>
+			</p>
+
+			<div style="display:flex;flex-direction:column;gap:0.75rem;">
+				<a
+					href="/vault/unlock"
+					style="display:flex;align-items:center;justify-content:center;gap:0.75rem;width:100%;padding:1rem;border-radius:1rem;color:white;font-weight:700;font-size:0.875rem;text-decoration:none;background:linear-gradient(135deg,#00d4ff,#8a5cf6);box-shadow:0 8px 32px rgba(0,212,255,0.25);transition:transform 0.2s;"
+				>
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+					Ouvrir mon coffre
+				</a>
+				<button
+					onclick={() => showLanding = true}
+					style="display:flex;align-items:center;justify-content:center;gap:0.5rem;width:100%;padding:1rem;border-radius:1rem;color:#b4c3d7;font-weight:500;font-size:0.875rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:all 0.2s;"
+				>
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+					Visiter le site
+				</button>
+			</div>
+
+			<p style="font-size:10px;color:#3a4a5c;margin-top:2.5rem;display:flex;align-items:center;justify-content:center;gap:0.375rem;">
+				<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+				Chiffrement AES-256 · Zero-Knowledge
+			</p>
+		</div>
+	</div>
+{/if}
+
 <!-- Scroll progress bar -->
 <div class="scroll-progress" style="width: {scrollProgress}%"></div>
 
@@ -604,6 +662,8 @@
 									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
 								{:else if feature.icon === 'zap'}
 									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+								{:else if feature.icon === 'mail'}
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="1.5"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3 6 9 7 9-7"/></svg>
 								{:else if feature.icon === 'sync'}
 									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={feature.color} stroke-width="1.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
 								{:else if feature.icon === 'key'}
@@ -644,7 +704,7 @@
 							</div>
 							<div class="demo-card-info">
 								<span class="demo-card-site">Google</span>
-								<span class="demo-card-email">user@fyxxvault.com</span>
+								<span class="demo-card-email">user@fyxxmail.com</span>
 							</div>
 							<div class="demo-card-badge">2FA</div>
 						</div>
@@ -1070,6 +1130,11 @@
 </div>
 
 <style>
+	@keyframes wbFadeIn {
+		from { opacity: 0; transform: translateY(20px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
 	/* ============================================================ */
 	/* CSS CUSTOM PROPERTIES & KEYFRAMES */
 	/* ============================================================ */

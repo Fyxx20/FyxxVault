@@ -31,3 +31,6 @@ web/build/
 .claude/worktrees/
 supabase/.temp/
 video/
+
+# Local Netlify folder
+.netlify

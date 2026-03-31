@@ -172,6 +172,7 @@ final class AuthManager: ObservableObject {
                            let token = SupabaseAuthService.shared.accessToken {
                             try await syncService.configureWithToken(
                                 token,
+                                refresh: SupabaseAuthService.shared.refreshToken,
                                 email: syncEmail,
                                 masterPassword: syncPw
                             )
@@ -234,6 +235,7 @@ final class AuthManager: ObservableObject {
                     do {
                         try await syncService.configureWithToken(
                             token,
+                            refresh: SupabaseAuthService.shared.refreshToken,
                             email: email,
                             masterPassword: password
                         )

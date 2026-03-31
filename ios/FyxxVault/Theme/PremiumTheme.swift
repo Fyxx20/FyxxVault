@@ -739,10 +739,12 @@ struct FVSettingsButton: ButtonStyle {
     }
 }
 
-// MARK: - Custom Tab Bar
+/// MARK: - Custom Tab Bar (5 tabs)
 
 struct FVTabBar: View {
     @Binding var selectedTab: Int
+    var mailUnread: Int = 0
+    var announcementUnread: Int = 0
 
     var body: some View {
         ZStack {
@@ -766,29 +768,89 @@ struct FVTabBar: View {
                 .frame(height: 68)
                 .shadow(color: .black.opacity(0.3), radius: 20, y: 8)
 
-            // Tab items
+            // Tab items: Security(0) | Emails(1) | [VAULT CENTER(2)] | Identity(3) | Settings(4)
             HStack(spacing: 0) {
-                // Left — Sécurité
                 FVTabItem(icon: "shield.checkered", label: "Sécurité", index: 0, selected: $selectedTab)
                     .frame(maxWidth: .infinity)
 
-                // Center spacer for the floating button
-                Color.clear.frame(width: 80)
+                FVTabBadgeItem(icon: "envelope.fill", label: "Mails", index: 1, badgeCount: mailUnread, selected: $selectedTab)
+                    .frame(maxWidth: .infinity)
 
-                // Right — Réglages
-                FVTabItem(icon: "gearshape.fill", label: "Réglages", index: 2, selected: $selectedTab)
+                // Spacer for center floating button
+                Color.clear.frame(width: 68)
+
+                FVTabItem(icon: "person.text.rectangle.fill", label: "Identité", index: 3, selected: $selectedTab)
+                    .frame(maxWidth: .infinity)
+
+                FVTabItem(icon: "gearshape.fill", label: "Réglages", index: 4, selected: $selectedTab)
                     .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 8)
 
-            // Center floating button — Coffre
-            FVTabCenterItem(icon: "lock.shield.fill", index: 1, selected: $selectedTab)
+            // Center floating button — Coffre (tab 2)
+            FVTabCenterItem(icon: "lock.shield.fill", index: 2, selected: $selectedTab)
                 .offset(y: -22)
         }
-        .frame(maxWidth: 420)
+        .frame(maxWidth: 440)
         .frame(height: 68)
-        .padding(.horizontal, 18)
+        .padding(.horizontal, 14)
         .padding(.bottom, 10)
+    }
+}
+
+// MARK: - Tab Item with Badge
+
+struct FVTabBadgeItem: View {
+    let icon: String
+    let label: String
+    let index: Int
+    var badgeCount: Int = 0
+    @Binding var selected: Int
+
+    private var isSelected: Bool { selected == index }
+
+    var body: some View {
+        Button {
+            fvHaptic(.light)
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                selected = index
+            }
+        } label: {
+            VStack(spacing: 5) {
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: icon)
+                        .font(.system(size: 21, weight: isSelected ? .bold : .medium))
+                        .symbolRenderingMode(.hierarchical)
+                        .frame(height: 22)
+
+                    if badgeCount > 0 {
+                        ZStack {
+                            Circle()
+                                .fill(FVColor.danger)
+                                .frame(width: 14, height: 14)
+                            Text(badgeCount > 9 ? "9+" : "\(badgeCount)")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundStyle(.white)
+                        }
+                        .offset(x: 6, y: -4)
+                    }
+                }
+
+                Text(label)
+                    .font(FVFont.caption(10))
+                    .kerning(0.3)
+                    .lineLimit(1)
+
+                Circle()
+                    .fill(FVColor.cyan)
+                    .frame(width: 5, height: 5)
+                    .opacity(isSelected ? 1 : 0)
+                    .scaleEffect(isSelected ? 1 : 0.3)
+            }
+            .foregroundStyle(isSelected ? FVColor.cyan : FVColor.smoke)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+        }
+        .buttonStyle(.plain)
     }
 }
 

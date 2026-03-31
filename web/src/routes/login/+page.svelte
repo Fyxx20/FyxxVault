@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabase';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { t } from '$lib/i18n.svelte';
 
 	let email = $state('');
 	let password = $state('');
@@ -8,9 +10,17 @@
 	let error = $state('');
 	let errorKey = $state(0);
 
+	// If already authenticated, redirect to unlock
+	onMount(async () => {
+		const { data: { session } } = await supabase.auth.getSession();
+		if (session) {
+			goto('/vault/unlock');
+		}
+	});
+
 	async function handleLogin() {
 		error = '';
-		if (!email.trim() || !password) { error = 'Email et mot de passe requis.'; errorKey++; return; }
+		if (!email.trim() || !password) { error = t('login.error.required'); errorKey++; return; }
 
 		loading = true;
 
@@ -22,14 +32,14 @@
 
 			if (authError) {
 				error = authError.message === 'Invalid login credentials'
-					? 'Email ou mot de passe incorrect.'
+					? t('login.error.invalid')
 					: authError.message;
 				errorKey++;
 			} else {
 				goto('/vault/unlock');
 			}
 		} catch (e: any) {
-			error = e.message || 'Une erreur est survenue.';
+			error = e.message || t('login.error.generic');
 			errorKey++;
 		} finally {
 			loading = false;
@@ -38,7 +48,7 @@
 </script>
 
 <svelte:head>
-	<title>Connexion — FyxxVault</title>
+	<title>{t('login.title')} — FyxxVault</title>
 </svelte:head>
 
 <div class="min-h-screen bg-[var(--fv-abyss)] flex items-center justify-center px-6 py-20">
@@ -57,8 +67,8 @@
 				</div>
 				<span class="text-2xl font-extrabold text-white">FyxxVault</span>
 			</a>
-			<h1 class="text-2xl font-bold text-white">Connexion</h1>
-			<p class="text-sm text-[var(--fv-smoke)] mt-2">Accède à ton coffre sécurisé</p>
+			<h1 class="text-2xl font-bold text-white">{t('login.title')}</h1>
+			<p class="text-sm text-[var(--fv-smoke)] mt-2">{t('login.subtitle')}</p>
 		</div>
 
 		<!-- Login form -->
@@ -66,7 +76,7 @@
 			<form onsubmit={(e: SubmitEvent) => { e.preventDefault(); handleLogin(); }} class="space-y-4">
 				<!-- Email -->
 				<div>
-					<label for="email" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Email</label>
+					<label for="email" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">{t('login.email_placeholder')}</label>
 					<input
 						id="email"
 						type="email"
@@ -78,7 +88,7 @@
 
 				<!-- Password -->
 				<div>
-					<label for="password" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Mot de passe</label>
+					<label for="password" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">{t('login.password_placeholder')}</label>
 					<input
 						id="password"
 						type="password"
@@ -86,6 +96,11 @@
 						placeholder="••••••••••••"
 						class="w-full px-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none fv-input-glow transition-all duration-300"
 					/>
+					<div class="mt-2 text-right">
+						<a href="/forgot-password" class="text-xs text-[var(--fv-cyan)] hover:underline transition-colors duration-200">
+							{t('login.forgot')}
+						</a>
+					</div>
 				</div>
 
 				<!-- Error -->
@@ -104,23 +119,23 @@
 				<button type="submit" disabled={loading} class="fv-btn fv-btn-primary w-full !py-4 {loading ? 'opacity-60 cursor-not-allowed' : ''}">
 					{#if loading}
 						<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-						Connexion...
+						{t('login.submitting')}
 					{:else}
-						Se connecter
+						{t('login.submit')}
 					{/if}
 				</button>
 			</form>
 
 			<!-- Register link -->
 			<p class="text-center text-sm text-[var(--fv-smoke)] mt-6">
-				Pas encore de compte ? <a href="/register" class="text-[var(--fv-cyan)] font-semibold hover:underline transition-colors duration-200">Créer un compte</a>
+				{t('login.no_account')} <a href="/register" class="text-[var(--fv-cyan)] font-semibold hover:underline transition-colors duration-200">{t('login.register')}</a>
 			</p>
 		</div>
 
 		<!-- Footer -->
 		<p class="text-center text-[10px] text-[var(--fv-ash)]/60 mt-8 flex items-center justify-center gap-1.5 fv-animate-in" style="animation-delay: 200ms;">
 			<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-			Chiffrement local AES-256 &middot; Connexion sécurisée
+			{t('login.encryption_footer')}
 		</p>
 	</div>
 </div>

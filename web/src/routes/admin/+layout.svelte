@@ -9,6 +9,7 @@
 	let sidebarOpen = $state(false);
 	let authorized = $state(false);
 	let checking = $state(true);
+	let openTicketCount = $state(0);
 
 	initAuth();
 
@@ -27,6 +28,13 @@
 						const admins: string[] = data.admins ?? ['fyxxfn@gmail.com'];
 						if (admins.includes(auth.user?.email ?? '')) {
 							authorized = true;
+							// Fetch open ticket count for nav badge
+							fetch('/api/admin/support?status=open', {
+								headers: { Authorization: `Bearer ${auth.session?.access_token ?? ''}` }
+							})
+								.then(r => r.json())
+								.then(d => { openTicketCount = d.stats?.open ?? d.tickets?.length ?? 0; })
+								.catch(() => {});
 						} else {
 							goto('/');
 						}
@@ -46,6 +54,7 @@
 		{ path: '/admin/users', label: 'Utilisateurs', icon: 'users' },
 		{ path: '/admin/subscriptions', label: 'Abonnements', icon: 'credit-card' },
 		{ path: '/admin/database', label: 'Base de donnees', icon: 'database' },
+		{ path: '/admin/support', label: 'Support', icon: 'support' },
 		{ path: '/admin/settings', label: 'Parametres', icon: 'settings' }
 	];
 
@@ -131,6 +140,10 @@
 								<path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
 								<path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
 							</svg>
+						{:else if item.icon === 'support'}
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+							</svg>
 						{:else if item.icon === 'settings'}
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 								<circle cx="12" cy="12" r="3"/>
@@ -138,6 +151,9 @@
 							</svg>
 						{/if}
 						{item.label}
+						{#if item.icon === 'support' && openTicketCount > 0}
+							<span class="ml-auto px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px] font-bold leading-none min-w-[18px] text-center">{openTicketCount}</span>
+						{/if}
 					</a>
 				{/each}
 			</nav>

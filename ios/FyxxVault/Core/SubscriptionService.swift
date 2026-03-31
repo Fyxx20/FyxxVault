@@ -13,6 +13,11 @@ final class SubscriptionService: ObservableObject {
     @Published var purchaseInProgress: Bool = false
     @Published var errorMessage: String? = nil
 
+    /// Pro via StoreKit (iOS purchase)
+    private var storeKitPro: Bool = false
+    /// Pro via cloud/Stripe (web purchase recognized on iOS)
+    private var cloudPro: Bool = false
+
     static let proMonthlyID = "com.fyxx.fyxxvault.pro.monthly"
     static let proYearlyID = "com.fyxx.fyxxvault.pro.yearly"
 
@@ -33,6 +38,20 @@ final class SubscriptionService: ObservableObject {
             await checkEntitlements()
             await loadProducts()
         }
+    }
+
+    /// Called when cloud Pro status changes (Stripe subscription recognized)
+    func setCloudProStatus(_ isPro: Bool) {
+        print("[SubscriptionService] setCloudProStatus(\(isPro)) — storeKit=\(storeKitPro) cloud=\(isPro)")
+        cloudPro = isPro
+        updateCombinedProStatus()
+    }
+
+    private func updateCombinedProStatus() {
+        let combined = storeKitPro || cloudPro
+        print("[SubscriptionService] updateCombined: storeKit=\(storeKitPro) cloud=\(cloudPro) → isProUser=\(combined)")
+        isProUser = combined
+        cacheEntitlementStatus(combined)
     }
 
     deinit {
@@ -68,8 +87,8 @@ final class SubscriptionService: ObservableObject {
             }
         }
 
-        isProUser = hasActiveSubscription
-        cacheEntitlementStatus(hasActiveSubscription)
+        storeKitPro = hasActiveSubscription
+        updateCombinedProStatus()
 
         // Also update current subscription status
         await updateSubscriptionStatus()
@@ -160,15 +179,6 @@ final class SubscriptionService: ObservableObject {
             }
         } catch {
             // Subscription status unavailable
-        }
-    }
-
-    /// Called when the cloud profile reports a Stripe-based Pro entitlement.
-    /// Sets Pro if cloud says true. Revocation is only possible via StoreKit (not cloud).
-    func setCloudProStatus(_ isPro: Bool) {
-        if isPro && !isProUser {
-            isProUser = true
-            cacheEntitlementStatus(true)
         }
     }
 

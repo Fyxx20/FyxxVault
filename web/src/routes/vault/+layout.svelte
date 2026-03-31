@@ -5,7 +5,10 @@
 	import { getAuthState, logout, lockVault, initAuth } from '$lib/stores/auth.svelte';
 	import { resetVault, getSecurityStats } from '$lib/stores/vault.svelte';
 	import { inboxUnreadCount } from '$lib/stores/email-badge';
+	import { unreadAnnouncementsCount, checkUnreadAnnouncements } from '$lib/stores/announcements-badge';
 	import { supabase } from '$lib/supabase';
+	import { t, getLang, setLang } from '$lib/i18n.svelte';
+	import SupportChat from '$lib/components/SupportChat.svelte';
 
 	let { children } = $props();
 
@@ -129,6 +132,8 @@
 
 	onMount(() => {
 		refreshInboxBadge();
+		// Check unread announcements (fallback IDs)
+		checkUnreadAnnouncements(['ann-identity-generator', 'ann-multilingual', 'fallback-1', 'fallback-2']);
 		const onFocus = () => refreshInboxBadge();
 		const onVisibility = () => {
 			if (!document.hidden) refreshInboxBadge();
@@ -223,12 +228,12 @@
 	const hasSecurityAlert = $derived(securityStats ? (securityStats.weak > 0 || securityStats.reused > 0) : false);
 
 	const navItems = [
-		{ path: '/vault', label: 'Coffre', icon: 'vault', color: 'var(--fv-cyan)', mobileIcon: true },
-		{ path: '/vault/security', label: 'Securite', icon: 'shield', color: 'var(--fv-violet)', mobileIcon: true },
-		{ path: '/vault/emails', label: 'Messagerie', icon: 'mail', color: '#3b82f6', mobileIcon: true },
-		{ path: '/vault/identity', label: 'Identite', icon: 'identity', color: '#10b981', mobileIcon: true },
-		{ path: '/vault/announcements', label: 'Annonces', icon: 'megaphone', color: 'var(--fv-gold)', mobileIcon: true },
-		{ path: '/vault/settings', label: 'Parametres', icon: 'settings', color: 'var(--fv-smoke)', mobileIcon: true }
+		{ path: '/vault', label: () => t('nav.vault'), icon: 'vault', color: 'var(--fv-cyan)', mobileIcon: true },
+		{ path: '/vault/security', label: () => t('nav.security'), icon: 'shield', color: 'var(--fv-violet)', mobileIcon: true },
+		{ path: '/vault/emails', label: () => t('nav.messaging'), icon: 'mail', color: '#3b82f6', mobileIcon: true },
+		{ path: '/vault/identity', label: () => t('nav.identity'), icon: 'identity', color: '#10b981', mobileIcon: true },
+		{ path: '/vault/announcements', label: () => t('nav.announcements'), icon: 'megaphone', color: 'var(--fv-gold)', mobileIcon: true },
+		{ path: '/vault/settings', label: () => t('nav.settings'), icon: 'settings', color: 'var(--fv-smoke)', mobileIcon: true }
 	];
 
 	function isActive(path: string): boolean {
@@ -249,21 +254,20 @@
 					<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
 				</svg>
 			</div>
-			<h1 class="text-2xl font-extrabold text-white mb-3">Maintenance en cours</h1>
+			<h1 class="text-2xl font-extrabold text-white mb-3">{t('maintenance.title')}</h1>
 			<p class="text-sm text-[var(--fv-smoke)] mb-6 leading-relaxed">
-				FyxxVault est temporairement indisponible pour des operations de maintenance.
-				Vos donnees sont en securite. Veuillez reessayer dans quelques instants.
+				{t('maintenance.description')}
 			</p>
 			<div class="fv-glass p-4 rounded-2xl">
 				<p class="text-xs text-[var(--fv-ash)]">
-					Si le probleme persiste, contactez l'administrateur.
+					{t('maintenance.contact')}
 				</p>
 			</div>
 			<button
 				onclick={() => window.location.reload()}
 				class="mt-6 px-6 py-3 rounded-xl bg-[var(--fv-violet)] text-white text-sm font-bold hover:bg-[var(--fv-violet-light)] transition-all"
 			>
-				Reessayer
+				{t('common.retry')}
 			</button>
 		</div>
 	</div>
@@ -303,6 +307,15 @@
 					</svg>
 				</div>
 				<span class="text-lg font-extrabold text-white tracking-tight">FyxxVault</span>
+					<button
+						onclick={() => setLang(getLang() === 'fr' ? 'en' : 'fr')}
+						class="ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-bold tracking-wider border border-white/10 bg-white/[0.06] hover:bg-white/[0.14] hover:border-[var(--fv-cyan)]/30 text-white transition-all duration-200"
+					>
+						<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+						</svg>
+						{getLang() === 'fr' ? 'FR' : 'EN'}
+					</button>
 			</div>
 
 			<!-- Separator -->
@@ -358,7 +371,7 @@
 								</svg>
 							{/if}
 						</div>
-						{item.label}
+						{item.label()}
 						{#if item.icon === 'shield' && hasSecurityAlert}
 							<span class="ml-auto w-2 h-2 rounded-full bg-[var(--fv-danger)] shrink-0 security-alert-dot"></span>
 						{:else if item.icon === 'mail' && $inboxUnreadCount > 0}
@@ -366,6 +379,13 @@
 								<span class="w-2 h-2 rounded-full bg-[var(--fv-danger)] security-alert-dot"></span>
 								<span class="px-2 py-0.5 rounded-full text-[10px] font-bold leading-none text-[var(--fv-abyss)] bg-[var(--fv-cyan)] shadow-[0_0_12px_rgba(0,212,255,0.35)]">
 									{$inboxUnreadCount > 99 ? '99+' : $inboxUnreadCount}
+								</span>
+							</span>
+						{:else if item.icon === 'megaphone' && $unreadAnnouncementsCount > 0}
+							<span class="ml-auto flex items-center gap-1.5 shrink-0">
+								<span class="w-2 h-2 rounded-full bg-[var(--fv-gold)] shrink-0 security-alert-dot"></span>
+								<span class="px-2 py-0.5 rounded-full text-[10px] font-bold leading-none text-[var(--fv-abyss)] bg-[var(--fv-gold)] shadow-[0_0_12px_rgba(234,179,8,0.35)]">
+									{$unreadAnnouncementsCount}
 								</span>
 							</span>
 						{/if}
@@ -383,14 +403,14 @@
 				<div class="pro-upsell-card p-3 rounded-xl">
 					<div class="flex items-center gap-2 mb-2">
 						<span class="text-lg">👑</span>
-						<span class="text-xs font-bold text-[var(--fv-gold)]">FyxxVault Pro</span>
+						<span class="text-xs font-bold text-[var(--fv-gold)]">{t('sidebar.pro_title')}</span>
 					</div>
-					<p class="text-[10px] text-[var(--fv-smoke)] mb-2 leading-relaxed">Comptes illimites, Dark Web, emails masques</p>
+					<p class="text-[10px] text-[var(--fv-smoke)] mb-2 leading-relaxed">{t('sidebar.pro_features')}</p>
 					<a
 						href="/vault/settings"
 						class="block w-full text-center px-3 py-2.5 rounded-xl bg-gradient-to-r from-[var(--fv-gold)] to-[var(--fv-gold-light)] text-[#1a1a2e] text-xs font-bold transition-all duration-200 hover:shadow-lg hover:shadow-[var(--fv-gold)]/20 hover:translate-y-[-1px] no-underline"
 					>
-						4,99€/mois — Essai gratuit
+						{t('sidebar.pro_price')}
 					</a>
 				</div>
 			</div>
@@ -405,7 +425,7 @@
 						</div>
 						<div class="flex-1 min-w-0">
 							<p class="text-xs text-white font-medium truncate">{auth.user?.email ?? ''}</p>
-							<p class="text-[10px] {auth.isPro ? 'text-[var(--fv-gold)]' : 'text-[var(--fv-ash)]'}">{auth.isPro ? 'Plan Pro 👑' : 'Plan Gratuit'}</p>
+							<p class="text-[10px] {auth.isPro ? 'text-[var(--fv-gold)]' : 'text-[var(--fv-ash)]'}">{auth.isPro ? t('sidebar.plan_pro') : t('sidebar.plan_free')}</p>
 						</div>
 					</div>
 				</div>
@@ -418,7 +438,7 @@
 						<polyline points="16 17 21 12 16 7"/>
 						<line x1="21" y1="12" x2="9" y2="12"/>
 					</svg>
-					Deconnexion
+					{t('sidebar.logout')}
 				</button>
 			</div>
 			</div><!-- end bottom section -->
@@ -456,7 +476,7 @@
 			<div class="fv-toast {logoutToastExiting ? 'fv-toast-exit' : ''}" style="color: var(--fv-smoke);">
 				<span class="flex items-center gap-2">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-smoke)" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-					Deconnexion en cours...
+					{t('sidebar.logging_out')}
 				</span>
 			</div>
 		{/if}
@@ -495,13 +515,19 @@
 							<span class="absolute top-0 right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-[var(--fv-cyan)] text-[9px] font-bold text-[var(--fv-abyss)] flex items-center justify-center shadow-[0_0_10px_rgba(0,212,255,0.35)]">
 								{$inboxUnreadCount > 99 ? '99+' : $inboxUnreadCount}
 							</span>
+						{:else if item.icon === 'megaphone' && $unreadAnnouncementsCount > 0}
+							<span class="absolute top-0 right-1 w-2 h-2 rounded-full bg-[var(--fv-gold)] security-alert-dot"></span>
 						{/if}
-						<span class="text-[9px] font-semibold">{item.label.split(' ')[0]}</span>
+						<span class="text-[9px] font-semibold">{item.label().split(' ')[0]}</span>
 					</a>
 				{/each}
 			</div>
 		</nav>
 	</div>
+{/if}
+
+{#if auth.isUnlocked}
+	<SupportChat />
 {/if}
 
 <style>

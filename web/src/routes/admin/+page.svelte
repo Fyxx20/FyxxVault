@@ -60,6 +60,24 @@
 		const days = Math.floor(hours / 24);
 		return `il y a ${days}j`;
 	}
+
+	function formatBytes(bytes: number): string {
+		if (!bytes || bytes <= 0) return '0 B';
+		const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+		let size = bytes;
+		let idx = 0;
+		while (size >= 1024 && idx < units.length - 1) {
+			size /= 1024;
+			idx++;
+		}
+		return `${size.toFixed(idx === 0 ? 0 : 1)} ${units[idx]}`;
+	}
+
+	function usageColor(percent: number): string {
+		if (percent >= 90) return 'var(--fv-danger)';
+		if (percent >= 75) return 'var(--fv-gold)';
+		return 'var(--fv-success)';
+	}
 </script>
 
 <svelte:head>
@@ -150,6 +168,134 @@
 				</div>
 				<p class="text-3xl font-extrabold text-white mb-1">{stats.vaultItemsCount}</p>
 				<p class="text-xs text-[var(--fv-smoke)]">dans tous les coffres</p>
+			</div>
+		</div>
+
+		<!-- Usage Section -->
+		<div class="fv-glass p-6 mb-8">
+			<div class="flex items-center justify-between mb-4">
+				<div>
+					<h2 class="text-sm font-bold text-white">Utilisation</h2>
+					<p class="text-[10px] text-[var(--fv-ash)] mt-1">Suivi des quotas (BDD + messagerie Cloudflare)</p>
+				</div>
+				<a href="/admin/settings" class="text-xs text-[var(--fv-violet-light)] hover:text-white transition-colors">Configurer</a>
+			</div>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div class="p-4 rounded-xl bg-white/5 border border-white/8">
+					<div class="flex items-center justify-between mb-2">
+						<p class="text-xs font-semibold text-white">Base de donnees Supabase</p>
+						<p class="text-xs font-bold" style="color: {usageColor(stats.usage?.database?.percent ?? 0)}">
+							{stats.usage?.database?.percent ?? 0}%
+						</p>
+					</div>
+					<div class="h-2 rounded-full bg-white/10 overflow-hidden mb-2">
+						<div
+							class="h-full rounded-full transition-all"
+							style="width: {Math.min(100, stats.usage?.database?.percent ?? 0)}%; background: {usageColor(stats.usage?.database?.percent ?? 0)};"
+						></div>
+					</div>
+					<p class="text-[11px] text-[var(--fv-smoke)]">
+						{formatBytes(stats.usage?.database?.usedBytes ?? 0)} / {formatBytes(stats.usage?.database?.quotaBytes ?? 0)}
+					</p>
+					<p class="text-[10px] text-[var(--fv-ash)] mt-1">
+						{#if stats.usage?.database?.projection?.daysToQuota}
+							Saturation estimee dans ~{stats.usage.database.projection.daysToQuota} jour{stats.usage.database.projection.daysToQuota > 1 ? 's' : ''} (au rythme actuel)
+						{:else}
+							Saturation non estimee (croissance trop faible ou donnees insuffisantes)
+						{/if}
+					</p>
+				</div>
+
+				<div class="p-4 rounded-xl bg-white/5 border border-white/8">
+					<div class="flex items-center justify-between mb-2">
+						<p class="text-xs font-semibold text-white">Cloudflare Email Routing</p>
+						<p class="text-xs font-bold" style="color: {usageColor(stats.usage?.cloudflare?.percent ?? 0)}">
+							{stats.usage?.cloudflare?.percent ?? 0}%
+						</p>
+					</div>
+					<div class="h-2 rounded-full bg-white/10 overflow-hidden mb-2">
+						<div
+							class="h-full rounded-full transition-all"
+							style="width: {Math.min(100, stats.usage?.cloudflare?.percent ?? 0)}%; background: {usageColor(stats.usage?.cloudflare?.percent ?? 0)};"
+						></div>
+					</div>
+					<p class="text-[11px] text-[var(--fv-smoke)]">
+						{stats.usage?.cloudflare?.emailsThisMonth ?? 0} / {stats.usage?.cloudflare?.monthlyQuota ?? 0} emails ce mois
+					</p>
+					<p class="text-[10px] text-[var(--fv-ash)] mt-1">
+						Total recus: {stats.usage?.cloudflare?.emailsTotal ?? 0}
+						{#if stats.usage?.cloudflare?.emailsStored !== undefined}
+							· Stockes: {stats.usage?.cloudflare?.emailsStored ?? 0}
+						{/if}
+						· Aliases actifs: {stats.usage?.cloudflare?.activeAliases ?? 0}
+					</p>
+					<p class="text-[10px] text-[var(--fv-ash)] mt-1">
+						{#if stats.usage?.cloudflare?.projection?.daysToQuota}
+							Saturation quota estimee dans ~{stats.usage.cloudflare.projection.daysToQuota} jour{stats.usage.cloudflare.projection.daysToQuota > 1 ? 's' : ''} (rythme: {stats.usage.cloudflare.projection.emailsPerDay ?? 0}/jour)
+						{:else}
+							Projection quota indisponible (volume trop faible pour estimer)
+						{/if}
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Site Impressions -->
+		<div class="fv-glass p-6 mb-8">
+			<div class="flex items-center justify-between mb-4">
+				<div>
+					<h2 class="text-sm font-bold text-white">Impressions du site</h2>
+					<p class="text-[10px] text-[var(--fv-ash)] mt-1">Pages publiques consultees (fenetres glissantes)</p>
+				</div>
+			</div>
+
+			<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+				<div class="p-4 rounded-xl bg-white/5 border border-white/8">
+					<p class="text-[10px] uppercase tracking-wider text-[var(--fv-ash)] mb-2">Derniere heure</p>
+					<p class="text-2xl font-extrabold text-white">{stats.impressions?.hour ?? 0}</p>
+				</div>
+				<div class="p-4 rounded-xl bg-white/5 border border-white/8">
+					<p class="text-[10px] uppercase tracking-wider text-[var(--fv-ash)] mb-2">24 heures</p>
+					<p class="text-2xl font-extrabold text-white">{stats.impressions?.day ?? 0}</p>
+				</div>
+				<div class="p-4 rounded-xl bg-white/5 border border-white/8">
+					<p class="text-[10px] uppercase tracking-wider text-[var(--fv-ash)] mb-2">7 jours</p>
+					<p class="text-2xl font-extrabold text-white">{stats.impressions?.week ?? 0}</p>
+				</div>
+				<div class="p-4 rounded-xl bg-white/5 border border-white/8">
+					<p class="text-[10px] uppercase tracking-wider text-[var(--fv-ash)] mb-2">30 jours</p>
+					<p class="text-2xl font-extrabold text-white">{stats.impressions?.month ?? 0}</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Unique Visitors -->
+		<div class="fv-glass p-6 mb-8">
+			<div class="flex items-center justify-between mb-4">
+				<div>
+					<h2 class="text-sm font-bold text-white">Visiteurs uniques</h2>
+					<p class="text-[10px] text-[var(--fv-ash)] mt-1">Nombre de visiteurs distincts (heure / jour / semaine / mois)</p>
+				</div>
+			</div>
+
+			<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+				<div class="p-4 rounded-xl bg-white/5 border border-white/8">
+					<p class="text-[10px] uppercase tracking-wider text-[var(--fv-ash)] mb-2">Derniere heure</p>
+					<p class="text-2xl font-extrabold text-white">{stats.visitors?.hour ?? 0}</p>
+				</div>
+				<div class="p-4 rounded-xl bg-white/5 border border-white/8">
+					<p class="text-[10px] uppercase tracking-wider text-[var(--fv-ash)] mb-2">24 heures</p>
+					<p class="text-2xl font-extrabold text-white">{stats.visitors?.day ?? 0}</p>
+				</div>
+				<div class="p-4 rounded-xl bg-white/5 border border-white/8">
+					<p class="text-[10px] uppercase tracking-wider text-[var(--fv-ash)] mb-2">7 jours</p>
+					<p class="text-2xl font-extrabold text-white">{stats.visitors?.week ?? 0}</p>
+				</div>
+				<div class="p-4 rounded-xl bg-white/5 border border-white/8">
+					<p class="text-[10px] uppercase tracking-wider text-[var(--fv-ash)] mb-2">30 jours</p>
+					<p class="text-2xl font-extrabold text-white">{stats.visitors?.month ?? 0}</p>
+				</div>
 			</div>
 		</div>
 

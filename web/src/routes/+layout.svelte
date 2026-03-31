@@ -2,7 +2,6 @@
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { fade } from 'svelte/transition';
 	let { children } = $props();
 
 	let showLoader = $state(false);
@@ -15,10 +14,59 @@
 	let cursorHover = $state(false);
 	let cursorCta = $state(false);
 	let isDesktop = $state(false);
+	let lastTrackedPath = $state('');
+	let lastTrackedAt = $state(0);
+
+	const VISITOR_KEY = 'fv_visitor_id';
+
+	function getVisitorId(): string {
+		const existing = localStorage.getItem(VISITOR_KEY);
+		if (existing) return existing;
+		const generated = `${crypto.randomUUID()}-${Date.now().toString(36)}`;
+		localStorage.setItem(VISITOR_KEY, generated);
+		return generated;
+	}
+
+	async function trackImpression(path: string) {
+		try {
+			const now = Date.now();
+			if (path === lastTrackedPath && now - lastTrackedAt < 10_000) return;
+
+			lastTrackedPath = path;
+			lastTrackedAt = now;
+
+			await fetch('/api/analytics/impression', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				keepalive: true,
+				body: JSON.stringify({
+					visitorId: getVisitorId(),
+					path,
+					referrer: document.referrer || ''
+				})
+			});
+		} catch {
+			// Best-effort.
+		}
+	}
 
 	onMount(() => {
 		if ('serviceWorker' in navigator) {
-			navigator.serviceWorker.register('/sw.js').catch(() => {});
+			// Cleanup old PWA worker/caches that could serve stale assets and break styling.
+			navigator.serviceWorker.getRegistrations()
+				.then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+				.catch(() => {});
+			if ('caches' in window) {
+				caches.keys()
+					.then((keys) =>
+						Promise.all(
+							keys
+								.filter((key) => key.startsWith('fyxxvault-'))
+								.map((key) => caches.delete(key))
+						)
+					)
+					.catch(() => {});
+			}
 		}
 
 		// Page loader - only on first visit
@@ -71,6 +119,12 @@
 				cancelAnimationFrame(rafId);
 			};
 		}
+	});
+
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const path = `${$page.url.pathname}${$page.url.search}`;
+		trackImpression(path);
 	});
 </script>
 

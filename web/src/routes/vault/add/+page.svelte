@@ -6,6 +6,7 @@
 	import { addEntry, updateEntry, getVaultState } from '$lib/stores/vault.svelte';
 	import { getAuthState } from '$lib/stores/auth.svelte';
 	import { untrack } from 'svelte';
+	import { t } from '$lib/i18n.svelte';
 
 	const vault = getVaultState();
 	const auth = getAuthState();
@@ -135,7 +136,7 @@
 	}
 
 	function removeTag(tag: string) {
-		entry.tags = entry.tags.filter((t) => t !== tag);
+		entry.tags = entry.tags.filter((tg) => tg !== tag);
 	}
 
 	function onCategoryChange(cat: VaultCategory) {
@@ -155,7 +156,7 @@
 
 	async function handleSubmit() {
 		if (!entry.title.trim()) {
-			error = 'Le titre est requis.';
+			error = t('add.title_required');
 			return;
 		}
 
@@ -186,10 +187,10 @@
 				clearDraft();
 				setTimeout(() => goto('/vault'), 800);
 			} else {
-				error = result.error || 'Erreur lors de la sauvegarde.';
+				error = result.error || t('add.save_error');
 			}
 		} catch (e: any) {
-			error = e.message || 'Erreur inconnue.';
+			error = e.message || t('add.unknown_error');
 		} finally {
 			loading = false;
 		}
@@ -200,7 +201,7 @@
 </script>
 
 <svelte:head>
-	<title>{editId ? 'Modifier' : 'Ajouter'} — FyxxVault</title>
+	<title>{editId ? t('add.title_edit') : t('add.title_new')} — FyxxVault</title>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto">
@@ -212,7 +213,7 @@
 				<polyline points="12 19 5 12 12 5"/>
 			</svg>
 		</button>
-		<h1 class="text-xl font-extrabold text-white tracking-tight">{editId ? 'Modifier l\'element' : 'Nouvel element'}</h1>
+		<h1 class="text-xl font-extrabold text-white tracking-tight">{editId ? t('add.title_edit') : t('add.title_new')}</h1>
 	</div>
 
 	{#if !canAdd}
@@ -220,22 +221,22 @@
 			<div class="w-20 h-20 rounded-full bg-[var(--fv-gold)]/10 flex items-center justify-center mx-auto mb-5">
 				<span class="text-4xl">👑</span>
 			</div>
-			<h2 class="text-xl font-bold" style="color: var(--fv-gold);">Limite atteinte (5/5)</h2>
-			<p class="text-sm text-[var(--fv-smoke)] mb-6 mt-2">Passe à FyxxVault Pro pour des comptes illimités</p>
-			<a href="/vault/settings" class="fv-btn fv-btn-gold" style="display: inline-block;">Passer à Pro — 4,99€/mois</a>
+			<h2 class="text-xl font-bold" style="color: var(--fv-gold);">{t('add.limit_reached')}</h2>
+			<p class="text-sm text-[var(--fv-smoke)] mb-6 mt-2">{t('add.limit_desc')}</p>
+			<a href="/vault/settings" class="fv-btn fv-btn-gold" style="display: inline-block;">{t('add.upgrade_pro')}</a>
 		</div>
 	{:else if success}
 		<div class="fv-glass p-8 text-center fv-glow-cyan">
 			<div class="w-16 h-16 rounded-full bg-[var(--fv-success)]/15 flex items-center justify-center mx-auto mb-4">
 				<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 			</div>
-			<p class="text-white font-semibold">{editId ? 'Élément modifié' : 'Élément ajouté'} !</p>
+			<p class="text-white font-semibold">{editId ? t('add.entry_modified') : t('add.entry_added')} !</p>
 		</div>
 	{:else}
 		<form onsubmit={(e: SubmitEvent) => { e.preventDefault(); handleSubmit(); }} class="add-form-wrapper space-y-6">
 			<!-- Category selector -->
 			<div class="add-glass-card p-6">
-				<label class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-4">Categorie</label>
+				<label class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-4">{t('add.category')}</label>
 				<div class="grid grid-cols-5 sm:grid-cols-10 gap-2">
 					{#each categories as [key, meta]}
 						<button
@@ -257,9 +258,9 @@
 			<div class="add-glass-card p-8 space-y-7">
 				<!-- Title (always shown) -->
 				<div>
-					<label for="title" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Titre *</label>
+					<label for="title" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.title_label')} *</label>
 					<div class="relative">
-						<input id="title" type="text" bind:value={entry.title} oninput={() => titleTouched = true} placeholder="Ex: Gmail, Netflix, Banque..." class="{inputClass} {titleTouched && titleValid ? '!border-[var(--fv-success)]/40' : ''}" />
+						<input id="title" type="text" bind:value={entry.title} oninput={() => titleTouched = true} placeholder={t('add.title_placeholder_full')} class="{inputClass} {titleTouched && titleValid ? '!border-[var(--fv-success)]/40' : ''}" />
 						{#if titleTouched && titleValid}
 							<div class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fv-success)] transition-opacity duration-200">
 								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" class="fv-check-draw"/></svg>
@@ -273,11 +274,11 @@
 			{#if entry.category === 'login' || entry.category === 'server' || entry.category === 'other'}
 					<!-- LOGIN / SERVER / OTHER -->
 					<div>
-						<label for="website" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Site web</label>
+						<label for="website" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.website')}</label>
 						<input id="website" type="text" bind:value={entry.website} placeholder="example.com" class={inputClass} />
 					</div>
 					<div>
-						<label for="username" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Identifiant / Email</label>
+						<label for="username" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.username_email')}</label>
 						<input id="username" type="text" bind:value={entry.username} placeholder="ton@email.com" class={inputClass} />
 					</div>
 					<!-- Password field with generator -->
@@ -286,20 +287,20 @@
 				{:else if entry.category === 'creditCard'}
 					<!-- CREDIT CARD -->
 					<div>
-						<label for="cardholderName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Titulaire de la carte</label>
+						<label for="cardholderName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.cardholder')}</label>
 						<input id="cardholderName" type="text" bind:value={entry.cardholderName} placeholder="JEAN DUPONT" class={inputClass} />
 					</div>
 					<div>
-						<label for="cardNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Numéro de carte</label>
+						<label for="cardNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.card_number')}</label>
 						<input id="cardNumber" type="text" bind:value={entry.cardNumber} placeholder="4242 4242 4242 4242" class="{inputClass} font-mono" maxlength="19" />
 					</div>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="cardExpiry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Expiration</label>
+							<label for="cardExpiry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.card_expiry')}</label>
 							<input id="cardExpiry" type="text" bind:value={entry.cardExpiry} placeholder="MM/AA" class="{inputClass} font-mono" maxlength="5" />
 						</div>
 						<div>
-							<label for="cardCVV" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">CVV</label>
+							<label for="cardCVV" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.card_cvv')}</label>
 							<input id="cardCVV" type="password" bind:value={entry.cardCVV} placeholder="•••" class="{inputClass} font-mono" maxlength="4" />
 						</div>
 					</div>
@@ -308,29 +309,29 @@
 					<!-- IDENTITY -->
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="firstName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Prénom</label>
+							<label for="firstName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.first_name')}</label>
 							<input id="firstName" type="text" bind:value={entry.firstName} placeholder="Jean" class={inputClass} />
 						</div>
 						<div>
-							<label for="lastName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Nom</label>
+							<label for="lastName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.last_name')}</label>
 							<input id="lastName" type="text" bind:value={entry.lastName} placeholder="Dupont" class={inputClass} />
 						</div>
 					</div>
 					<div>
-						<label for="dateOfBirth" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Date de naissance</label>
+						<label for="dateOfBirth" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.dob')}</label>
 						<input id="dateOfBirth" type="date" bind:value={entry.dateOfBirth} class={inputClass} />
 					</div>
 					<div>
-						<label for="address" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Adresse</label>
+						<label for="address" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.address')}</label>
 						<input id="address" type="text" bind:value={entry.address} placeholder="123 Rue de la Paix, Paris" class={inputClass} />
 					</div>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="phone" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Téléphone</label>
+							<label for="phone" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.phone')}</label>
 							<input id="phone" type="tel" bind:value={entry.phone} placeholder="+33 6 12 34 56 78" class={inputClass} />
 						</div>
 						<div>
-							<label for="email" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Email</label>
+							<label for="email" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.email')}</label>
 							<input id="email" type="email" bind:value={entry.email} placeholder="jean@email.com" class={inputClass} />
 						</div>
 					</div>
@@ -341,18 +342,18 @@
 				{:else if entry.category === 'wifi'}
 					<!-- WI-FI -->
 					<div>
-						<label for="networkName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Nom du réseau (SSID)</label>
+						<label for="networkName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.network_ssid')}</label>
 						<input id="networkName" type="text" bind:value={entry.networkName} placeholder="MonWiFi-5G" class={inputClass} />
 					</div>
 					<div>
-						<label for="securityType" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Type de sécurité</label>
+						<label for="securityType" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.security_type')}</label>
 						<select id="securityType" bind:value={entry.securityType} class={inputClass}>
-							<option value="">Sélectionner...</option>
+							<option value="">{t('add.select')}</option>
 							<option value="WPA3">WPA3</option>
 							<option value="WPA2">WPA2</option>
 							<option value="WPA">WPA</option>
 							<option value="WEP">WEP</option>
-							<option value="Open">Ouvert</option>
+							<option value="Open">{t('add.wifi_open')}</option>
 						</select>
 					</div>
 					{@render passwordField()}
@@ -360,20 +361,20 @@
 				{:else if entry.category === 'softwareLicense'}
 					<!-- SOFTWARE LICENSE -->
 					<div>
-						<label for="softwareName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Nom du logiciel</label>
+						<label for="softwareName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.software_name')}</label>
 						<input id="softwareName" type="text" bind:value={entry.softwareName} placeholder="Adobe Photoshop" class={inputClass} />
 					</div>
 					<div>
-						<label for="licenseKey" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Clé de licence</label>
+						<label for="licenseKey" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.license_key')}</label>
 						<input id="licenseKey" type="text" bind:value={entry.licenseKey} placeholder="XXXX-XXXX-XXXX-XXXX" class="{inputClass} font-mono" />
 					</div>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="licenseEmail" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Email associé</label>
+							<label for="licenseEmail" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.license_email')}</label>
 							<input id="licenseEmail" type="email" bind:value={entry.licenseEmail} placeholder="jean@email.com" class={inputClass} />
 						</div>
 						<div>
-							<label for="softwareVersion" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Version</label>
+							<label for="softwareVersion" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.version')}</label>
 							<input id="softwareVersion" type="text" bind:value={entry.softwareVersion} placeholder="v2.1.0" class={inputClass} />
 						</div>
 					</div>
@@ -381,24 +382,24 @@
 				{:else if entry.category === 'passport'}
 					<!-- PASSPORT -->
 					<div>
-						<label for="passportFullName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Nom complet</label>
+						<label for="passportFullName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.passport_name')}</label>
 						<input id="passportFullName" type="text" bind:value={entry.passportFullName} placeholder="DUPONT Jean" class={inputClass} />
 					</div>
 					<div>
-						<label for="passportNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Numéro de passeport</label>
+						<label for="passportNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.passport_number')}</label>
 						<input id="passportNumber" type="text" bind:value={entry.passportNumber} placeholder="12AB34567" class="{inputClass} font-mono" />
 					</div>
 					<div>
-						<label for="passportCountry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Pays</label>
+						<label for="passportCountry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.passport_country')}</label>
 						<input id="passportCountry" type="text" bind:value={entry.passportCountry} placeholder="France" class={inputClass} />
 					</div>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="passportExpiry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Date d'expiration</label>
+							<label for="passportExpiry" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.passport_expiry')}</label>
 							<input id="passportExpiry" type="date" bind:value={entry.passportExpiry} class={inputClass} />
 						</div>
 						<div>
-							<label for="passportDOB" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Date de naissance</label>
+							<label for="passportDOB" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.passport_dob')}</label>
 							<input id="passportDOB" type="date" bind:value={entry.passportDOB} class={inputClass} />
 						</div>
 					</div>
@@ -406,20 +407,20 @@
 				{:else if entry.category === 'bankAccount'}
 					<!-- BANK ACCOUNT -->
 					<div>
-						<label for="bankName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Nom de la banque</label>
+						<label for="bankName" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.bank_name')}</label>
 						<input id="bankName" type="text" bind:value={entry.bankName} placeholder="BNP Paribas" class={inputClass} />
 					</div>
 					<div>
-						<label for="iban" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">IBAN</label>
+						<label for="iban" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.iban')}</label>
 						<input id="iban" type="text" bind:value={entry.iban} placeholder="FR76 1234 5678 9012 3456 7890 123" class="{inputClass} font-mono" />
 					</div>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
-							<label for="bic" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">BIC / SWIFT</label>
+							<label for="bic" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.bic')}</label>
 							<input id="bic" type="text" bind:value={entry.bic} placeholder="BNPAFRPP" class="{inputClass} font-mono" />
 						</div>
 						<div>
-							<label for="accountNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Numéro de compte</label>
+							<label for="accountNumber" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.account_number')}</label>
 							<input id="accountNumber" type="text" bind:value={entry.accountNumber} placeholder="12345678901" class="{inputClass} font-mono" />
 						</div>
 					</div>
@@ -429,11 +430,11 @@
 
 				<!-- Notes (always shown) -->
 				<div>
-					<label for="notes" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Notes</label>
+					<label for="notes" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.notes')}</label>
 					<textarea
 						id="notes"
 						bind:value={entry.notes}
-						placeholder="Notes privées..."
+						placeholder={t('add.notes_placeholder')}
 						rows={entry.category === 'secureNote' ? 8 : 3}
 						class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none focus:border-[var(--fv-cyan)]/50 focus:ring-1 focus:ring-[var(--fv-cyan)]/30 transition-all resize-none"
 					></textarea>
@@ -444,18 +445,18 @@
 			<div class="add-glass-card p-6 space-y-5">
 				<!-- Folder -->
 				<div>
-					<label for="folder" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Dossier</label>
-					<input id="folder" type="text" bind:value={entry.folder} placeholder="Ex: Travail, Personnel..." class={inputClass} />
+					<label for="folder" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.folder')}</label>
+					<input id="folder" type="text" bind:value={entry.folder} placeholder={t('add.folder_placeholder')} class={inputClass} />
 				</div>
 
 				<!-- Tags -->
 				<div>
-					<label class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Tags</label>
+					<label class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.tags')}</label>
 					<div class="flex gap-2">
 						<input
 							type="text"
 							bind:value={tagInput}
-							placeholder="Ajouter un tag..."
+							placeholder={t('add.tag_placeholder')}
 							onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
 							class="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none focus:border-[var(--fv-cyan)]/50 transition-all"
 						/>
@@ -475,7 +476,7 @@
 
 				<!-- Toggles -->
 				<div class="flex items-center justify-between">
-					<span class="text-sm text-[var(--fv-smoke)]">Favori</span>
+					<span class="text-sm text-[var(--fv-smoke)]">{t('add.favorite')}</span>
 					<button
 						type="button"
 						onclick={() => entry.isFavorite = !entry.isFavorite}
@@ -487,7 +488,7 @@
 
 				{#if entry.category === 'login' || entry.category === 'server'}
 					<div class="flex items-center justify-between">
-						<span class="text-sm text-[var(--fv-smoke)]">MFA activé</span>
+						<span class="text-sm text-[var(--fv-smoke)]">{t('add.mfa_enabled')}</span>
 						<button
 							type="button"
 							onclick={() => entry.mfaEnabled = !entry.mfaEnabled}
@@ -499,7 +500,7 @@
 
 					{#if entry.mfaEnabled}
 						<div>
-							<label for="mfa-secret" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Secret TOTP</label>
+							<label for="mfa-secret" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.mfa_secret')}</label>
 							<input id="mfa-secret" type="text" bind:value={entry.mfaSecret} placeholder="JBSWY3DPEHPK3PXP" class="{inputClass} font-mono" />
 						</div>
 					{/if}
@@ -518,13 +519,13 @@
 
 			<!-- Submit -->
 			<div class="flex gap-3">
-				<button type="button" onclick={() => goto('/vault')} class="fv-btn fv-btn-ghost flex-1 !py-3.5 !rounded-2xl">Annuler</button>
+				<button type="button" onclick={() => goto('/vault')} class="fv-btn fv-btn-ghost flex-1 !py-3.5 !rounded-2xl">{t('add.cancel')}</button>
 				<button type="submit" disabled={loading} class="add-submit-btn flex-1 py-3.5 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all duration-250 {loading ? 'opacity-60 cursor-not-allowed' : ''}">
 					{#if loading}
 						<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-						Sauvegarde...
+						{t('add.saving_alt')}
 					{:else}
-						{editId ? 'Enregistrer' : 'Ajouter au coffre'}
+						{editId ? t('add.save') : t('add.add_to_vault')}
 					{/if}
 				</button>
 			</div>
@@ -534,7 +535,7 @@
 
 {#snippet passwordField()}
 	<div>
-		<label for="password-field" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">Mot de passe</label>
+		<label for="password-field" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-3">{t('add.password')}</label>
 		<div class="relative">
 			<input
 				id="password-field"
@@ -544,17 +545,17 @@
 				class="w-full px-4 py-3 pr-28 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[var(--fv-ash)] text-sm font-mono focus:outline-none focus:border-[var(--fv-cyan)]/50 focus:ring-1 focus:ring-[var(--fv-cyan)]/30 transition-all"
 			/>
 			<div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
-				<button type="button" onclick={(e) => { e.stopPropagation(); showPassword = !showPassword; }} class="p-2 rounded-lg hover:bg-white/10 text-[var(--fv-smoke)] cursor-pointer" title="Afficher">
+				<button type="button" onclick={(e) => { e.stopPropagation(); showPassword = !showPassword; }} class="p-2 rounded-lg hover:bg-white/10 text-[var(--fv-smoke)] cursor-pointer" title={t('add.show_password')}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
 				</button>
-				<button type="button" onclick={(e) => { e.stopPropagation(); copyGeneratedPassword(); }} class="p-2 rounded-lg hover:bg-white/10 text-[var(--fv-smoke)] cursor-pointer" title="Copier">
+				<button type="button" onclick={(e) => { e.stopPropagation(); copyGeneratedPassword(); }} class="p-2 rounded-lg hover:bg-white/10 text-[var(--fv-smoke)] cursor-pointer" title={t('add.copy_password')}>
 					{#if copiedGenerated}
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 					{:else}
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
 					{/if}
 				</button>
-				<button type="button" onclick={(e) => { e.stopPropagation(); showGenerator = !showGenerator; }} class="p-2 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-90 cursor-pointer" style="color: {showGenerator ? 'var(--fv-cyan)' : 'var(--fv-smoke)'};" title="Générateur de mot de passe">
+				<button type="button" onclick={(e) => { e.stopPropagation(); showGenerator = !showGenerator; }} class="p-2 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-90 cursor-pointer" style="color: {showGenerator ? 'var(--fv-cyan)' : 'var(--fv-smoke)'};" title={t('add.password_generator')}>
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
 				</button>
 			</div>
@@ -575,24 +576,24 @@
 			<div class="mt-4 p-5 rounded-2xl border border-white/[0.08] space-y-4" style="background: rgba(255,255,255,0.03);">
 				<div class="flex items-center gap-2 mb-1">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-					<span class="text-xs font-semibold text-white/80 uppercase tracking-wider">Generateur</span>
+					<span class="text-xs font-semibold text-white/80 uppercase tracking-wider">{t('add.generator')}</span>
 				</div>
 
 				<!-- Mode toggle (segmented control) -->
 				<div class="flex rounded-xl p-1 bg-white/[0.05]">
 					<button type="button" onclick={() => genMode = 'password'}
 						class="flex-1 text-xs py-2.5 rounded-lg font-semibold transition-all duration-200 {genMode === 'password' ? 'bg-gradient-to-r from-[var(--fv-cyan)] to-[var(--fv-violet)] text-white shadow-md' : 'text-[var(--fv-smoke)] hover:text-white'}"
-					>Mot de passe</button>
+					>{t('add.gen_password')}</button>
 					<button type="button" onclick={() => genMode = 'passphrase'}
 						class="flex-1 text-xs py-2.5 rounded-lg font-semibold transition-all duration-200 {genMode === 'passphrase' ? 'bg-gradient-to-r from-[var(--fv-cyan)] to-[var(--fv-violet)] text-white shadow-md' : 'text-[var(--fv-smoke)] hover:text-white'}"
-					>Phrase secrete</button>
+					>{t('add.gen_passphrase')}</button>
 				</div>
 
 				{#if genMode === 'password'}
 					<!-- Length slider -->
 					<div>
 						<div class="flex items-center justify-between mb-2">
-							<span class="text-xs text-white/60">Longueur</span>
+							<span class="text-xs text-white/60">{t('add.gen_length')}</span>
 							<span class="text-sm font-bold text-[var(--fv-cyan)] tabular-nums" style="min-width: 28px; text-align: right;">{genLength}</span>
 						</div>
 						<input type="range" min="8" max="64" bind:value={genLength} class="gen-slider w-full" />
@@ -601,10 +602,10 @@
 					<!-- Character options as pills -->
 					<div class="flex flex-wrap gap-2">
 						{#each [
-							{ label: 'ABC', desc: 'Majuscules', checked: genUppercase, toggle: () => genUppercase = !genUppercase },
-							{ label: 'abc', desc: 'Minuscules', checked: genLowercase, toggle: () => genLowercase = !genLowercase },
-							{ label: '123', desc: 'Chiffres', checked: genDigits, toggle: () => genDigits = !genDigits },
-							{ label: '#$&', desc: 'Symboles', checked: genSymbols, toggle: () => genSymbols = !genSymbols }
+							{ label: 'ABC', desc: t('add.gen_uppercase'), checked: genUppercase, toggle: () => genUppercase = !genUppercase },
+							{ label: 'abc', desc: t('add.gen_lowercase'), checked: genLowercase, toggle: () => genLowercase = !genLowercase },
+							{ label: '123', desc: t('add.gen_digits'), checked: genDigits, toggle: () => genDigits = !genDigits },
+							{ label: '#$&', desc: t('add.gen_symbols'), checked: genSymbols, toggle: () => genSymbols = !genSymbols }
 						] as opt}
 							<button type="button" onclick={opt.toggle}
 								class="gen-pill px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 border {opt.checked ? 'gen-pill-active' : 'gen-pill-inactive'}"
@@ -618,14 +619,14 @@
 					<!-- Passphrase options -->
 					<div>
 						<div class="flex items-center justify-between mb-2">
-							<span class="text-xs text-white/60">Nombre de mots</span>
+							<span class="text-xs text-white/60">{t('add.gen_word_count')}</span>
 							<span class="text-sm font-bold text-[var(--fv-cyan)]">{genWordCount}</span>
 						</div>
 						<input type="range" min="3" max="10" bind:value={genWordCount} class="gen-slider w-full" />
 					</div>
 					<div class="flex gap-3">
 						<div class="flex-1">
-							<span class="block text-[10px] text-white/50 mb-1.5 uppercase tracking-wider">Separateur</span>
+							<span class="block text-[10px] text-white/50 mb-1.5 uppercase tracking-wider">{t('add.gen_separator')}</span>
 							<div class="flex gap-1.5">
 								{#each [{v: '-', l: '\u2014'}, {v: '.', l: '\u00b7'}, {v: '_', l: '_'}, {v: ' ', l: '\u2423'}] as sep}
 									<button type="button" onclick={() => genSeparator = sep.v}
@@ -636,7 +637,7 @@
 						</div>
 						<button type="button" onclick={() => genCapitalize = !genCapitalize}
 							class="gen-pill self-end mb-0.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border {genCapitalize ? 'gen-pill-active' : 'gen-pill-inactive'}"
-						>Aa Majuscule</button>
+						>{t('add.gen_capitalize')}</button>
 					</div>
 				{/if}
 
@@ -645,7 +646,7 @@
 					class="gen-btn w-full py-3 rounded-xl text-sm font-bold transition-all duration-200 hover:brightness-110 active:scale-[0.98] flex items-center justify-center gap-2"
 				>
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-					Generer
+					{t('add.generate')}
 				</button>
 			</div>
 		{/if}

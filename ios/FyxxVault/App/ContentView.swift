@@ -11,8 +11,10 @@ struct ContentView: View {
     @StateObject private var breachMonitor = BreachMonitorService()
     @StateObject private var maskedEmailService = MaskedEmailService()
     @StateObject private var subscriptionService = SubscriptionService()
+    @StateObject private var mailService = FyxxMailService()
+    @StateObject private var announcementsService = AnnouncementsService()
+    @StateObject private var supportService = SupportService()
     @Environment(\.scenePhase) private var scenePhase
-    /// Debounce flag to avoid overlapping sync requests
     @State private var isSyncing = false
 
     var body: some View {
@@ -29,7 +31,7 @@ struct ContentView: View {
                     if appLock.isLocked {
                         VaultLockView(appLock: appLock, authManager: authManager)
                     } else {
-                        VaultDashboardView(authManager: authManager, vaultStore: vaultStore, syncService: syncService, breachMonitor: breachMonitor, maskedEmailService: maskedEmailService, subscriptionService: subscriptionService)
+                        VaultDashboardView(authManager: authManager, vaultStore: vaultStore, syncService: syncService, breachMonitor: breachMonitor, maskedEmailService: maskedEmailService, subscriptionService: subscriptionService, mailService: mailService, announcementsService: announcementsService, supportService: supportService)
                     }
                 }
             }
@@ -59,45 +61,113 @@ struct ContentView: View {
         .onAppear {
             appLock.configureFromSettings()
             authManager.setSyncService(syncService)
+            mailService.syncService = syncService
+            supportService.syncService = syncService
+            announcementsService.syncService = syncService
             if authManager.phase == .vault {
                 appLock.activateForVaultEntry()
             }
         }
         .task(id: authManager.phase) {
-            if authManager.phase == .vault && breachMonitor.shouldAutoScan() && subscriptionService.isProUser {
+            guard authManager.phase == .vault else { return }
+            if breachMonitor.shouldAutoScan() && subscriptionService.isProUser {
                 await breachMonitor.scanAll(entries: vaultStore.entries)
             }
-            // Auto-sync on vault entry
-            if authManager.phase == .vault && syncService.isCloudAuthenticated {
-                let merged = try? await syncService.sync(localEntries: vaultStore.entries)
-                if let merged { vaultStore.replaceEntries(merged) }
+            print("[ContentView] .task(id: phase) — isCloudAuth=\(syncService.isCloudAuthenticated) localEntries=\(vaultStore.entries.count)")
+            if syncService.isCloudAuthenticated {
+                do {
+                    let merged = try await syncService.sync(localEntries: vaultStore.entries)
+                    if !merged.isEmpty {
+                        vaultStore.replaceEntries(merged)
+                    } else {
+                        print("[ContentView] sync returned empty — keeping \(vaultStore.entries.count) local entries")
+                    }
+                } catch {
+                    print("[ContentView] sync error: \(error)")
+                }
+                // Sync cloud Pro status (Stripe subscription from web)
+                await syncService.refreshCloudProStatus()
+                subscriptionService.setCloudProStatus(syncService.cloudIsProUser)
+            }
+            await announcementsService.fetch()
+            if mailService.isAuthenticated {
+                async let a: () = mailService.fetchAliases()
+                async let b: () = mailService.fetchEmails()
+                _ = await (a, b)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .fyxxVaultDataChanged)) { _ in
             guard syncService.isCloudAuthenticated, !isSyncing else { return }
             isSyncing = true
             Task {
-                let merged = try? await syncService.sync(localEntries: vaultStore.entries)
-                if let merged { vaultStore.replaceEntries(merged) }
+                do {
+                    let merged = try await syncService.sync(localEntries: vaultStore.entries)
+                    if !merged.isEmpty {
+                        vaultStore.replaceEntries(merged)
+                    }
+                } catch {
+                    print("[ContentView] dataChanged sync error: \(error)")
+                }
                 isSyncing = false
             }
         }
         .onChange(of: syncService.isCloudAuthenticated) { _, isAuthenticated in
-            // When SyncService becomes authenticated (e.g. background login on Path A),
-            // trigger a sync to pull remote vault items.
+            print("[ContentView] isCloudAuthenticated changed → \(isAuthenticated)")
             guard isAuthenticated, authManager.phase == .vault, !isSyncing else { return }
             isSyncing = true
             Task {
-                let merged = try? await syncService.sync(localEntries: vaultStore.entries)
-                if let merged { vaultStore.replaceEntries(merged) }
+                do {
+                    let merged = try await syncService.sync(localEntries: vaultStore.entries)
+                    if !merged.isEmpty {
+                        vaultStore.replaceEntries(merged)
+                        print("[ContentView] isCloudAuth sync OK — \(merged.count) entries")
+                    } else {
+                        print("[ContentView] isCloudAuth sync returned empty — keeping \(vaultStore.entries.count) local")
+                    }
+                } catch {
+                    print("[ContentView] isCloudAuth sync error: \(error)")
+                }
                 isSyncing = false
+                // Sync cloud Pro status
+                subscriptionService.setCloudProStatus(syncService.cloudIsProUser)
+                await mailService.fetchAliases()
+                await mailService.fetchEmails()
             }
         }
         .onChange(of: syncService.cloudIsProUser) { _, isPro in
-            if isPro { subscriptionService.setCloudProStatus(true) }
+            subscriptionService.setCloudProStatus(isPro)
         }
         .onChange(of: scenePhase) { _, newValue in
             appLock.handleScenePhase(newValue, userAuthenticated: authManager.phase == .vault)
+            // Refresh all data when coming back to foreground
+            if newValue == .active && authManager.phase == .vault {
+                Task {
+                    if syncService.isCloudAuthenticated && !isSyncing {
+                        isSyncing = true
+                        do {
+                            let merged = try await syncService.sync(localEntries: vaultStore.entries)
+                            if !merged.isEmpty {
+                                vaultStore.replaceEntries(merged)
+                            }
+                        } catch {
+                            print("[ContentView] foreground sync error: \(error)")
+                        }
+                        isSyncing = false
+                        // Refresh cloud Pro status
+                        await syncService.refreshCloudProStatus()
+                        subscriptionService.setCloudProStatus(syncService.cloudIsProUser)
+                    }
+                    if mailService.isAuthenticated {
+                        async let a: () = mailService.fetchAliases()
+                        async let b: () = mailService.fetchEmails()
+                        _ = await (a, b)
+                    }
+                    await announcementsService.fetch()
+                    if supportService.isAuthenticated {
+                        await supportService.fetchTickets()
+                    }
+                }
+            }
         }
         .onChange(of: authManager.phase) { _, phase in
             if phase == .vault {
