@@ -100,14 +100,14 @@
             <div class="import-card-desc">Glisse le fichier ou clique pour selectionner</div>
           </div>
         </div>
-        <div class="upload-zone" id="upload-zone">
+        <label class="upload-zone" id="upload-zone" for="csv-file">
           <div class="upload-zone-inner">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             <div class="upload-text">Glisse ton fichier CSV ici</div>
             <div class="upload-hint">ou <span class="upload-link">clique pour selectionner</span></div>
           </div>
-          <input type="file" id="csv-file" accept=".csv" hidden>
-        </div>
+          <input type="file" id="csv-file" accept=".csv" class="file-input-hidden">
+        </label>
       </div>
 
       <div class="import-loading hidden" id="import-loading">

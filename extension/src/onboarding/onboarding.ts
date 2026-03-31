@@ -67,11 +67,6 @@ function init() {
   const uploadZone = $('upload-zone');
   const csvInput = $('csv-file') as HTMLInputElement;
 
-  uploadZone.addEventListener('click', (e) => {
-    e.preventDefault();
-    csvInput.click();
-  });
-
   uploadZone.addEventListener('dragover', (e) => {
     e.preventDefault();
     e.stopPropagation();
