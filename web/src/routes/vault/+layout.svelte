@@ -397,6 +397,25 @@
 			<div class="flex-shrink-0">
 			<div class="relative z-10 mx-5 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"></div>
 
+			<!-- Chrome Extension banner -->
+			<div class="relative z-10 px-3 py-2">
+				<a
+					href="https://chromewebstore.google.com/detail/fyxxvault-%E2%80%93-autofill/pacioaldmfoppgnaieonkgjbipdeloll"
+					target="_blank"
+					rel="noopener"
+					class="flex items-center gap-3 p-3 rounded-xl border border-[var(--fv-cyan)]/15 bg-[var(--fv-cyan)]/[0.04] hover:bg-[var(--fv-cyan)]/[0.08] transition-all duration-200 no-underline group"
+				>
+					<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--fv-cyan)] to-[var(--fv-violet)] flex items-center justify-center flex-shrink-0">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+					</div>
+					<div class="flex-1 min-w-0">
+						<p class="text-xs font-semibold text-white">Extension Chrome</p>
+						<p class="text-[10px] text-[var(--fv-cyan)] group-hover:text-white transition-colors">Autofill sur tous les sites</p>
+					</div>
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2" stroke-linecap="round" class="flex-shrink-0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+				</a>
+			</div>
+
 			<!-- Upgrade Pro (hidden if already Pro) -->
 			{#if !auth.isPro}
 			<div class="relative z-10 px-3 py-2">
