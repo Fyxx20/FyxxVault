@@ -901,6 +901,77 @@
 	</section>
 
 	<!-- ============================================================ -->
+	<!-- EXTENSION SECTION -->
+	<!-- ============================================================ -->
+	<section id="extension" class="extension" data-reveal="extension">
+		<div class="section-inner">
+			<div class="section-header" class:revealed={isRevealed('extension')}>
+				<span class="section-pill" style="--pill-color: var(--fv-cyan)">Extension Chrome</span>
+				<h2 class="section-title">Autofill sur tous tes sites.</h2>
+				<p class="section-subtitle">Installe l'extension et tes identifiants se remplissent automatiquement.</p>
+			</div>
+
+			<div class="ext-card" class:revealed={isRevealed('extension')}>
+				<div class="ext-card-inner">
+					<div class="ext-left">
+						<div class="ext-icon-row">
+							<div class="ext-logo">
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48">
+									<defs><linearGradient id="ebg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0A101E"/><stop offset="100%" stop-color="#162A42"/></linearGradient><linearGradient id="elk" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00D4FF"/><stop offset="100%" stop-color="#8A5CF6"/></linearGradient></defs>
+									<rect width="512" height="512" rx="108" fill="url(#ebg)"/>
+									<g transform="translate(256,240)" fill="url(#elk)"><rect x="-80" y="-10" width="160" height="120" rx="20"/><path d="M-50,-10 L-50,-60 C-50,-95 50,-95 50,-60 L50,-10" fill="none" stroke="url(#elk)" stroke-width="24" stroke-linecap="round"/><circle cx="0" cy="45" r="18" fill="#0A101E"/><rect x="-6" y="45" width="12" height="25" rx="4" fill="#0A101E"/></g>
+								</svg>
+							</div>
+							<div>
+								<div class="ext-name">FyxxVault – Autofill</div>
+								<div class="ext-rating">
+									<span class="ext-stars">★★★★★</span>
+									<span class="ext-label">Extension Chrome</span>
+								</div>
+							</div>
+						</div>
+						<ul class="ext-features">
+							<li>Remplissage automatique email + mot de passe</li>
+							<li>Sauvegarde des nouveaux identifiants</li>
+							<li>Import depuis Chrome en 1 clic</li>
+							<li>Codes 2FA / TOTP automatiques</li>
+							<li>Zero-knowledge — tout est chiffre</li>
+						</ul>
+						<a href="https://chromewebstore.google.com/detail/fyxxvault-%E2%80%93-autofill/pacioaldmfoppgnaieonkgjbipdeloll" target="_blank" rel="noopener" class="ext-cta">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 16.5c2.49 0 4.5-2.01 4.5-4.5S14.49 7.5 12 7.5 7.5 9.51 7.5 12s2.01 4.5 4.5 4.5z" fill="currentColor" opacity="0.3"/><path d="M3.47 8.5L7.5 12H3c0-1.24.17-2.43.47-3.5z" fill="#EA4335"/><path d="M3.47 8.5A9 9 0 0112 3v4.5c-1.93 0-3.6 1.22-4.24 2.93L3.47 8.5z" fill="#FBBC05"/><path d="M12 3a9 9 0 017.94 4.77L16.24 10.43A4.49 4.49 0 0012 7.5V3z" fill="#4285F4"/><path d="M19.94 7.77A9 9 0 0121 12h-4.5c0-.87-.25-1.68-.68-2.37l4.12-1.86z" fill="#4285F4"/></svg>
+							Ajouter a Chrome — Gratuit
+						</a>
+						<div class="ext-compat">Fonctionne aussi sur Edge, Brave, Arc et Opera</div>
+					</div>
+					<div class="ext-right">
+						<div class="ext-mockup">
+							<div class="ext-popup-mock">
+								<div class="ext-popup-header">
+									<div class="ext-popup-logo"></div>
+									<span>FyxxVault</span>
+								</div>
+								<div class="ext-popup-search">Rechercher...</div>
+								<div class="ext-popup-item">
+									<div class="ext-popup-favicon" style="background:#E34133">N</div>
+									<div><div class="ext-popup-title">Netflix</div><div class="ext-popup-user">m.harea20@gmail.com</div></div>
+								</div>
+								<div class="ext-popup-item">
+									<div class="ext-popup-favicon" style="background:#003580">B</div>
+									<div><div class="ext-popup-title">Booking</div><div class="ext-popup-user">m.harea20@gmail.com</div></div>
+								</div>
+								<div class="ext-popup-item">
+									<div class="ext-popup-favicon" style="background:#3ECF8E">S</div>
+									<div><div class="ext-popup-title">Supabase</div><div class="ext-popup-user">fyxxfn@gmail.com</div></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ============================================================ -->
 	<!-- PRICING SECTION -->
 	<!-- ============================================================ -->
 	<section id="pricing" class="pricing" data-reveal="pricing">
@@ -2162,6 +2233,99 @@
 	}
 	.comparison-dim {
 		color: var(--fv-smoke);
+	}
+
+	/* ============================================================ */
+	/* EXTENSION */
+	/* ============================================================ */
+	.extension { padding: 120px 24px; }
+
+	.ext-card {
+		max-width: 900px; margin: 0 auto;
+		background: linear-gradient(135deg, rgba(0,212,255,0.04), rgba(138,92,246,0.04));
+		border: 1px solid rgba(0,212,255,0.12);
+		border-radius: 24px; overflow: hidden;
+		opacity: 0; transform: translateY(30px);
+		transition: all 0.8s cubic-bezier(0.16,1,0.3,1);
+	}
+	.ext-card.revealed { opacity: 1; transform: translateY(0); }
+	.ext-card-inner { display: flex; gap: 40px; padding: 48px; align-items: center; }
+
+	.ext-left { flex: 1; }
+	.ext-right { flex-shrink: 0; }
+
+	.ext-icon-row { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+	.ext-logo { width: 48px; height: 48px; flex-shrink: 0; }
+	.ext-name { font-size: 20px; font-weight: 800; color: white; }
+	.ext-rating { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+	.ext-stars { color: #FBBF24; font-size: 14px; letter-spacing: 1px; }
+	.ext-label { font-size: 12px; color: var(--fv-ash); }
+
+	.ext-features {
+		list-style: none; padding: 0; margin: 0 0 28px;
+	}
+	.ext-features li {
+		font-size: 14px; color: var(--fv-smoke); padding: 6px 0;
+		padding-left: 24px; position: relative;
+	}
+	.ext-features li::before {
+		content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+		width: 16px; height: 16px; border-radius: 50%;
+		background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet));
+		opacity: 0.8;
+	}
+	.ext-features li::after {
+		content: ''; position: absolute; left: 5px; top: 50%; transform: translateY(-50%) rotate(45deg);
+		width: 4px; height: 8px; border-bottom: 2px solid white; border-right: 2px solid white;
+	}
+
+	.ext-cta {
+		display: inline-flex; align-items: center; gap: 10px;
+		padding: 14px 28px; border-radius: 14px;
+		background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet));
+		color: white; font-size: 15px; font-weight: 700;
+		text-decoration: none; transition: all 0.2s;
+		box-shadow: 0 4px 20px rgba(0,212,255,0.25);
+	}
+	.ext-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(0,212,255,0.35); filter: brightness(1.05); }
+
+	.ext-compat { font-size: 12px; color: var(--fv-ash); margin-top: 12px; }
+
+	/* Popup mockup */
+	.ext-mockup { position: relative; }
+	.ext-popup-mock {
+		width: 260px; background: #0F172A; border: 1px solid rgba(0,212,255,0.15);
+		border-radius: 14px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+	}
+	.ext-popup-header {
+		display: flex; align-items: center; gap: 8px;
+		padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06);
+		font-size: 14px; font-weight: 700; color: var(--fv-cyan);
+	}
+	.ext-popup-logo {
+		width: 20px; height: 20px; border-radius: 5px;
+		background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet));
+	}
+	.ext-popup-search {
+		margin: 10px 12px; padding: 8px 12px; border-radius: 8px;
+		background: rgba(255,255,255,0.04); font-size: 12px; color: var(--fv-ash);
+	}
+	.ext-popup-item {
+		display: flex; align-items: center; gap: 10px;
+		padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.04);
+	}
+	.ext-popup-item:last-child { border-bottom: none; }
+	.ext-popup-favicon {
+		width: 28px; height: 28px; border-radius: 7px;
+		display: flex; align-items: center; justify-content: center;
+		font-size: 13px; font-weight: 700; color: white; flex-shrink: 0;
+	}
+	.ext-popup-title { font-size: 13px; font-weight: 600; color: white; }
+	.ext-popup-user { font-size: 11px; color: var(--fv-ash); }
+
+	@media (max-width: 768px) {
+		.ext-card-inner { flex-direction: column; padding: 32px 24px; gap: 24px; }
+		.ext-right { display: none; }
 	}
 
 	/* ============================================================ */
