@@ -6,7 +6,7 @@ If you discover a security vulnerability in FyxxVault, please report it responsi
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
-Instead, email us at: **security@fyxxvault.com**
+Instead, email us at: **security@fyxxmail.com**
 
 We will acknowledge your report within 48 hours and provide a timeline for a fix.
 
