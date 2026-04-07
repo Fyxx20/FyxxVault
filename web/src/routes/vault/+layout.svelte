@@ -409,7 +409,6 @@
 						</div>
 						<div class="flex-1 min-w-0">
 							<p class="text-xs text-white font-medium truncate">{auth.user?.email ?? ''}</p>
-							<p class="text-[10px] text-[var(--fv-cyan)]">100% Gratuit</p>
 						</div>
 					</div>
 				</div>
