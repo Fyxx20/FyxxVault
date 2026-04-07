@@ -7,7 +7,9 @@ import { checkRateLimit } from '$lib/rateLimit';
 import { logAdminAction } from '$lib/adminAudit';
 import type { RequestHandler } from './$types';
 
-const ADMIN_EMAILS = (env.ADMIN_EMAILS || 'fyxxfn@gmail.com').split(',').map(e => e.trim().toLowerCase());
+const ADMIN_EMAILS = env.ADMIN_EMAILS
+	? env.ADMIN_EMAILS.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+	: [];
 
 function getSupabaseAdmin() {
 	return createClient(pubEnv.PUBLIC_SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -164,7 +166,8 @@ export const GET: RequestHandler = async ({ request, params }) => {
 			support_messages_count: supportMessagesCount ?? 0
 		});
 	} catch (err: any) {
-		return json({ error: err.message }, { status: 500 });
+		console.error('Admin user endpoint error:', err);
+		return json({ error: 'Erreur interne du serveur' }, { status: 500 });
 	}
 };
 
@@ -203,11 +206,12 @@ export const PATCH: RequestHandler = async ({ request, params }) => {
 			});
 
 			if (resetError) {
-				return json({ error: resetError.message }, { status: 500 });
+				console.error('Password reset error:', resetError);
+				return json({ error: 'Erreur lors de la generation du lien' }, { status: 500 });
 			}
 
 			await logAdminAction(supabaseAdmin, adminEmail, 'password_reset', userId, null, clientIP);
-			return json({ success: true, message: 'Lien de recuperation genere', link: data });
+			return json({ success: true, message: 'Lien de recuperation genere' });
 		}
 
 		// Handle profile updates
@@ -242,14 +246,14 @@ export const PATCH: RequestHandler = async ({ request, params }) => {
 				.update(updates)
 				.eq('id', userId));
 		} else {
-			// Profile doesn't exist yet - create minimal one
 			({ error } = await supabaseAdmin
 				.from('profiles')
 				.insert({ id: userId, ...updates, wrapped_vek: '', vek_salt: '', vek_rounds: 210000 }));
 		}
 
 		if (error) {
-			return json({ error: error.message }, { status: 500 });
+			console.error('Profile update error:', error);
+			return json({ error: 'Erreur lors de la mise a jour du profil' }, { status: 500 });
 		}
 
 		// Audit log for profile changes
@@ -262,7 +266,8 @@ export const PATCH: RequestHandler = async ({ request, params }) => {
 
 		return json({ success: true });
 	} catch (err: any) {
-		return json({ error: err.message }, { status: 500 });
+		console.error('Admin user endpoint error:', err);
+		return json({ error: 'Erreur interne du serveur' }, { status: 500 });
 	}
 };
 
@@ -299,12 +304,14 @@ export const DELETE: RequestHandler = async ({ request, params }) => {
 		// Delete auth user
 		const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
 		if (error) {
-			return json({ error: error.message }, { status: 500 });
+			console.error('Delete user error:', error);
+			return json({ error: 'Erreur lors de la suppression' }, { status: 500 });
 		}
 
 		await logAdminAction(supabaseAdmin, adminEmail, 'delete_user', userId, { email: deletedEmail }, clientIP);
 		return json({ success: true });
 	} catch (err: any) {
-		return json({ error: err.message }, { status: 500 });
+		console.error('Admin user endpoint error:', err);
+		return json({ error: 'Erreur interne du serveur' }, { status: 500 });
 	}
 };

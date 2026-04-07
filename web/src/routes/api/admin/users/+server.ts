@@ -5,7 +5,9 @@ import { env as pubEnv } from '$env/dynamic/public';
 import { checkRateLimit } from '$lib/rateLimit';
 import type { RequestHandler } from './$types';
 
-const ADMIN_EMAILS = (env.ADMIN_EMAILS || 'fyxxfn@gmail.com').split(',').map(e => e.trim().toLowerCase());
+const ADMIN_EMAILS = env.ADMIN_EMAILS
+	? env.ADMIN_EMAILS.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+	: [];
 
 function getSupabaseAdmin() {
 	return createClient(pubEnv.PUBLIC_SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -35,12 +37,15 @@ export const GET: RequestHandler = async ({ request, url }) => {
 	}
 
 	try {
-		const page = parseInt(url.searchParams.get('page') || '1');
-		const perPage = parseInt(url.searchParams.get('perPage') || '20');
-		const search = url.searchParams.get('search') || '';
-		const filter = url.searchParams.get('filter') || 'all';
-		const sortBy = url.searchParams.get('sortBy') || 'created_at';
-		const sortDir = url.searchParams.get('sortDir') || 'desc';
+		const page = Math.max(1, parseInt(url.searchParams.get('page') || '1') || 1);
+		const perPage = Math.min(100, Math.max(1, parseInt(url.searchParams.get('perPage') || '20') || 20));
+		const search = (url.searchParams.get('search') || '').slice(0, 200);
+		const filter = ['all', 'pro', 'free'].includes(url.searchParams.get('filter') || 'all')
+			? url.searchParams.get('filter')! : 'all';
+		const sortBy = ['email', 'created_at'].includes(url.searchParams.get('sortBy') || 'created_at')
+			? url.searchParams.get('sortBy')! : 'created_at';
+		const sortDir = ['asc', 'desc'].includes(url.searchParams.get('sortDir') || 'desc')
+			? url.searchParams.get('sortDir')! : 'desc';
 
 		// Get all users from auth
 		const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
@@ -115,6 +120,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
 			totalPages: Math.ceil(total / perPage)
 		});
 	} catch (err: any) {
-		return json({ error: err.message }, { status: 500 });
+		console.error('Admin users list error:', err);
+		return json({ error: 'Erreur interne du serveur' }, { status: 500 });
 	}
 };

@@ -2,8 +2,21 @@
 // Receives session from bridge-main.ts (MAIN world) via postMessage, forwards to service worker.
 // Also receives VEK from the web app via custom events and postMessage.
 
+const TRUSTED_ORIGINS = ['https://fyxxvault.com', 'https://www.fyxxvault.com'];
+
+function isTrustedOrigin(origin: string): boolean {
+  if (TRUSTED_ORIGINS.includes(origin)) return true;
+  // Allow localhost for development
+  try {
+    const url = new URL(origin);
+    if (url.hostname === 'localhost') return true;
+  } catch {}
+  return false;
+}
+
 window.addEventListener('message', (e) => {
   if (e.source !== window) return;
+  if (!isTrustedOrigin(e.origin)) return;
 
   if (e.data?.type === '__FYXX_SESSION__') {
     try {
@@ -21,10 +34,12 @@ window.addEventListener('message', (e) => {
   }
 
   if (e.data?.type === '__FYXX_VEK__') {
-    chrome.runtime.sendMessage({
-      type: 'BRIDGE_VEK',
-      vekHex: e.data.payload
-    });
+    if (typeof e.data.payload === 'string' && /^[0-9a-f]{64}$/i.test(e.data.payload)) {
+      chrome.runtime.sendMessage({
+        type: 'BRIDGE_VEK',
+        vekHex: e.data.payload
+      });
+    }
   }
 });
 

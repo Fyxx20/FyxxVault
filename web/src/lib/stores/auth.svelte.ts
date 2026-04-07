@@ -68,7 +68,7 @@ function bridgeToExtension() {
 		// Custom event (same-world listeners)
 		window.dispatchEvent(new CustomEvent('fyxxvault-bridge-vek', { detail: vekHex }));
 		// postMessage (cross-world — content script isolated world can read this)
-		window.postMessage({ type: '__FYXX_VEK__', payload: vekHex }, '*');
+		window.postMessage({ type: '__FYXX_VEK__', payload: vekHex }, window.location.origin);
 	}
 }
 
