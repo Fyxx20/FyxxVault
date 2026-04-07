@@ -52,7 +52,6 @@
 	const navItems = [
 		{ path: '/admin', label: 'Dashboard', icon: 'dashboard' },
 		{ path: '/admin/users', label: 'Utilisateurs', icon: 'users' },
-		{ path: '/admin/subscriptions', label: 'Abonnements', icon: 'credit-card' },
 		{ path: '/admin/database', label: 'Base de donnees', icon: 'database' },
 		{ path: '/admin/support', label: 'Support', icon: 'support' },
 		{ path: '/admin/settings', label: 'Parametres', icon: 'settings' }

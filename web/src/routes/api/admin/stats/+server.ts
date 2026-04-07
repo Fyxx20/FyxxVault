@@ -1,17 +1,16 @@
 import { json } from '@sveltejs/kit';
-import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/private';
 import { env as pubEnv } from '$env/dynamic/public';
 import { checkRateLimit } from '$lib/rateLimit';
 import type { RequestHandler } from './$types';
 
-const ADMIN_EMAILS = (env.ADMIN_EMAILS || 'fyxxfn@gmail.com').split(',').map(e => e.trim().toLowerCase());
+const ADMIN_EMAILS = env.ADMIN_EMAILS
+	? env.ADMIN_EMAILS.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+	: [];
 
-function getAdminClients() {
-	const supabaseAdmin = createClient(pubEnv.PUBLIC_SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!);
-	const stripe = new Stripe(env.STRIPE_SECRET_KEY!);
-	return { supabaseAdmin, stripe };
+function getSupabaseAdmin() {
+	return createClient(pubEnv.PUBLIC_SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!);
 }
 
 async function verifyAdmin(request: Request, supabaseAdmin: ReturnType<typeof createClient>): Promise<{ valid: boolean; email?: string }> {
@@ -31,7 +30,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		return json({ error: 'Too many requests' }, { status: 429 });
 	}
 
-	const { supabaseAdmin, stripe } = getAdminClients();
+	const supabaseAdmin = getSupabaseAdmin();
 
 	if (!(await verifyAdmin(request, supabaseAdmin)).valid) {
 		return json({ error: 'Non autorise' }, { status: 403 });
@@ -215,24 +214,6 @@ export const GET: RequestHandler = async ({ request }) => {
 			// Table may be missing before migration is applied.
 		}
 
-		// Stripe revenue stats
-		let mrr = 0;
-		let activeSubscriptions = 0;
-		try {
-			const subs = await stripe.subscriptions.list({ status: 'active', limit: 100 });
-			activeSubscriptions = subs.data.length;
-			mrr = subs.data.reduce((sum, sub) => {
-				const item = sub.items.data[0];
-				if (!item?.price?.unit_amount) return sum;
-				const amount = item.price.unit_amount;
-				const interval = item.price.recurring?.interval;
-				if (interval === 'year') return sum + Math.round(amount / 12);
-				return sum + amount;
-			}, 0);
-		} catch (e) {
-			// Stripe may not be configured
-		}
-
 		return json({
 			totalUsers,
 			proUsers,
@@ -241,8 +222,6 @@ export const GET: RequestHandler = async ({ request }) => {
 			newUsersToday,
 			newUsersWeek,
 			newUsersMonth,
-			mrr,
-			activeSubscriptions,
 			impressions: {
 				hour: impressionsHour,
 				day: impressionsDay,
@@ -280,6 +259,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			}
 		});
 	} catch (err: any) {
-		return json({ error: err.message }, { status: 500 });
+		console.error('Admin stats error:', err);
+		return json({ error: 'Erreur interne du serveur' }, { status: 500 });
 	}
 };

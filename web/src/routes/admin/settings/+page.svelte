@@ -664,7 +664,7 @@
 					</div>
 					<div>
 						<p class="text-sm text-white font-medium group-hover:text-[var(--fv-violet-light)] transition-colors">Stripe Dashboard</p>
-						<p class="text-[10px] text-[var(--fv-ash)]">Paiements, Abonnements</p>
+						<p class="text-[10px] text-[var(--fv-ash)]">Historique</p>
 					</div>
 				</a>
 				<a

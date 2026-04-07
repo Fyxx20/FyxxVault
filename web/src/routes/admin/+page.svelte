@@ -138,23 +138,6 @@
 				</p>
 			</div>
 
-			<!-- MRR -->
-			<div class="admin-stat-card success">
-				<div class="flex items-center justify-between mb-3">
-					<span class="text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider">Revenus mensuels</span>
-					<div class="w-8 h-8 rounded-lg bg-[var(--fv-success)]/15 flex items-center justify-center">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2">
-							<line x1="12" y1="1" x2="12" y2="23"/>
-							<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-						</svg>
-					</div>
-				</div>
-				<p class="text-3xl font-extrabold text-white mb-1">{formatCurrency(stats.mrr)}</p>
-				<p class="text-xs text-[var(--fv-smoke)]">
-					{stats.activeSubscriptions} abonnement{stats.activeSubscriptions > 1 ? 's' : ''} actif{stats.activeSubscriptions > 1 ? 's' : ''}
-				</p>
-			</div>
-
 			<!-- Vault Items -->
 			<div class="admin-stat-card cyan">
 				<div class="flex items-center justify-between mb-3">
@@ -352,19 +335,6 @@
 						<div class="flex-1">
 							<p class="text-xs font-semibold text-white group-hover:text-[var(--fv-violet-light)] transition-colors">Voir tous les utilisateurs</p>
 							<p class="text-[10px] text-[var(--fv-ash)]">{stats.totalUsers} utilisateurs</p>
-						</div>
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-					</a>
-					<a href="/admin/subscriptions" class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/8 transition-all group">
-						<div class="w-10 h-10 rounded-lg bg-[var(--fv-gold)]/15 flex items-center justify-center">
-							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-gold)" stroke-width="2">
-								<rect x="1" y="4" width="22" height="16" rx="2"/>
-								<line x1="1" y1="10" x2="23" y2="10"/>
-							</svg>
-						</div>
-						<div class="flex-1">
-							<p class="text-xs font-semibold text-white group-hover:text-[var(--fv-gold)] transition-colors">Gerer les abonnements</p>
-							<p class="text-[10px] text-[var(--fv-ash)]">{stats.activeSubscriptions} actifs</p>
 						</div>
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
 					</a>
