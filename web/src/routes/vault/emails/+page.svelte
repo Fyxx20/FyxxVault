@@ -94,9 +94,10 @@
 	async function createAlias() {
 		creating = true;
 		error = '';
+		const customInput = (document.getElementById('custom-alias-input') as HTMLInputElement)?.value?.trim() || '';
 		const data = await apiFetch('/api/email/aliases', {
 			method: 'POST',
-			body: JSON.stringify({ label: newAliasLabel })
+			body: JSON.stringify({ label: newAliasLabel, customName: customInput || undefined })
 		});
 		if (data.error) {
 			error = data.error;
@@ -568,9 +569,21 @@
 			<div class="email-modal" role="dialog" onclick={(e) => e.stopPropagation()}>
 				<h3 class="email-modal-title">{t('emails.new_alias_title')}</h3>
 				<p class="email-modal-desc">
-					{@html t('emails.new_alias_desc')}
+					Choisis un nom personnalise ou laisse vide pour un alias aleatoire.
 				</p>
 
+				<div style="margin: 12px 0;">
+					<div style="display: flex; align-items: center; gap: 0; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.03);">
+						<input
+							type="text"
+							id="custom-alias-input"
+							placeholder="nom-personnalise"
+							style="flex: 1; padding: 10px 12px; background: transparent; border: none; color: var(--fv-text, #e2e8f0); font-size: 14px; outline: none; min-width: 0;"
+						/>
+						<span style="padding: 10px 12px; color: var(--fv-cyan, #00d4ff); font-size: 14px; font-weight: 600; white-space: nowrap; border-left: 1px solid rgba(255,255,255,0.1); background: rgba(0,212,255,0.05);">@fyxxmail.com</span>
+					</div>
+					<p style="font-size: 11px; color: var(--fv-ash, #94a3b8); margin-top: 6px;">Lettres, chiffres, points et tirets. Min. 3 caracteres. Vide = aleatoire.</p>
+				</div>
 
 				{#if error}
 					<div class="email-modal-error">{error}</div>
