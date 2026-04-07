@@ -584,12 +584,8 @@
 				</div>
 
 				<div class="email-modal-pro-notice">
-					<span>{'\u{1F451}'}</span>
-					{#if auth.isPro}
-						<span>{t('emails.pro_notice')}</span>
-					{:else}
-						<span>{@html t('emails.free_notice')}</span>
-					{/if}
+					<span>✉️</span>
+					<span>{t('emails.pro_notice')}</span>
 				</div>
 			</div>
 		</div>

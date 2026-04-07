@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { getAuthState, logout, changeMasterPassword, refreshProStatus } from '$lib/stores/auth.svelte';
+	import { getAuthState, logout, changeMasterPassword } from '$lib/stores/auth.svelte';
 	import { exportCSV, resetVault, getVaultState } from '$lib/stores/vault.svelte';
 	import { t } from '$lib/i18n.svelte';
 
@@ -19,17 +19,6 @@
 
 	// Export state
 	let exportLoading = $state(false);
-
-	// Subscription
-	let selectedPlan = $state<'monthly' | 'yearly'>('yearly');
-	let checkoutLoading = $state(false);
-	const proFeatures = $derived([
-		t('settings.feature.unlimited'),
-		t('settings.feature.dark_web'),
-		t('settings.feature.emails'),
-		t('settings.feature.sharing'),
-		t('settings.feature.support')
-	]);
 
 	// Settings
 	let autoLockTimeout = $state(5);
@@ -53,75 +42,6 @@
 	function saveClipboardClear(value: number) {
 		clipboardAutoClear = value;
 		localStorage.setItem('fv_clipboard_clear', value.toString());
-	}
-
-	let billingLoading = $state(false);
-	let proSyncMessage = $state('');
-
-	async function handleCheckout() {
-		checkoutLoading = true;
-		try {
-			const res = await fetch('/api/checkout', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${auth.session?.access_token}`
-				},
-				body: JSON.stringify({ plan: selectedPlan })
-			});
-			const data = await res.json();
-			if (data.url) {
-				window.location.href = data.url;
-			} else {
-				alert(data.error || t('settings.error.payment'));
-			}
-		} catch (e: any) {
-			alert(e.message || t('settings.error.network'));
-		} finally {
-			checkoutLoading = false;
-		}
-	}
-
-	async function syncProStatusAfterSuccess() {
-		proSyncMessage = t('settings.payment_checking');
-		for (let i = 0; i < 12; i++) {
-			const isPro = await refreshProStatus();
-			if (isPro) {
-				proSyncMessage = t('settings.payment_confirmed');
-				setTimeout(() => { proSyncMessage = ''; }, 4000);
-				return;
-			}
-			await new Promise(resolve => setTimeout(resolve, 2000));
-		}
-		proSyncMessage = t('settings.payment_pending');
-	}
-
-	onMount(() => {
-		const params = new URLSearchParams(window.location.search);
-		if (params.get('success') === 'true') {
-			syncProStatusAfterSuccess();
-		}
-	});
-
-	async function handleManageBilling() {
-		billingLoading = true;
-		try {
-			const res = await fetch('/api/billing-portal', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ email: auth.user?.email })
-			});
-			const data = await res.json();
-			if (data.url) {
-				window.location.href = data.url;
-			} else {
-				alert(data.error || t('settings.error.portal'));
-			}
-		} catch (e: any) {
-			alert(e.message || t('settings.error.network'));
-		} finally {
-			billingLoading = false;
-		}
 	}
 
 	async function handleChangePassword() {
@@ -210,8 +130,8 @@
 			<div class="flex-1">
 				<p class="text-sm font-bold text-white">{auth.user?.email ?? ''}</p>
 				<div class="flex items-center gap-2 mt-1 flex-wrap">
-					<span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold {auth.isPro ? 'bg-[var(--fv-gold)]/10 text-[var(--fv-gold)]' : 'bg-white/10 text-[var(--fv-smoke)]'}">
-						{auth.isPro ? `\u{1F451} ${t('settings.plan_pro')}` : t('settings.plan_free')}
+					<span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold bg-[var(--fv-cyan)]/10 text-[var(--fv-cyan)]">
+						100% Gratuit
 					</span>
 				</div>
 			</div>
@@ -230,13 +150,11 @@
 		</div>
 	</div>
 
-	<!-- Subscription management -->
-	<div class="settings-card p-6 mb-4">
-		<div class="settings-card-border-left" style="background: var(--fv-gold);"></div>
+	<!-- Plan info -->
+	<div class="settings-card p-6 mb-4 hidden">
+		<div class="settings-card-border-left" style="background: var(--fv-cyan);"></div>
 		<h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-			<div class="w-7 h-7 rounded-lg bg-[var(--fv-gold)]/15 flex items-center justify-center">
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-gold)" stroke-width="2"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg>
-			</div>
+			Plan
 			{t('settings.section.subscription')}
 		</h2>
 

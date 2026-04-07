@@ -189,22 +189,6 @@
 		};
 	});
 
-	async function handleSidebarCheckout() {
-		try {
-			const res = await fetch('/api/checkout', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${auth.session?.access_token}`
-				},
-				body: JSON.stringify({ plan: 'monthly' })
-			});
-			const data = await res.json();
-			if (data.url) window.location.href = data.url;
-		} catch (e) {
-			console.error('Checkout error:', e);
-		}
-	}
 
 	// Logout confirmation
 	let showLogoutToast = $state(false);
@@ -416,25 +400,6 @@
 				</a>
 			</div>
 
-			<!-- Upgrade Pro (hidden if already Pro) -->
-			{#if !auth.isPro}
-			<div class="relative z-10 px-3 py-2">
-				<div class="pro-upsell-card p-3 rounded-xl">
-					<div class="flex items-center gap-2 mb-2">
-						<span class="text-lg">👑</span>
-						<span class="text-xs font-bold text-[var(--fv-gold)]">{t('sidebar.pro_title')}</span>
-					</div>
-					<p class="text-[10px] text-[var(--fv-smoke)] mb-2 leading-relaxed">{t('sidebar.pro_features')}</p>
-					<a
-						href="/vault/settings"
-						class="block w-full text-center px-3 py-2.5 rounded-xl bg-gradient-to-r from-[var(--fv-gold)] to-[var(--fv-gold-light)] text-[#1a1a2e] text-xs font-bold transition-all duration-200 hover:shadow-lg hover:shadow-[var(--fv-gold)]/20 hover:translate-y-[-1px] no-underline"
-					>
-						{t('sidebar.pro_price')}
-					</a>
-				</div>
-			</div>
-			{/if}
-
 			<!-- User section -->
 			<div class="relative z-10 px-3 py-2">
 				<div class="user-section-card p-2.5 rounded-xl mb-1">
@@ -444,7 +409,7 @@
 						</div>
 						<div class="flex-1 min-w-0">
 							<p class="text-xs text-white font-medium truncate">{auth.user?.email ?? ''}</p>
-							<p class="text-[10px] {auth.isPro ? 'text-[var(--fv-gold)]' : 'text-[var(--fv-ash)]'}">{auth.isPro ? t('sidebar.plan_pro') : t('sidebar.plan_free')}</p>
+							<p class="text-[10px] text-[var(--fv-cyan)]">100% Gratuit</p>
 						</div>
 					</div>
 				</div>

@@ -233,28 +233,7 @@
 		{/each}
 	</div>
 
-	<!-- Dark Web Monitoring (HIBP) — Pro only -->
-	{#if !auth.isPro}
-	<div class="sec-glass-card p-6 mb-6 opacity-70 relative z-10">
-		<div class="flex items-center gap-3 mb-3">
-			<div class="w-9 h-9 rounded-xl bg-[var(--fv-danger)]/10 flex items-center justify-center">
-				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
-			</div>
-			<div>
-				<h2 class="text-sm font-bold text-white">{t('security.dark_web')}</h2>
-				<p class="text-[10px] text-[var(--fv-smoke)]">{t('security.dark_web_desc')}</p>
-			</div>
-		</div>
-		<div class="p-4 rounded-xl bg-[var(--fv-gold)]/5 border border-[var(--fv-gold)]/20 flex items-center gap-3">
-			<span>&#128081;</span>
-			<div class="flex-1">
-				<p class="text-xs font-semibold text-[var(--fv-gold)]">{t('security.pro_feature')}</p>
-				<p class="text-[10px] text-[var(--fv-smoke)]">{t('security.pro_upgrade')}</p>
-			</div>
-			<a href="/vault/settings" class="px-3 py-1.5 rounded-lg bg-[var(--fv-gold)] text-[#1a1a2e] text-[10px] font-bold transition-all duration-200 hover:shadow-lg hover:shadow-[var(--fv-gold)]/20">{t('security.upgrade')}</a>
-		</div>
-	</div>
-	{:else}
+	<!-- Dark Web Monitoring (HIBP) -->
 	<div class="sec-glass-card p-6 mb-6 relative z-10">
 		<div class="flex items-center justify-between mb-4">
 			<div class="flex items-center gap-3">
@@ -328,7 +307,6 @@
 			<p class="text-xs text-[var(--fv-ash)] text-center py-2">{t('security.click_scan')}</p>
 		{/if}
 	</div>
-	{/if}
 
 	<!-- Recommendations -->
 	<div class="sec-glass-card p-6 mb-6 fv-animate-in relative z-10" style="animation-delay: 300ms;">

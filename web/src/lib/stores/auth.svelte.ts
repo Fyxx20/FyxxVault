@@ -11,7 +11,7 @@ let _session: Session | null = $state(null);
 let _isAuthenticated = $state(false);
 let _isUnlocked = $state(false);
 let _loading = $state(true);
-let _isPro = $state(false);
+let _isPro = $state(true);
 let _masterPassword: string | null = null; // kept briefly for profile bootstrap
 
 // ─── Public accessors ───

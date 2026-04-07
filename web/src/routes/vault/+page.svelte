@@ -12,9 +12,7 @@
 	const vault = getVaultState();
 	const auth = getAuthState();
 
-	// Free user limit
-	const FREE_LIMIT = 5;
-	const canAdd = $derived(auth.isPro || vault.entries.length < FREE_LIMIT);
+	const canAdd = true;
 
 	let showPassword = $state<Record<string, boolean>>({});
 	let copiedField = $state<string | null>(null);
@@ -280,9 +278,6 @@
 			<h1 class="vault-title text-3xl font-extrabold text-white tracking-tight">{t('vault.title')}</h1>
 			<div class="flex items-center gap-3 mt-2">
 				<span class="vault-count-pill">{vault.entries.length} {vault.entries.length !== 1 ? t('vault.elements_count_plural') : t('vault.elements_count')}</span>
-				{#if !auth.isPro}
-					<span class="text-[10px] text-[var(--fv-ash)]">{t('vault.free_count').replace('{n}', String(vault.entries.length)).replace('{limit}', String(FREE_LIMIT))}</span>
-				{/if}
 			</div>
 		</div>
 		<div class="flex gap-3">
@@ -294,12 +289,12 @@
 				</svg>
 				{t('vault.import')}
 			</a>
-			<a href={canAdd ? '/vault/add' : '/vault/settings'} class="fv-btn {canAdd ? 'fv-btn-primary' : 'fv-btn-gold'} !py-2.5 !px-5 text-sm inline-flex items-center gap-2 w-fit">
+			<a href="/vault/add" class="fv-btn fv-btn-primary !py-2.5 !px-5 text-sm inline-flex items-center gap-2 w-fit">
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
 					<line x1="12" y1="5" x2="12" y2="19"/>
 					<line x1="5" y1="12" x2="19" y2="12"/>
 				</svg>
-				{canAdd ? t('vault.add_entry') : t('vault.upgrade_pro')}
+				{t('vault.add_entry')}
 			</a>
 		</div>
 	</div>
@@ -648,7 +643,6 @@
 						>
 							{t('common.edit')}
 						</button>
-						{#if auth.isPro}
 						<button
 							onclick={() => { showSharePanel = !showSharePanel; shareLink = ''; }}
 							class="fv-btn fv-btn-ghost text-xs !py-2.5 !px-3"
@@ -656,7 +650,6 @@
 						>
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
 						</button>
-						{/if}
 						<button
 							onclick={() => showDeleteConfirm = entry.id}
 							class="fv-btn fv-btn-ghost text-xs !py-2.5 !px-3 !text-[var(--fv-danger)] hover:!bg-[var(--fv-danger)]/10"

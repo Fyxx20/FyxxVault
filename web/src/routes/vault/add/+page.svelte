@@ -11,10 +11,7 @@
 	const vault = getVaultState();
 	const auth = getAuthState();
 
-	// Free user limit
-	const FREE_LIMIT = 5;
-	let showProPopup = $state(false);
-	const canAdd = $derived(auth.isPro || (editId ? true : vault.entries.length < FREE_LIMIT));
+	const canAdd = true;
 
 	// Determine if editing
 	const editId = $derived($page.url.searchParams.get('edit'));
@@ -187,8 +184,6 @@
 				success = true;
 				clearDraft();
 				setTimeout(() => goto('/vault'), 800);
-			} else if (result.needsPro) {
-				showProPopup = true;
 			} else {
 				error = result.error || t('add.save_error');
 			}
@@ -207,25 +202,6 @@
 	<title>{editId ? t('add.title_edit') : t('add.title_new')} — FyxxVault</title>
 </svelte:head>
 
-{#if showProPopup}
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-	<div class="bg-[var(--fv-obsidian)] border border-white/10 rounded-2xl p-8 max-w-md w-full mx-4 text-center">
-		<div class="text-4xl mb-4">🔒</div>
-		<h3 class="text-xl font-bold text-white mb-2">Limite atteinte</h3>
-		<p class="text-sm text-[var(--fv-smoke)] mb-6 leading-relaxed">
-			Tu as deja 5 identifiants dans ton coffre. Passe a <strong class="text-[var(--fv-violet)]">FyxxVault Pro</strong> pour un stockage illimite.
-		</p>
-		<div class="flex flex-wrap gap-2 justify-center mb-6">
-			<span class="text-xs font-semibold px-3 py-1 rounded-full bg-[var(--fv-violet)]/10 text-[var(--fv-violet)]">Identifiants illimites</span>
-			<span class="text-xs font-semibold px-3 py-1 rounded-full bg-[var(--fv-violet)]/10 text-[var(--fv-violet)]">Import/Export CSV</span>
-			<span class="text-xs font-semibold px-3 py-1 rounded-full bg-[var(--fv-violet)]/10 text-[var(--fv-violet)]">Emails jetables</span>
-		</div>
-		<button onclick={() => goto('/vault/settings')} class="fv-btn fv-btn-primary w-full !py-3.5 mb-3" style="background: linear-gradient(135deg, var(--fv-violet), #c084fc);">Passer a Pro</button>
-		<button onclick={() => { showProPopup = false; }} class="text-sm text-[var(--fv-smoke)] hover:text-white">Plus tard</button>
-	</div>
-</div>
-{/if}
-
 <div class="max-w-2xl mx-auto">
 	<!-- Header -->
 	<div class="flex items-center gap-4 mb-8">
@@ -238,16 +214,7 @@
 		<h1 class="text-xl font-extrabold text-white tracking-tight">{editId ? t('add.title_edit') : t('add.title_new')}</h1>
 	</div>
 
-	{#if !canAdd}
-		<div class="fv-glass p-10 text-center" style="border: 1px solid var(--fv-gold);">
-			<div class="w-20 h-20 rounded-full bg-[var(--fv-gold)]/10 flex items-center justify-center mx-auto mb-5">
-				<span class="text-4xl">👑</span>
-			</div>
-			<h2 class="text-xl font-bold" style="color: var(--fv-gold);">{t('add.limit_reached')}</h2>
-			<p class="text-sm text-[var(--fv-smoke)] mb-6 mt-2">{t('add.limit_desc')}</p>
-			<a href="/vault/settings" class="fv-btn fv-btn-gold" style="display: inline-block;">{t('add.upgrade_pro')}</a>
-		</div>
-	{:else if success}
+	{#if success}
 		<div class="fv-glass p-8 text-center fv-glow-cyan">
 			<div class="w-16 h-16 rounded-full bg-[var(--fv-success)]/15 flex items-center justify-center mx-auto mb-4">
 				<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>

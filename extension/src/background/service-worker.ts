@@ -175,33 +175,12 @@ function getLoginsForDomain(domain: string): VaultEntry[] {
   );
 }
 
-// ─── Check if user is Pro ───
-async function checkIsPro(userId: string): Promise<boolean> {
-  try {
-    const { data } = await supabase
-      .from('profiles')
-      .select('is_pro')
-      .eq('id', userId)
-      .single();
-    return data?.is_pro === true;
-  } catch {
-    return false;
-  }
-}
-
-const FREE_LIMIT = 5;
-
 // ─── Save new login ───
 async function saveLogin(entry: VaultEntry): Promise<{ success: boolean; error?: string }> {
   if (!vek) return { success: false, error: 'Vault locked' };
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return { success: false, error: 'Not authenticated' };
-
-  const isPro = await checkIsPro(session.user.id);
-  if (!isPro && entries.length >= FREE_LIMIT) {
-    return { success: false, error: `Limite de ${FREE_LIMIT} elements atteinte. Passe a FyxxVault Pro.` };
-  }
 
   try {
     const blob = await encryptEntry(entry, vek);
@@ -369,11 +348,6 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
 
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return { success: false, error: 'Non authentifie.' };
-
-        const isPro = await checkIsPro(session.user.id);
-        if (!isPro && entries.length >= FREE_LIMIT) {
-          return { success: false, error: 'UPGRADE_PRO', needsPro: true };
-        }
 
         try {
           let count = 0;

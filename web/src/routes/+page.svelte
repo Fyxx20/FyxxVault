@@ -426,7 +426,7 @@
 	const faqs = [
 		{
 			q: 'FyxxVault est-il vraiment gratuit ?',
-			a: 'Oui, le plan gratuit est 100% fonctionnel avec jusqu\'a 5 comptes. Le plan Pro debloque les comptes illimites, le monitoring dark web et les emails masques.',
+			a: 'Oui ! FyxxVault est 100% gratuit, sans limites. Stockage illimite, monitoring dark web, emails masques — tout est inclus pour tout le monde.',
 		},
 		{
 			q: 'Mes donnees sont-elles lisibles par FyxxVault ?',
@@ -977,66 +977,34 @@
 	<section id="pricing" class="pricing" data-reveal="pricing">
 		<div class="section-inner">
 			<div class="section-header" class:revealed={isRevealed('pricing')}>
-				<span class="section-pill" style="--pill-color: var(--fv-gold)">Tarifs</span>
-				<h2 class="section-title">Simple et transparent.</h2>
-				<p class="section-subtitle">14 jours d'essai gratuit. Sans carte bancaire.</p>
+				<span class="section-pill" style="--pill-color: var(--fv-cyan)">Gratuit</span>
+				<h2 class="section-title">100% gratuit. Pour toujours.</h2>
+				<p class="section-subtitle">Pas de plan payant. Pas de limites. Toutes les fonctionnalites pour tout le monde.</p>
 			</div>
 
 			<div class="pricing-grid" class:revealed={isRevealed('pricing')}>
-				<!-- Free Plan -->
-				<div class="pricing-card" style="--reveal-delay: 0ms">
-					<div class="pricing-card-border"></div>
+				<div class="pricing-card pricing-card--pro" style="--reveal-delay: 0ms">
+					<div class="pricing-card-border pricing-card-border--gold"></div>
+					<div class="pricing-card-popular">Open Source</div>
 					<div class="pricing-card-inner">
 						<div class="pricing-card-header">
-							<h3 class="pricing-card-name">Gratuit</h3>
-							<p class="pricing-card-tagline">Pour commencer en securite</p>
+							<h3 class="pricing-card-name">FyxxVault</h3>
+							<p class="pricing-card-tagline">Securite maximale, zero compromis</p>
 						</div>
 						<div class="pricing-card-price">
 							<span class="pricing-card-amount">0</span>
 							<span class="pricing-card-currency">EUR</span>
-							<span class="pricing-card-period">/mois</span>
+							<span class="pricing-card-period">/toujours</span>
 						</div>
 						<ul class="pricing-card-features">
-							{#each freeFeatures as f}
+							{#each [...freeFeatures, ...proFeatures] as f}
 								<li>
 									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
 									{f}
 								</li>
 							{/each}
 						</ul>
-						<a href="/register" class="pricing-card-cta pricing-card-cta--ghost magnetic-btn">Creer un compte</a>
-					</div>
-				</div>
-
-				<!-- Pro Plan -->
-				<div class="pricing-card pricing-card--pro" style="--reveal-delay: 150ms">
-					<div class="pricing-card-shimmer"></div>
-					<div class="pricing-card-border pricing-card-border--gold"></div>
-					<div class="pricing-card-popular">Populaire</div>
-					<div class="pricing-card-inner">
-						<div class="pricing-card-header">
-							<h3 class="pricing-card-name">Pro <span class="pricing-crown">&#9733;</span></h3>
-							<p class="pricing-card-tagline">Securite maximale</p>
-						</div>
-						<div class="pricing-card-price">
-							<span class="pricing-card-amount">{pricingAmount}</span>
-							<span class="pricing-card-currency">EUR</span>
-							<span class="pricing-card-period">/mois</span>
-						</div>
-						<p class="pricing-card-annual">ou 41,99EUR/an <span>(-30%)</span></p>
-						<ul class="pricing-card-features">
-							{#each proFeatures as f}
-								<li>
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-gold)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-									{f}
-								</li>
-							{/each}
-						</ul>
-						<a href="/register" class="pricing-card-cta pricing-card-cta--gold magnetic-btn">Essai gratuit 14 jours</a>
-						<p class="pricing-card-guarantee">
-							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-							Satisfait ou rembourse 30 jours
-						</p>
+						<a href="/register" class="pricing-card-cta pricing-card-cta--gold magnetic-btn">Creer un compte gratuit</a>
 					</div>
 				</div>
 			</div>
