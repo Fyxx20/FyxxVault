@@ -115,7 +115,7 @@
 
 <div class="max-w-2xl mx-auto">
 	<h1 class="text-2xl font-extrabold text-white mb-8 tracking-tight">{t('settings.title')}</h1>
-	{#if proSyncMessage}
+	{#if false}
 		<div class="mb-4 p-3 rounded-xl bg-[var(--fv-gold)]/10 border border-[var(--fv-gold)]/25">
 			<p class="text-xs text-[var(--fv-gold)] font-medium">{proSyncMessage}</p>
 		</div>
@@ -150,7 +150,8 @@
 		</div>
 	</div>
 
-	<!-- Plan info -->
+	<!-- Plan info (removed - all free now) -->
+	{#if false}
 	<div class="settings-card p-6 mb-4 hidden">
 		<div class="settings-card-border-left" style="background: var(--fv-cyan);"></div>
 		<h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
@@ -289,6 +290,7 @@
 			</div>
 		{/if}
 	</div>
+	{/if}
 
 	<!-- Security -->
 	<div class="settings-card p-6 mb-4">
