@@ -3,17 +3,15 @@
 
 import { supabase } from '../shared/supabase';
 import { decryptEntry, encryptEntry, decodeSupabaseBytes, encodeToSupabaseBytes, deriveKEK, unwrapVEK, hexToBytes, bytesToHex } from '../shared/crypto';
-import { newVaultEntry } from '../shared/types';
+import { newVaultEntry, DEFAULT_SETTINGS } from '../shared/types';
 import { generateTOTP } from '../shared/totp';
-import type { VaultEntry, ExtMessage, ExtStatus } from '../shared/types';
+import type { VaultEntry, ExtMessage, ExtStatus, ExtSettings } from '../shared/types';
 
 // ─── Disable Chrome's built-in password manager ───
 function disableChromePasswordManager() {
   chrome.privacy.services.passwordSavingEnabled.set({ value: false }, () => {
     if (chrome.runtime.lastError) {
       console.error('Failed to disable passwordSaving:', chrome.runtime.lastError);
-    } else {
-      console.log('FyxxVault: Chrome password saving disabled');
     }
   });
   chrome.privacy.services.autofillAddressEnabled.set({ value: false });
@@ -66,11 +64,50 @@ function lock() {
   chrome.action.setBadgeText({ text: '' });
 }
 
+// ─── Auto-lock alarm ───
+async function setupAutoLock() {
+  const settings = await getSettings();
+  await chrome.alarms.clear('fyxx-autolock');
+  if (settings.autoLockMinutes > 0) {
+    chrome.alarms.create('fyxx-autolock', { periodInMinutes: 1 });
+  }
+}
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === 'fyxx-autolock' && vek) {
+    const settings = await getSettings();
+    if (settings.autoLockMinutes > 0) {
+      const elapsed = (Date.now() - lastActivity) / 60000;
+      if (elapsed >= settings.autoLockMinutes) {
+        lock();
+      }
+    }
+  }
+});
+
+// ─── Settings ───
+async function getSettings(): Promise<ExtSettings> {
+  const { fyxxSettings } = await chrome.storage.local.get('fyxxSettings');
+  return { ...DEFAULT_SETTINGS, ...(fyxxSettings || {}) };
+}
+
+async function updateSettings(partial: Partial<ExtSettings>): Promise<ExtSettings> {
+  const current = await getSettings();
+  const updated = { ...current, ...partial };
+  await chrome.storage.local.set({ fyxxSettings: updated });
+  if ('autoLockMinutes' in partial) await setupAutoLock();
+  if ('disableChromePasswords' in partial && partial.disableChromePasswords) {
+    disableChromePasswordManager();
+  }
+  return updated;
+}
+
 // ─── Restore VEK on service worker wake ───
 restoreVEK().then(async (restored) => {
   if (restored) {
     await loadEntries();
   }
+  await setupAutoLock();
 });
 
 // ─── Restore session on SW wake ───
@@ -127,7 +164,6 @@ function extractDomain(url: string): string {
 function matchesDomain(entryWebsite: string, pageDomain: string): boolean {
   if (!entryWebsite) return false;
   const entryDomain = extractDomain(entryWebsite);
-  // Exact match or subdomain match
   return pageDomain === entryDomain ||
     pageDomain.endsWith('.' + entryDomain) ||
     entryDomain.endsWith('.' + pageDomain);
@@ -162,10 +198,9 @@ async function saveLogin(entry: VaultEntry): Promise<{ success: boolean; error?:
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return { success: false, error: 'Not authenticated' };
 
-  // Free users: block if already at 5+ entries
   const isPro = await checkIsPro(session.user.id);
   if (!isPro && entries.length >= FREE_LIMIT) {
-    return { success: false, error: `Limite de ${FREE_LIMIT} identifiants atteinte. Passe a FyxxVault Pro pour un stockage illimite.` };
+    return { success: false, error: `Limite de ${FREE_LIMIT} elements atteinte. Passe a FyxxVault Pro.` };
   }
 
   try {
@@ -185,6 +220,52 @@ async function saveLogin(entry: VaultEntry): Promise<{ success: boolean; error?:
   } catch (e: any) {
     return { success: false, error: e.message };
   }
+}
+
+// ─── Delete entry (soft delete) ───
+async function deleteEntry(entryId: string): Promise<{ success: boolean; error?: string }> {
+  if (!vek) return { success: false, error: 'Vault locked' };
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { success: false, error: 'Not authenticated' };
+
+  try {
+    const { error } = await supabase
+      .from('vault_items')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', entryId)
+      .eq('user_id', session.user.id);
+
+    if (error) return { success: false, error: error.message };
+
+    entries = entries.filter(e => e.id !== entryId);
+    chrome.action.setBadgeText({ text: String(entries.length) });
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+// ─── Password generator ───
+function generatePassword(length: number, opts: { uppercase: boolean; lowercase: boolean; digits: boolean; symbols: boolean }): string {
+  let charset = '';
+  if (opts.lowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
+  if (opts.uppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if (opts.digits) charset += '0123456789';
+  if (opts.symbols) charset += '!@#$%^&*()-_=+[]{}|;:,.<>?';
+  if (!charset) charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+  const maxValid = 256 - (256 % charset.length);
+  const result: string[] = [];
+  while (result.length < length) {
+    const array = crypto.getRandomValues(new Uint8Array(length - result.length + 16));
+    for (const byte of array) {
+      if (byte < maxValid && result.length < length) {
+        result.push(charset[byte % charset.length]);
+      }
+    }
+  }
+  return result.join('');
 }
 
 // ─── Unlock vault with master password ───
@@ -230,15 +311,12 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
       case 'LOGIN_AND_UNLOCK': {
         try {
           const { email, masterPassword } = msg as any;
-          // Sign in with Supabase
           const { data, error: authError } = await supabase.auth.signInWithPassword({
             email,
             password: masterPassword
           });
           if (authError) return { success: false, error: authError.message };
           if (!data.session) return { success: false, error: 'Pas de session.' };
-
-          // Now unlock the vault with the same master password
           return await unlock(masterPassword);
         } catch (e: any) {
           return { success: false, error: e.message || 'Erreur de connexion.' };
@@ -252,15 +330,21 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
 
       case 'GET_STATUS': {
         const hasSession = await ensureSession();
-        // Restore VEK from session storage if SW restarted
         if (!vek) {
           const restored = await restoreVEK();
           if (restored && entries.length === 0) await loadEntries();
         }
+        // Get user email for settings display
+        let userEmail: string | undefined;
+        if (hasSession) {
+          const { data: { session } } = await supabase.auth.getSession();
+          userEmail = session?.user?.email;
+        }
         return {
           isAuthenticated: hasSession,
           isUnlocked: !!vek,
-          entryCount: entries.length
+          entryCount: entries.length,
+          userEmail
         } satisfies ExtStatus;
       }
 
@@ -281,12 +365,11 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
       }
 
       case 'IMPORT_CSV_ENTRIES': {
-        if (!vek) return { success: false, error: 'Coffre verrouille. Connecte-toi d\'abord sur FyxxVault.' };
+        if (!vek) return { success: false, error: 'Coffre verrouille.' };
 
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return { success: false, error: 'Non authentifie. Connecte-toi sur FyxxVault.' };
+        if (!session) return { success: false, error: 'Non authentifie.' };
 
-        // Check free user limit before import
         const isPro = await checkIsPro(session.user.id);
         if (!isPro && entries.length >= FREE_LIMIT) {
           return { success: false, error: 'UPGRADE_PRO', needsPro: true };
@@ -336,7 +419,6 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
 
       case 'GET_LOGINS': {
         if (!vek) return { logins: [] };
-        // Empty domain = return all entries (for popup list)
         if (!msg.domain) return { logins: entries };
         return { logins: getLoginsForDomain(msg.domain) };
       }
@@ -359,6 +441,10 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
         return await saveLogin(msg.entry);
       }
 
+      case 'DELETE_ENTRY': {
+        return await deleteEntry(msg.entryId);
+      }
+
       case 'UNLOCK': {
         return await unlock(msg.masterPassword);
       }
@@ -368,8 +454,67 @@ chrome.runtime.onMessage.addListener((msg: ExtMessage, _sender, sendResponse) =>
         return { success: true };
       }
 
+      case 'LOGOUT': {
+        lock();
+        await supabase.auth.signOut();
+        return { success: true };
+      }
+
+      case 'GET_ALIASES': {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return { aliases: [] };
+        const { data, error } = await supabase
+          .from('email_aliases')
+          .select('id, address, label, is_active, emails_received, created_at')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
+        return { aliases: error ? [] : (data || []) };
+      }
+
+      case 'GET_EMAILS': {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return { emails: [] };
+        const { data, error } = await supabase
+          .from('emails')
+          .select('id, alias_id, from_address, from_name, to_address, subject, body_text, is_read, is_starred, received_at')
+          .eq('user_id', session.user.id)
+          .eq('alias_id', msg.aliasId)
+          .order('received_at', { ascending: false })
+          .limit(50);
+        return { emails: error ? [] : (data || []) };
+      }
+
+      case 'TOGGLE_ALIAS': {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return { success: false };
+        const { error } = await supabase
+          .from('email_aliases')
+          .update({ is_active: msg.active })
+          .eq('id', msg.aliasId)
+          .eq('user_id', session.user.id);
+        return { success: !error };
+      }
+
+      case 'GET_SETTINGS': {
+        return await getSettings();
+      }
+
+      case 'UPDATE_SETTINGS': {
+        const updated = await updateSettings(msg.settings);
+        return { success: true, settings: updated };
+      }
+
+      case 'GENERATE_PASSWORD': {
+        const password = generatePassword(msg.length, {
+          uppercase: msg.uppercase,
+          lowercase: msg.lowercase,
+          digits: msg.digits,
+          symbols: msg.symbols
+        });
+        return { password };
+      }
+
       case 'BRIDGE_SESSION': {
-        // Web app sends its Supabase session to the extension
         try {
           const { error } = await supabase.auth.setSession({
             access_token: msg.session.access_token,

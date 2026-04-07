@@ -48,34 +48,245 @@
       <p id="unlock-error" class="error hidden"></p>
     </div>
 
-    <!-- Unlocked — main view -->
-    <div id="view-unlocked" class="view hidden">
-      <div class="header">
-        <div class="header-left">
-          <img src="../icons/icon-48.png" alt="" class="header-logo">
-          <span class="header-title">FyxxVault</span>
+    <!-- ═══════════════ MAIN APP (tabbed) ═══════════════ -->
+    <div id="view-main" class="view hidden">
+
+      <!-- ─── TAB: Vault ─── -->
+      <div id="tab-vault" class="tab-content">
+        <div class="header">
+          <div class="header-left">
+            <img src="../icons/icon-48.png" alt="" class="header-logo">
+            <span class="header-title">FyxxVault</span>
+          </div>
+          <div class="header-actions">
+            <button id="btn-add" class="btn-icon" title="Ajouter">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button id="btn-lock" class="btn-icon" title="Verrouiller">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </button>
+          </div>
         </div>
-        <button id="btn-lock" class="btn-icon" title="Verrouiller">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+
+        <div class="search-bar">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="search-input" placeholder="Rechercher...">
+        </div>
+
+        <div id="category-chips" class="category-chips">
+          <button class="chip active" data-cat="all">Tous</button>
+          <button class="chip" data-cat="login">🔑 Identifiants</button>
+          <button class="chip" data-cat="creditCard">💳 Cartes</button>
+          <button class="chip" data-cat="secureNote">📝 Notes</button>
+          <button class="chip" data-cat="identity">👤 Identite</button>
+          <button class="chip" data-cat="bankAccount">🏦 Banque</button>
+          <button class="chip" data-cat="wifi">📶 Wi-Fi</button>
+          <button class="chip" data-cat="other">📦 Autre</button>
+        </div>
+
+        <div id="entries-list" class="entries-list"></div>
+        <div id="empty-state" class="empty-state hidden">
+          <p>Aucun element trouve</p>
+        </div>
+        <div class="footer">
+          <span id="entry-count" class="entry-count"></span>
+        </div>
+      </div>
+
+      <!-- ─── TAB: Emails ─── -->
+      <div id="tab-emails" class="tab-content hidden">
+        <div class="tab-header">
+          <h3>Emails</h3>
+          <button id="btn-new-alias" class="btn-icon" title="Gerer les alias">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </button>
+        </div>
+        <div id="aliases-list" class="aliases-list"></div>
+        <div id="emails-list" class="emails-list hidden"></div>
+        <div id="email-detail" class="email-detail hidden"></div>
+        <div id="emails-empty" class="empty-state">
+          <p>Aucun alias email configure.</p>
+          <p class="text-muted">Gere tes alias sur fyxxvault.com</p>
+        </div>
+      </div>
+
+      <!-- ─── TAB: Settings ─── -->
+      <div id="tab-settings" class="tab-content hidden">
+        <div class="tab-header">
+          <h3>Reglages</h3>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-user" id="settings-user">
+            <div class="user-avatar" id="user-avatar">F</div>
+            <div class="user-info">
+              <div class="user-name" id="user-email">...</div>
+              <div class="user-status">Connecte(e)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-icon">⏱️</span>
+              <span>Verrouillage auto</span>
+            </div>
+            <select id="setting-autolock" class="settings-select">
+              <option value="1">1 min</option>
+              <option value="5">5 min</option>
+              <option value="15">15 min</option>
+              <option value="30">30 min</option>
+              <option value="60">1 heure</option>
+              <option value="0">Jamais</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-icon">📋</span>
+              <span>Effacer presse-papiers</span>
+            </div>
+            <select id="setting-clipboard" class="settings-select">
+              <option value="10">10 sec</option>
+              <option value="30">30 sec</option>
+              <option value="60">60 sec</option>
+              <option value="0">Jamais</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-icon">🔒</span>
+              <span>Bloquer Chrome Passwords</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="setting-chrome-pw" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-row clickable" id="btn-gen-standalone">
+            <div class="settings-label">
+              <span class="settings-icon">🎲</span>
+              <span>Generateur de mot de passe</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-text-muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          <div class="settings-row clickable" id="btn-open-vault">
+            <div class="settings-label">
+              <span class="settings-icon">🌐</span>
+              <span>Ouvrir FyxxVault.com</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-text-muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <button id="btn-lock-settings" class="btn-settings-action">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Verrouiller
+          </button>
+          <button id="btn-logout" class="btn-settings-action danger">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Deconnexion
+          </button>
+        </div>
+
+        <div class="settings-version">FyxxVault v1.0.0</div>
+      </div>
+
+      <!-- ═══ OVERLAYS ═══ -->
+
+      <!-- Add Entry Overlay -->
+      <div id="overlay-add" class="overlay hidden">
+        <div class="overlay-header">
+          <button id="btn-add-back" class="btn-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="overlay-title">Nouvel element</span>
+          <button id="btn-add-save" class="btn-save">Enregistrer</button>
+        </div>
+
+        <div class="overlay-body">
+          <div id="category-selector" class="category-grid">
+            <button class="cat-btn active" data-cat="login"><span>🔑</span>Identifiant</button>
+            <button class="cat-btn" data-cat="creditCard"><span>💳</span>Carte</button>
+            <button class="cat-btn" data-cat="secureNote"><span>📝</span>Note</button>
+            <button class="cat-btn" data-cat="identity"><span>👤</span>Identite</button>
+            <button class="cat-btn" data-cat="bankAccount"><span>🏦</span>Banque</button>
+            <button class="cat-btn" data-cat="wifi"><span>📶</span>Wi-Fi</button>
+          </div>
+
+          <div id="add-fields" class="add-fields">
+            <!-- Filled dynamically based on category -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Password Generator Overlay -->
+      <div id="overlay-generator" class="overlay hidden">
+        <div class="overlay-header">
+          <button id="btn-gen-back" class="btn-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="overlay-title">Generateur</span>
+          <button id="btn-gen-use" class="btn-save hidden">Utiliser</button>
+        </div>
+
+        <div class="overlay-body">
+          <div class="gen-preview" id="gen-preview">Appuie sur generer</div>
+          <div class="gen-strength" id="gen-strength-bar"><div class="gen-strength-fill"></div></div>
+          <div class="gen-strength-label" id="gen-strength-label"></div>
+
+          <div class="gen-controls">
+            <div class="gen-row">
+              <label>Longueur: <span id="gen-length-val">20</span></label>
+              <input type="range" id="gen-length" min="8" max="64" value="20" class="gen-slider">
+            </div>
+            <div class="gen-row">
+              <label>Majuscules</label>
+              <label class="toggle"><input type="checkbox" id="gen-upper" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="gen-row">
+              <label>Minuscules</label>
+              <label class="toggle"><input type="checkbox" id="gen-lower" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="gen-row">
+              <label>Chiffres</label>
+              <label class="toggle"><input type="checkbox" id="gen-digits" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="gen-row">
+              <label>Symboles</label>
+              <label class="toggle"><input type="checkbox" id="gen-symbols" checked><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+
+          <div class="gen-actions">
+            <button id="btn-gen-generate" class="btn-primary">Generer</button>
+            <button id="btn-gen-copy" class="btn-secondary">Copier</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Navigation -->
+      <nav id="bottom-nav" class="bottom-nav">
+        <button class="nav-btn active" data-tab="vault">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          <span>Coffre-fort</span>
         </button>
-      </div>
-
-      <div class="search-bar">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="text" id="search-input" placeholder="Rechercher...">
-      </div>
-
-      <div id="entries-list" class="entries-list">
-        <!-- Filled dynamically -->
-      </div>
-
-      <div id="empty-state" class="empty-state hidden">
-        <p>Aucun identifiant trouve</p>
-      </div>
-
-      <div class="footer">
-        <span id="entry-count" class="entry-count"></span>
-      </div>
+        <button class="nav-btn" data-tab="emails">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>Emails</span>
+        </button>
+        <button class="nav-btn" data-tab="settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <span>Reglages</span>
+        </button>
+      </nav>
     </div>
   </div>
 
