@@ -365,35 +365,34 @@
 	];
 
 	const comparisonFeatures = [
-		{ name: 'Prix mensuel', fyxx: '0-4,99 EUR', one: '2,99 USD', bit: '0-3 USD', last: '3 USD' },
+		{ name: 'Prix mensuel', fyxx: 'Gratuit', one: '2,99 USD', bit: '0-3 USD', last: '3 USD' },
 		{ name: 'Chiffrement AES-256', fyxx: true, one: true, bit: true, last: true },
 		{ name: 'Zero-knowledge', fyxx: true, one: true, bit: true, last: false },
-		{ name: 'App desktop (Mac/Win/Linux)', fyxx: true, one: true, bit: true, last: true },
+		{ name: 'Comptes illimites', fyxx: true, one: true, bit: true, last: true },
 		{ name: '2FA/TOTP integre', fyxx: true, one: true, bit: true, last: true },
 		{ name: 'Dark Web monitoring', fyxx: true, one: true, bit: false, last: true },
-		{ name: 'AutoFill iOS natif', fyxx: true, one: true, bit: true, last: true },
-		{ name: 'Emails masques', fyxx: true, one: true, bit: false, last: false },
+		{ name: 'Emails masques illimites', fyxx: true, one: true, bit: false, last: false },
+		{ name: 'Generateur d\'identite fictive', fyxx: true, one: false, bit: false, last: false },
 		{ name: 'Mode panique', fyxx: true, one: false, bit: false, last: false },
 		{ name: 'Partage chiffre', fyxx: true, one: true, bit: true, last: true },
+		{ name: 'Open Source', fyxx: true, one: false, bit: true, last: false },
 	];
 
 	const freeFeatures = [
-		'5 comptes maximum',
+		'Comptes illimites',
 		'Chiffrement AES-256',
 		'Synchronisation cloud',
 		'Codes TOTP integres',
 		'Generateur de mots de passe',
-		'AutoFill iOS natif',
+		'Generateur d\'identite fictive',
 	];
 
 	const proFeatures = [
-		'Comptes illimites',
-		'Tout du plan gratuit',
 		'Surveillance Dark Web',
 		'Emails masques illimites',
 		'Partage securise',
-		'Support prioritaire',
 		'Mode panique',
+		'Open Source',
 	];
 
 	const testimonials = [
