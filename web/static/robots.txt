@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /vault/
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://fyxxvault.com/sitemap.xml

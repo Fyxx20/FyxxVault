@@ -1,0 +1,6 @@
+name = "fyxxmail-handler"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+account_id = "507a5d656132e8aec08bdea804c8023b"
+workers_dev = false

@@ -1,0 +1,45 @@
+# ─── Environment & Secrets ───
+.env
+.env.local
+.env.production
+*.p12
+*.pem
+*.mobileprovision
+
+# ─── Dependencies ───
+node_modules/
+web/node_modules/
+extension/node_modules/
+cloudflare-worker/node_modules/
+.build/
+Packages/
+
+# ─── Build outputs ───
+web/.svelte-kit/
+web/build/
+web/.netlify/
+extension/dist/
+.netlify/
+
+# ─── IDE & OS ───
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
+*.xcuserstate
+
+# ─── Xcode ───
+ios/FyxxVault.xcodeproj/project.xcworkspace/xcuserdata/
+ios/FyxxVault.xcodeproj/xcuserdata/
+DerivedData/
+*.xcscmblueprint
+
+# ─── Claude Code ───
+.claude/worktrees/
+.claude/plans/
+
+# ─── Misc ───
+supabase/.temp/
+video/
+*.log
