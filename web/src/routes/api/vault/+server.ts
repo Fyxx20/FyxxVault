@@ -18,7 +18,17 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	if (!encrypted_data) return json({ error: 'Missing encrypted_data' }, { status: 400 });
 
 	const id = crypto.randomUUID();
-	db.insertVaultItem(id, userId, JSON.stringify({ encrypted_data, data_iv, category, favorite }));
+	const now = new Date().toISOString();
+	db.createVaultItem({
+		id,
+		user_id: userId,
+		encrypted_data,
+		data_iv: data_iv ?? '',
+		category: category ?? 'login',
+		favorite: favorite ?? 0,
+		created_at: now,
+		updated_at: now
+	});
 	return json({ success: true, id }, { status: 201 });
 };
 
@@ -29,14 +39,13 @@ export const PATCH: RequestHandler = async ({ request, cookies }) => {
 	const { id, encrypted_data, data_iv, category, favorite } = await request.json();
 	if (!id) return json({ error: 'Missing id' }, { status: 400 });
 
-	const fields = {
+	db.updateVaultItem(id, userId, {
 		encrypted_data,
 		data_iv,
 		category,
 		favorite,
 		updated_at: new Date().toISOString()
-	};
-	db.updateVaultItem(id, userId, JSON.stringify(fields));
+	});
 	return json({ success: true });
 };
 
@@ -47,6 +56,6 @@ export const DELETE: RequestHandler = async ({ request, cookies }) => {
 	const { id } = await request.json();
 	if (!id) return json({ error: 'Missing id' }, { status: 400 });
 
-	db.softDeleteVaultItem(id, userId);
+	db.deleteVaultItem(id, userId);
 	return json({ success: true });
 };
