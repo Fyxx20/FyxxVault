@@ -41,7 +41,7 @@ Most password managers store your data on their servers, charge monthly fees, or
 ### One-line install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/self-hosted/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/install.sh | bash
 ```
 
 The animated installer will:
@@ -72,7 +72,7 @@ Run `fyxxvault-panel` to open an interactive terminal dashboard with:
 ### Manual install
 
 ```bash
-git clone -b self-hosted https://github.com/Fyxx20/FyxxVault.git
+git clone https://github.com/Fyxx20/FyxxVault.git
 cd FyxxVault/web
 npm install && npm run build
 node build/index.js

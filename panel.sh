@@ -622,7 +622,7 @@ action_update() {
 #  Main Loop
 # ═══════════════════════════════════════════════════
 
-BRANCH="self-hosted"
+BRANCH="main"
 
 main() {
   while true; do
