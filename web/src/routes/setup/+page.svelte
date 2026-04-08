@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { passwordStrength } from '$lib/crypto';
+	import { passwordStrength, generateVEK, generateSalt, deriveKEK, wrapVEK, bytesToHex } from '$lib/crypto';
 	import { login, initAuth, getAuthState } from '$lib/stores/auth.svelte';
 
 	let step = $state(0);
@@ -129,11 +129,6 @@
 		}, 300);
 	}
 
-	function bufToHex(buf: ArrayBuffer | Uint8Array): string {
-		const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
-		return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-	}
-
 	async function handleSetup() {
 		error = '';
 		if (!allRequirementsMet) { error = 'Le mot de passe ne respecte pas les exigences.'; errorKey++; return; }
@@ -142,30 +137,22 @@
 		loading = true;
 
 		try {
-			const enc = new TextEncoder();
-			const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+			// Generate random VEK and salt
+			const vek = generateVEK();
+			const salt = generateSalt();
+			const rounds = 210_000;
 
-			const vekSalt = crypto.getRandomValues(new Uint8Array(16));
-			const vekIv = crypto.getRandomValues(new Uint8Array(12));
-
-			const vek = await crypto.subtle.deriveKey(
-				{ name: 'PBKDF2', salt: vekSalt, iterations: 210000, hash: 'SHA-256' },
-				keyMaterial,
-				{ name: 'AES-GCM', length: 256 },
-				true,
-				['encrypt', 'decrypt']
-			);
-
-			const rawVek = await crypto.subtle.exportKey('raw', vek);
-			const encryptedVek = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: vekIv }, vek, rawVek);
+			// Derive KEK from master password, then wrap VEK with it
+			const kek = await deriveKEK(password, salt, rounds);
+			const wrappedVek = await wrapVEK(vek, kek);
 
 			const res = await fetch('/api/setup', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					wrapped_vek: bufToHex(encryptedVek),
-					vek_salt: bufToHex(vekSalt),
-					vek_iv: bufToHex(vekIv),
+					wrapped_vek: bytesToHex(wrappedVek),
+					vek_salt: bytesToHex(salt),
+					vek_iv: '',
 					password
 				})
 			});
