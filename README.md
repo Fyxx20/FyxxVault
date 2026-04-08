@@ -111,7 +111,6 @@ fyxxvault uninstall    # Uninstall instructions
 | Emergency Kit PDF | :white_check_mark: |
 | Admin panel (backup, logs, integrity) | :white_check_mark: |
 | Auto-lock on inactivity | :white_check_mark: |
-| iOS app (SwiftUI) | :white_check_mark: |
 
 ---
 
@@ -121,7 +120,7 @@ fyxxvault uninstall    # Uninstall instructions
                     Your Device
 ┌─────────────────────────────────────────────┐
 │                                             │
-│   Browser / Extension / iOS App             │
+│   Browser / Extension                       │
 │   ┌───────────────────────────────┐         │
 │   │  AES-256-GCM encryption      │         │
 │   │  PBKDF2-SHA256 key derivation │         │
@@ -175,7 +174,6 @@ FyxxVault implements a **zero-knowledge architecture**:
 | Server | SvelteKit + adapter-node |
 | Database | SQLite via better-sqlite3 (WAL mode) |
 | Extension | Chrome MV3, TypeScript, Vite |
-| iOS app | SwiftUI, native CryptoKit |
 | Encryption | Web Crypto API (AES-256-GCM, PBKDF2-SHA256) |
 | Auth | Cookie-based sessions, PBKDF2 password hashing |
 
@@ -202,7 +200,6 @@ FyxxVault/
 │   │       └── panel/          # Admin dashboard
 │   └── build/                  # Production output (adapter-node)
 ├── extension/                  # Chrome browser extension (MV3)
-├── ios/                        # Native iOS app (SwiftUI)
 ├── self-hosted/
 │   ├── bin/fyxxvault.js        # CLI tool
 │   └── scripts/init-db.js     # Database initializer
