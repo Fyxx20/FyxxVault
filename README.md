@@ -38,30 +38,22 @@ Most password managers store your data on their servers, charge monthly fees, or
 
 ## Quick Start
 
-### One-line install
+Choose your platform and run the one-line installer:
 
-**macOS / Linux:**
-```bash
-curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/install.sh | bash
-```
+| Platform | Command |
+|----------|---------|
+| **macOS** | `curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/macos/install.sh \| bash` |
+| **Linux** | `curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/linux/install.sh \| bash` |
+| **Windows** | `irm https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/windows/install.ps1 \| iex` |
 
-**Windows (PowerShell):**
-```powershell
-irm https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/install.ps1 | iex
-```
+> Detailed guides: [macOS](macos/INSTALL.md) · [Linux](linux/INSTALL.md) · [Windows](windows/INSTALL.md)
 
-The animated installer will:
-1. Check requirements (Node.js 18+, npm, git)
-2. Download FyxxVault to `~/.fyxxvault/`
-3. Install dependencies and build
-4. Initialize the SQLite database
-5. Set up the `fyxxvault` CLI command
+The animated installer checks requirements, downloads, builds, and sets up the CLI — all in one go.
 
-Then start the server and open the management panel:
+Then start the server:
 
 ```bash
-fyxxvault start          # Start the server
-fyxxvault-panel          # Open the interactive panel
+fyxxvault start
 ```
 
 Open **http://localhost:3000** and create your account.
@@ -206,6 +198,9 @@ FyxxVault/
 │   │       └── panel/          # Admin dashboard
 │   └── build/                  # Production output (adapter-node)
 ├── extension/                  # Chrome browser extension (MV3)
+├── macos/                      # macOS installer + guide
+├── linux/                      # Linux installer + guide
+├── windows/                    # Windows installer + guide
 ├── self-hosted/
 │   ├── bin/fyxxvault.js        # CLI tool
 │   └── scripts/init-db.js     # Database initializer
