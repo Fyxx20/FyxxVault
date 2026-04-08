@@ -227,11 +227,11 @@ node "%USERPROFILE%\.fyxxvault\app\self-hosted\bin\fyxxvault.js" %*
     Set-Content -Path "$BIN_DIR\fyxxvault.cmd" -Value $cmdContent
     Show-Success "CLI tool installed (fyxxvault.cmd)"
 
-    # Create panel launcher
+    # Create panel launcher (port 3001 — controls vault on 3000)
     $panelContent = @"
 @echo off
 set FYXXVAULT_DATA_DIR=%USERPROFILE%\.fyxxvault\data
-powershell -ExecutionPolicy Bypass -File "%USERPROFILE%\.fyxxvault\app\panel.ps1"
+node "%USERPROFILE%\.fyxxvault\app\panel\server.js"
 "@
     Set-Content -Path "$BIN_DIR\fyxxvault-panel.cmd" -Value $panelContent
     Show-Success "Panel launcher installed"

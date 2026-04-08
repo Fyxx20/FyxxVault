@@ -8,9 +8,6 @@
 
 # ─── Dependencies ───
 node_modules/
-web/node_modules/
-extension/node_modules/
-cloudflare-worker/node_modules/
 .build/
 Packages/
 
@@ -18,7 +15,6 @@ Packages/
 web/.svelte-kit/
 web/build/
 web/.netlify/
-extension/dist/
 .netlify/
 
 # ─── IDE & OS ───
@@ -29,17 +25,15 @@ extension/dist/
 .idea/
 *.xcuserstate
 
-# ─── Xcode ───
-ios/FyxxVault.xcodeproj/project.xcworkspace/xcuserdata/
-ios/FyxxVault.xcodeproj/xcuserdata/
-DerivedData/
-*.xcscmblueprint
-
 # ─── Claude Code ───
 .claude/
-web/.claude/
+
+# ─── Deprecated / Cloud ───
+cloudflare-worker/
+supabase/
+ios/
+extension/
 
 # ─── Misc ───
-supabase/.temp/
 video/
 *.log

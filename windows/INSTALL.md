@@ -20,7 +20,7 @@ fyxxvault start
 
 ## 3. Ouvrir
 
-Allez sur **http://localhost:3000** dans votre navigateur et creez votre compte.
+Allez sur **http://localhost:3000** dans votre navigateur et creez votre mot de passe maitre.
 
 ---
 

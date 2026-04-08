@@ -311,12 +311,12 @@ CLIFILE
   chmod +x "$BIN_DIR/fyxxvault"
   echo -e "    ${G}✓${NC}  CLI tool installed"
 
-  # Create panel launcher
+  # Create panel launcher (port 3001 — controls vault on 3000)
   cat > "$BIN_DIR/fyxxvault-panel" << 'PANELFILE'
 #!/usr/bin/env bash
 FYXX_DIR="$HOME/.fyxxvault"
 export FYXXVAULT_DATA_DIR="$FYXX_DIR/data"
-bash "$FYXX_DIR/app/panel.sh"
+node "$FYXX_DIR/app/panel/server.js"
 PANELFILE
   chmod +x "$BIN_DIR/fyxxvault-panel"
   echo -e "    ${G}✓${NC}  Panel launcher installed"

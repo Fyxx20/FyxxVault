@@ -5,14 +5,14 @@
 <h1 align="center">FyxxVault</h1>
 
 <p align="center">
-  <strong>Self-hosted password manager with zero-knowledge encryption.</strong><br>
-  Your data stays on your server. Always.
+  <strong>Gestionnaire de mots de passe self-hosted. Zero-knowledge. 100% local.</strong><br>
+  Tes donnees restent chez toi. Point.
 </p>
 
 <p align="center">
-  <a href="#quick-start"><img src="https://img.shields.io/badge/Install-30_seconds-00d4ff?style=for-the-badge" alt="Install"></a>
+  <a href="#installation"><img src="https://img.shields.io/badge/Install-1_commande-00d4ff?style=for-the-badge" alt="Install"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL_3.0-8b5cf6?style=for-the-badge" alt="License"></a>
-  <a href="#security"><img src="https://img.shields.io/badge/Encryption-AES--256--GCM-00d4ff?style=for-the-badge" alt="Encryption"></a>
+  <a href="#securite"><img src="https://img.shields.io/badge/Chiffrement-AES--256--GCM-00d4ff?style=for-the-badge" alt="Encryption"></a>
   <a href="https://github.com/Fyxx20/FyxxVault/stargazers"><img src="https://img.shields.io/github/stars/Fyxx20/FyxxVault?style=for-the-badge&color=8b5cf6" alt="Stars"></a>
 </p>
 
@@ -24,92 +24,107 @@
 
 ---
 
-## Why FyxxVault?
+## Pourquoi FyxxVault ?
 
-Most password managers store your data on their servers, charge monthly fees, or require cloud accounts. FyxxVault is different:
+La plupart des gestionnaires stockent tes mots de passe sur leurs serveurs, facturent un abonnement, ou imposent un compte cloud. FyxxVault, c'est different :
 
-- **100% self-hosted** — Your data never leaves your machine
-- **Zero-knowledge** — AES-256-GCM encryption happens on your device, the server only stores encrypted blobs
-- **Completely free** — No premium plan, no feature gates, no limits, forever
-- **Open source** — Every line of code is auditable under GPL-3.0
-- **No dependencies** — No Supabase, no AWS, no cloud. Just SQLite on your server
+- **100% local** — Tes donnees ne quittent jamais ta machine
+- **Zero-knowledge** — Chiffrement AES-256-GCM cote client, le serveur ne voit que du bruit
+- **Gratuit pour toujours** — Pas de premium, pas de limites, pas de piege
+- **Open source** — Chaque ligne de code est auditable (GPL-3.0)
+- **Zero dependance cloud** — Juste SQLite sur ta machine
 
 ---
 
-## Quick Start
+## Installation
 
-**macOS / Linux :**
+**Une seule commande :**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/macos/install.sh | bash
 ```
 
-**Windows (PowerShell) :**
-```powershell
-irm https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/windows/install.ps1 | iex
-```
+> **Windows :**
+> ```powershell
+> irm https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/windows/install.ps1 | iex
+> ```
 
-Then:
+**Puis :**
+
 ```bash
 fyxxvault start
 ```
 
-Open **http://localhost:3000** — done.
+Ouvre **http://localhost:3000** — c'est tout.
 
-> **Guides:** [macOS](macos/INSTALL.md) · [Linux](linux/INSTALL.md) · [Windows](windows/INSTALL.md)
+> **Pre-requis :** Node.js 18+ et git. C'est tout.
 
-Open **http://localhost:3000** — done.
+---
 
-### CLI Commands
+## Panel de controle
+
+Un mini serveur separe sur le port **3001** qui te permet de demarrer/arreter le vault meme quand il est eteint.
 
 ```bash
-fyxxvault start        # Start the server
-fyxxvault stop         # Stop the server
-fyxxvault status       # Check if running + DB size
-fyxxvault backup       # Create database backup
-fyxxvault check        # SQLite integrity check
-fyxxvault audit        # File permissions audit
-fyxxvault restart      # Restart the server
-fyxxvault uninstall    # Uninstall instructions
+fyxxvault-panel
+```
+
+Ouvre **http://localhost:3001** — tu vois le statut du serveur et tu peux l'allumer/eteindre en un clic.
+
+---
+
+## Commandes CLI
+
+```bash
+fyxxvault start        # Demarrer le serveur
+fyxxvault stop         # Arreter le serveur
+fyxxvault restart      # Redemarrer
+fyxxvault status       # Voir si ca tourne + taille DB
+fyxxvault backup       # Creer un backup de la DB
+fyxxvault check        # Verification d'integrite SQLite
+fyxxvault audit        # Audit des permissions fichiers
+fyxxvault-panel        # Lancer le panel web (port 3001)
 ```
 
 ---
 
-## Features
+## Fonctionnalites
 
-| Feature | Status |
-|---------|--------|
-| Unlimited vault entries | :white_check_mark: |
-| AES-256-GCM encryption | :white_check_mark: |
+| Fonctionnalite | |
+|---|---|
+| Entrees illimitees | :white_check_mark: |
+| Chiffrement AES-256-GCM | :white_check_mark: |
 | PBKDF2-SHA256 (210K iterations) | :white_check_mark: |
-| Password generator | :white_check_mark: |
-| TOTP / 2FA codes | :white_check_mark: |
-| Dark web monitoring (HIBP) | :white_check_mark: |
-| Identity generator | :white_check_mark: |
-| Secure sharing | :white_check_mark: |
-| CSV import (Chrome, 1Password, Bitwarden, Samsung Pass) | :white_check_mark: |
-| CSV / JSON export | :white_check_mark: |
-| Emergency Kit PDF | :white_check_mark: |
-| Admin panel (backup, logs, integrity) | :white_check_mark: |
-| Auto-lock on inactivity | :white_check_mark: |
+| Generateur de mots de passe | :white_check_mark: |
+| TOTP / 2FA | :white_check_mark: |
+| Surveillance dark web (HIBP) | :white_check_mark: |
+| Generateur d'identite | :white_check_mark: |
+| Partage securise | :white_check_mark: |
+| Import CSV (Chrome, 1Password, Bitwarden, Samsung Pass) | :white_check_mark: |
+| Export CSV / JSON | :white_check_mark: |
+| Kit d'urgence PDF | :white_check_mark: |
+| Panel d'administration | :white_check_mark: |
+| Verrouillage auto sur inactivite | :white_check_mark: |
+| Pas de compte / pas d'email | :white_check_mark: |
 
 ---
 
 ## Architecture
 
 ```
-                    Your Device
+                    Ta Machine
 ┌─────────────────────────────────────────────┐
 │                                             │
-│   Browser                                   │
+│   Navigateur (localhost:3000)               │
 │   ┌───────────────────────────────┐         │
-│   │  AES-256-GCM encryption      │         │
-│   │  PBKDF2-SHA256 key derivation │         │
-│   │  VEK held in memory only      │         │
+│   │  Chiffrement AES-256-GCM     │         │
+│   │  Derivation PBKDF2-SHA256    │         │
+│   │  VEK en memoire uniquement   │         │
 │   └──────────────┬────────────────┘         │
-│                  │ encrypted blobs           │
+│                  │ blobs chiffres            │
 │   ┌──────────────▼────────────────┐         │
 │   │  SvelteKit + Node.js          │         │
-│   │  REST API (localhost:3000)    │         │
+│   │  API REST (localhost:3000)    │         │
 │   └──────────────┬────────────────┘         │
 │                  │                           │
 │   ┌──────────────▼────────────────┐         │
@@ -118,114 +133,120 @@ fyxxvault uninstall    # Uninstall instructions
 │   │  Permissions: 0600            │         │
 │   └───────────────────────────────┘         │
 │                                             │
+│   Panel de controle (localhost:3001)        │
+│   ┌───────────────────────────────┐         │
+│   │  Start / Stop du serveur      │         │
+│   │  Stats, backup, export        │         │
+│   └───────────────────────────────┘         │
+│                                             │
 └─────────────────────────────────────────────┘
-          Nothing leaves this box.
+          Rien ne sort de cette boite.
 ```
 
 ---
 
-## Security
+## Securite
 
-FyxxVault implements a **zero-knowledge architecture**:
+FyxxVault utilise une architecture **zero-knowledge** :
 
-1. Your **master password** derives a Key Encryption Key (KEK) via PBKDF2-SHA256 with **210,000 iterations**
-2. A random **Vault Encryption Key (VEK)** is generated and wrapped with the KEK using AES-256-GCM
-3. Each vault entry is **individually encrypted** with the VEK
-4. Only encrypted blobs are stored in SQLite — the server **cannot read your data**
-5. The VEK is held **in memory only** while your vault is unlocked — never written to disk
-6. Login passwords are hashed server-side with PBKDF2-SHA256 (100K iterations, unique salt)
+1. Ton **mot de passe maitre** derive une cle (KEK) via PBKDF2-SHA256 avec **210 000 iterations**
+2. Une **cle de chiffrement (VEK)** aleatoire est generee et protegee par la KEK en AES-256-GCM
+3. Chaque entree du coffre est **individuellement chiffree** avec la VEK
+4. Seuls des blobs chiffres sont stockes — le serveur **ne peut pas lire tes donnees**
+5. La VEK est **en memoire uniquement** — jamais ecrite sur disque
+6. Meme si quelqu'un accede au port 3000, il ne voit que du chiffre inexploitable
 
-### Database Security
+### Base de donnees
 
-- SQLite in WAL mode for performance and crash safety
-- File permissions set to `0600` (owner read/write only)
-- Foreign keys enforced
-- No network exposure — runs on localhost by default
+- SQLite en mode WAL (performance + crash safety)
+- Permissions fichier `0600` (lecture/ecriture proprietaire uniquement)
+- Foreign keys actives
+- Aucune exposition reseau — localhost par defaut
 
-> Found a vulnerability? Please read [SECURITY.md](SECURITY.md) for responsible disclosure.
-
----
-
-## Tech Stack
-
-| Component | Technology |
-|-----------|------------|
-| Web app | SvelteKit 5, Svelte 5, Tailwind CSS 4, TypeScript |
-| Server | SvelteKit + adapter-node |
-| Database | SQLite via better-sqlite3 (WAL mode) |
-| Encryption | Web Crypto API (AES-256-GCM, PBKDF2-SHA256) |
-| Auth | Cookie-based sessions, PBKDF2 password hashing |
+> Trouve une faille ? Lis [SECURITY.md](SECURITY.md).
 
 ---
 
-## Project Structure
+## Stack technique
+
+| Composant | Technologie |
+|---|---|
+| Application web | SvelteKit 5, Svelte 5, Tailwind CSS 4, TypeScript |
+| Serveur | SvelteKit + adapter-node |
+| Base de donnees | SQLite via better-sqlite3 (WAL mode) |
+| Chiffrement | Web Crypto API (AES-256-GCM, PBKDF2-SHA256) |
+| Panel | Node.js HTTP natif (zero dependance) |
+
+---
+
+## Structure du projet
 
 ```
 FyxxVault/
-├── macos/                      # macOS: double-click installer + guide
-├── linux/                      # Linux: double-click installer + guide
-├── windows/                    # Windows: double-click installer + guide
-├── web/                        # Application source code
+├── web/                        # Application SvelteKit
+├── panel/                      # Panel de controle (port 3001)
+│   └── server.js               # Serveur standalone
 ├── self-hosted/
-│   ├── bin/fyxxvault.js        # CLI tool
-│   └── scripts/init-db.js     # Database initializer
+│   ├── bin/fyxxvault.js        # CLI
+│   └── scripts/
+│       ├── install.sh          # Installateur
+│       └── init-db.js          # Init base de donnees
+├── macos/                      # Installateur macOS
+├── linux/                      # Installateur Linux
+├── windows/                    # Installateur Windows
 └── SECURITY.md
 ```
 
 ---
 
-## Comparison
+## Comparaison
 
-| Feature | FyxxVault | 1Password | Bitwarden | LastPass |
-|---------|:---------:|:---------:|:---------:|:--------:|
-| Price | **Free** | $2.99/mo | $0-3/mo | $3/mo |
-| Self-hosted | **Yes** | No | Yes | No |
-| Open source | **Yes** | No | Partial | No |
-| Zero-knowledge | **Yes** | Yes | Yes | No |
-| No cloud required | **Yes** | No | No | No |
-| Unlimited entries | **Yes** | Yes | Yes | Yes |
-| TOTP / 2FA | **Yes** | Yes | Premium | Premium |
-| Dark web monitoring | **Yes** | Premium | Premium | Premium |
-| Identity generator | **Yes** | No | No | No |
+| | FyxxVault | 1Password | Bitwarden | LastPass |
+|---|:-:|:-:|:-:|:-:|
+| Prix | **Gratuit** | 2.99$/mois | 0-3$/mois | 3$/mois |
+| Self-hosted | **Oui** | Non | Oui | Non |
+| Open source | **Oui** | Non | Partiel | Non |
+| Zero-knowledge | **Oui** | Oui | Oui | Non |
+| Pas de cloud | **Oui** | Non | Non | Non |
+| Entrees illimitees | **Oui** | Oui | Oui | Oui |
+| TOTP / 2FA | **Oui** | Oui | Premium | Premium |
+| Dark web monitoring | **Oui** | Premium | Premium | Premium |
+| Pas de compte requis | **Oui** | Non | Non | Non |
 
 ---
 
 ## Configuration
 
-Environment variables (optional):
+Variables d'environnement (optionnelles) :
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3000` | Server port |
-| `FYXXVAULT_DATA_DIR` | `~/.fyxxvault/data/` | Database location |
-
----
-
-## Contributing
-
-Contributions are welcome! Here's how:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Commit your changes
-4. Push and open a Pull Request
-
-Please make sure your code follows the existing patterns and doesn't introduce security vulnerabilities.
+| Variable | Defaut | Description |
+|---|---|---|
+| `PORT` | `3000` | Port du serveur vault |
+| `FYXXVAULT_DATA_DIR` | `~/.fyxxvault/data/` | Emplacement de la DB |
 
 ---
 
-## License
+## Contribuer
 
-FyxxVault is licensed under the [GNU General Public License v3.0](LICENSE).
+1. Fork le repo
+2. Cree une branche (`git checkout -b feature/ma-feature`)
+3. Commit tes changements
+4. Push et ouvre une Pull Request
 
-You can use, modify, and distribute FyxxVault freely — any derivative work must also be open source under the same license.
+---
+
+## Licence
+
+FyxxVault est sous licence [GNU General Public License v3.0](LICENSE).
+
+Tu peux utiliser, modifier et distribuer FyxxVault librement — tout travail derive doit aussi etre open source sous la meme licence.
 
 ---
 
 <p align="center">
   <br>
-  <strong>Your passwords. Your server. Your rules.</strong>
+  <strong>Tes mots de passe. Ta machine. Tes regles.</strong>
   <br><br>
-  Built by <a href="https://github.com/Fyxx20">@Fyxx20</a><br>
-  <sub>Because security should be a right, not a subscription.</sub>
+  Fait par <a href="https://github.com/Fyxx20">@Fyxx20</a><br>
+  <sub>Parce que la securite devrait etre un droit, pas un abonnement.</sub>
 </p>
