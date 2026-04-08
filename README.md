@@ -38,28 +38,47 @@ Most password managers store your data on their servers, charge monthly fees, or
 
 ## Quick Start
 
+### One-line install
+
 ```bash
-git clone https://github.com/Fyxx20/FyxxVault.git
+curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/self-hosted/self-hosted/scripts/install.sh | bash
+```
+
+That's it. The installer will:
+1. Check requirements (Node.js 18+, npm, git)
+2. Download FyxxVault to `~/.fyxxvault/`
+3. Install dependencies and build
+4. Initialize the SQLite database
+5. Set up the `fyxxvault` CLI command
+
+Then start the server:
+
+```bash
+fyxxvault start
+```
+
+Open **http://localhost:3000** and create your account.
+
+### Manual install
+
+```bash
+git clone -b self-hosted https://github.com/Fyxx20/FyxxVault.git
 cd FyxxVault/web
-npm install
-npm run build
+npm install && npm run build
 node build/index.js
 ```
 
-Open `http://localhost:3000` and create your account.
-
-### Using the CLI
+### CLI Commands
 
 ```bash
-# Start / Stop
-fyxxvault start
-fyxxvault stop
-fyxxvault status
-
-# Backup & Security
-fyxxvault backup
+fyxxvault start        # Start the server
+fyxxvault stop         # Stop the server
+fyxxvault status       # Check if running + DB size
+fyxxvault backup       # Create database backup
 fyxxvault check        # SQLite integrity check
 fyxxvault audit        # File permissions audit
+fyxxvault restart      # Restart the server
+fyxxvault uninstall    # Uninstall instructions
 ```
 
 ---
