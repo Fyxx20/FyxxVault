@@ -104,8 +104,7 @@
 		{ path: '/vault', label: () => t('nav.vault'), icon: 'vault', color: 'var(--fv-cyan)', mobileIcon: true },
 		{ path: '/vault/security', label: () => t('nav.security'), icon: 'shield', color: 'var(--fv-violet)', mobileIcon: true },
 		{ path: '/vault/identity', label: () => t('nav.identity'), icon: 'identity', color: '#10b981', mobileIcon: true },
-		{ path: '/vault/settings', label: () => t('nav.settings'), icon: 'settings', color: 'var(--fv-smoke)', mobileIcon: true },
-		{ path: '/panel', label: () => 'Panel', icon: 'panel', color: '#3b82f6', mobileIcon: true }
+		{ path: '/vault/settings', label: () => t('nav.settings'), icon: 'settings', color: 'var(--fv-smoke)', mobileIcon: true }
 	];
 
 	function isActive(path: string): boolean {
