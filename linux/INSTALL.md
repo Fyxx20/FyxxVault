@@ -2,44 +2,41 @@
 
 ## Installation
 
-1. Telecharger **[Install FyxxVault.sh](https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/linux/Install%20FyxxVault.sh)**
-2. Clic droit > Proprietes > Permissions > Autoriser l'execution
-3. Double-cliquer dessus
-
-### Ou via Terminal
+Ouvrez un terminal et collez :
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/linux/install.sh | bash
 ```
 
+Puis lancez :
+
+```bash
+fyxxvault start
+```
+
+Ouvrez **http://localhost:3000** — c'est pret.
+
 ---
 
 ## Prerequis
 
-- **Node.js 18+** — [nodejs.org](https://nodejs.org)
-- **git** + **build-essential**
-
-```bash
-# Ubuntu / Debian
-sudo apt install -y nodejs npm git build-essential
-
-# Fedora
-sudo dnf install -y nodejs npm git gcc-c++ make
-
-# Arch
-sudo pacman -S nodejs npm git base-devel
-```
+| | |
+|---|---|
+| **Node.js** | 18+ — [nodejs.org](https://nodejs.org) |
+| **git** | `sudo apt install git` |
+| **build-essential** | `sudo apt install build-essential` |
 
 ---
 
-## Utilisation
+## Commandes
 
 ```bash
-fyxxvault start        # Demarrer → http://localhost:3000
+fyxxvault start        # Demarrer le serveur
 fyxxvault stop         # Arreter
-fyxxvault status       # Statut + infos
+fyxxvault status       # Statut + infos DB
 fyxxvault backup       # Sauvegarder la base
-fyxxvault-panel        # Panel de gestion interactif
+fyxxvault check        # Verification d'integrite
+fyxxvault-panel        # Panel de gestion
 ```
 
 ---

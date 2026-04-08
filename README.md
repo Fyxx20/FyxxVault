@@ -38,21 +38,24 @@ Most password managers store your data on their servers, charge monthly fees, or
 
 ## Quick Start
 
-Choose your platform, download the installer, and double-click:
+**macOS / Linux :**
+```bash
+curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/macos/install.sh | bash
+```
 
-| Platform | Download | Alternative |
-|----------|----------|-------------|
-| **macOS** | [Install FyxxVault.command](macos/) | `curl -fsSL .../macos/install.sh \| bash` |
-| **Linux** | [Install FyxxVault.sh](linux/) | `curl -fsSL .../linux/install.sh \| bash` |
-| **Windows** | [Install FyxxVault.bat](windows/) | `irm .../windows/install.ps1 \| iex` |
+**Windows (PowerShell) :**
+```powershell
+irm https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/windows/install.ps1 | iex
+```
 
-> **Step-by-step guides:** [macOS](macos/INSTALL.md) · [Linux](linux/INSTALL.md) · [Windows](windows/INSTALL.md)
-
-The installer downloads, builds, and sets everything up. Then:
-
+Then:
 ```bash
 fyxxvault start
 ```
+
+Open **http://localhost:3000** — done.
+
+> **Guides:** [macOS](macos/INSTALL.md) · [Linux](linux/INSTALL.md) · [Windows](windows/INSTALL.md)
 
 Open **http://localhost:3000** — done.
 
