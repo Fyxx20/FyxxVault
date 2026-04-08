@@ -34,7 +34,7 @@ function getPid() {
 const commands = {
   start() {
     if (isRunning()) { log('⚡ FyxxVault is already running (PID: ' + getPid() + ')'); return; }
-    const buildDir = path.join(FYXX_DIR, 'app', 'build');
+    const buildDir = path.join(FYXX_DIR, 'app', 'web', 'build');
     if (!fs.existsSync(path.join(buildDir, 'index.js'))) {
       log('❌ Build not found. Run: fyxxvault update'); return;
     }
@@ -75,9 +75,9 @@ const commands = {
     fs.copyFileSync(dbPath, backupPath);
     log(`💾 Backup created: ${backupPath}`);
   },
-  check() {
+  async check() {
     try {
-      const Database = (await import('better-sqlite3')).default;
+      const { default: Database } = await import('better-sqlite3');
       const db = new Database(path.join(DATA_DIR, 'fyxxvault.db'), { readonly: true });
       const result = db.pragma('integrity_check');
       db.close();

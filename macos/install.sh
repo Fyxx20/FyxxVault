@@ -244,7 +244,7 @@ download_fyxxvault() {
   section "Downloading FyxxVault"
 
   if [ -d "$APP_DIR/.git" ]; then
-    run_with_spinner "Updating to latest version..." "cd '$APP_DIR' && git fetch origin '$BRANCH' --quiet && git reset --hard 'origin/$BRANCH' --quiet"
+    run_with_spinner "Updating to latest version..." "cd '$APP_DIR' && git fetch origin '$BRANCH' --quiet && git reset --hard 'origin/$BRANCH' --quiet && git clean -fd -e node_modules --quiet"
   else
     # Clean target if exists but no git
     if [ -d "$APP_DIR" ] && [ "$(ls -A $APP_DIR 2>/dev/null)" ]; then
