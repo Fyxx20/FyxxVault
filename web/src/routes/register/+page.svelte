@@ -1,15 +1,19 @@
 <script lang="ts">
-	import { supabase } from '$lib/supabase';
 	import { goto } from '$app/navigation';
 	import { passwordStrength } from '$lib/crypto';
+	import { login } from '$lib/stores/auth.svelte';
+	import { generateEmergencyPDF } from '$lib/emergencyKit';
+	import { t } from '$lib/i18n.svelte';
 
 	let email = $state('');
 	let password = $state('');
 	let confirmPassword = $state('');
+	let masterHint = $state('');
 	let loading = $state(false);
 	let error = $state('');
 	let success = $state(false);
 	let errorKey = $state(0);
+	let showEmergencyKit = $state(false);
 
 	const requirements = $derived([
 		{ label: '12 caractères minimum', met: password.length >= 12 },
@@ -21,6 +25,11 @@
 	const allRequirementsMet = $derived(requirements.every(r => r.met));
 	const strength = $derived(password.length > 0 ? passwordStrength(password) : null);
 
+	function bufToHex(buf: ArrayBuffer | Uint8Array): string {
+		const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+		return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+	}
+
 	async function handleRegister() {
 		error = '';
 
@@ -31,19 +40,103 @@
 		loading = true;
 
 		try {
-			const { error: authError } = await supabase.auth.signUp({
+			// Derive VEK from master password using PBKDF2
+			const enc = new TextEncoder();
+			const keyMaterial = await crypto.subtle.importKey(
+				'raw',
+				enc.encode(password),
+				'PBKDF2',
+				false,
+				['deriveKey']
+			);
+
+			// Generate random salt and IV
+			const vekSalt = crypto.getRandomValues(new Uint8Array(16));
+			const vekIv = crypto.getRandomValues(new Uint8Array(12));
+
+			// Derive the VEK (Vault Encryption Key) using PBKDF2
+			const vek = await crypto.subtle.deriveKey(
+				{
+					name: 'PBKDF2',
+					salt: vekSalt,
+					iterations: 210000,
+					hash: 'SHA-256'
+				},
+				keyMaterial,
+				{ name: 'AES-GCM', length: 256 },
+				true,
+				['encrypt', 'decrypt']
+			);
+
+			// Export VEK to raw bytes, then encrypt it with itself for storage
+			const rawVek = await crypto.subtle.exportKey('raw', vek);
+
+			// Encrypt the VEK with the derived key (for verification on unlock)
+			const encryptedVek = await crypto.subtle.encrypt(
+				{ name: 'AES-GCM', iv: vekIv },
+				vek,
+				rawVek
+			);
+
+			const body = {
 				email: email.trim().toLowerCase(),
-				password
+				password,
+				encrypted_vek: bufToHex(encryptedVek),
+				vek_salt: bufToHex(vekSalt),
+				vek_iv: bufToHex(vekIv),
+				master_hint: masterHint.trim() || null
+			};
+
+			const res = await fetch('/api/profile', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(body)
 			});
 
-			if (authError) {
-				error = authError.message;
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				error = data.error || `Erreur ${res.status}`;
 				errorKey++;
-			} else {
-				success = true;
+				return;
 			}
+
+			// Registration successful — show emergency kit option
+			showEmergencyKit = true;
+
 		} catch (e: any) {
 			error = e.message || 'Une erreur est survenue.';
+			errorKey++;
+		} finally {
+			loading = false;
+		}
+	}
+
+	async function handleDownloadKit() {
+		try {
+			const blob = await generateEmergencyPDF(email.trim().toLowerCase());
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `fyxxvault-emergency-kit.pdf`;
+			a.click();
+			URL.revokeObjectURL(url);
+		} catch (e) {
+			console.error('Emergency kit download failed:', e);
+		}
+	}
+
+	async function handleContinue() {
+		loading = true;
+		try {
+			const result = await login(email.trim().toLowerCase(), password);
+			if (result.success) {
+				goto('/vault');
+			} else {
+				// Fallback: redirect to login page
+				success = true;
+			}
+		} catch {
+			success = true;
 		} finally {
 			loading = false;
 		}
@@ -70,19 +163,42 @@
 				</div>
 				<span class="text-2xl font-extrabold text-white">FyxxVault</span>
 			</a>
-			<h1 class="text-2xl font-bold text-white">Créer ton compte</h1>
-			<p class="text-sm text-[var(--fv-smoke)] mt-2">Essai gratuit 14 jours — sans carte bancaire</p>
+			<h1 class="text-2xl font-bold text-white">{t('register.title') ?? 'Créer ton compte'}</h1>
+			<p class="text-sm text-[var(--fv-smoke)] mt-2">100% gratuit &middot; Self-hosted &middot; Zero-knowledge</p>
 		</div>
 
 		{#if success}
-			<!-- Success state -->
+			<!-- Fallback success state (if auto-login failed) -->
 			<div class="fv-glass p-8 text-center fv-glow-cyan fv-animate-in">
 				<div class="w-16 h-16 rounded-full bg-[var(--fv-success)]/15 flex items-center justify-center mx-auto mb-4">
 					<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12" class="fv-check-draw"/></svg>
 				</div>
 				<h2 class="text-xl font-bold text-white mb-2">Compte créé !</h2>
-				<p class="text-sm text-[var(--fv-mist)] mb-6">Vérifie tes emails pour confirmer ton adresse, puis connecte-toi.</p>
+				<p class="text-sm text-[var(--fv-mist)] mb-6">Ton compte a été créé avec succès. Connecte-toi pour commencer.</p>
 				<a href="/login" class="fv-btn fv-btn-primary w-full">Se connecter</a>
+			</div>
+		{:else if showEmergencyKit}
+			<!-- Emergency kit download step -->
+			<div class="fv-glass p-8 text-center fv-animate-in">
+				<div class="w-16 h-16 rounded-full bg-[var(--fv-success)]/15 flex items-center justify-center mx-auto mb-4">
+					<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12" class="fv-check-draw"/></svg>
+				</div>
+				<h2 class="text-xl font-bold text-white mb-2">Compte créé !</h2>
+				<p class="text-sm text-[var(--fv-mist)] mb-6">Télécharge ton kit d'urgence avant de continuer. Il contient les informations nécessaires pour récupérer ton coffre.</p>
+
+				<button onclick={handleDownloadKit} class="fv-btn fv-btn-ghost w-full mb-3 flex items-center justify-center gap-2">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+					Télécharger le kit d'urgence (PDF)
+				</button>
+
+				<button onclick={handleContinue} disabled={loading} class="fv-btn fv-btn-primary w-full !py-4 {loading ? 'opacity-60 cursor-not-allowed' : ''}">
+					{#if loading}
+						<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+						Connexion...
+					{:else}
+						Continuer vers le coffre
+					{/if}
+				</button>
 			</div>
 		{:else}
 			<!-- Register form -->
@@ -165,6 +281,18 @@
 								</div>
 							{/if}
 						</div>
+					</div>
+
+					<!-- Master hint -->
+					<div>
+						<label for="hint" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Indice (optionnel)</label>
+						<input
+							id="hint"
+							type="text"
+							bind:value={masterHint}
+							placeholder="Un indice pour te souvenir..."
+							class="w-full px-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none fv-input-glow transition-all duration-300"
+						/>
 					</div>
 
 					<!-- Error -->

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { supabase } from '$lib/supabase';
 	import { goto } from '$app/navigation';
+	import { getAuthState, initAuth } from '$lib/stores/auth.svelte';
 	import Navbar from '$lib/components/landing/Navbar.svelte';
 
 	let mounted = $state(false);
@@ -40,10 +40,11 @@
 
 	onMount(async () => {
 		// Check for existing session before showing landing
-		const { data: { session } } = await supabase.auth.getSession();
-		if (session) {
+		await initAuth();
+		const auth = getAuthState();
+		if (auth.isAuthenticated) {
 			hasSession = true;
-			sessionEmail = session.user?.email ?? '';
+			sessionEmail = auth.email ?? '';
 		}
 		sessionChecked = true;
 

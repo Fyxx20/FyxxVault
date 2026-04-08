@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { supabase } from '$lib/supabase';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { t } from '$lib/i18n.svelte';
+	import { login, initAuth, getAuthState } from '$lib/stores/auth.svelte';
 
 	let email = $state('');
 	let password = $state('');
@@ -10,11 +10,11 @@
 	let error = $state('');
 	let errorKey = $state(0);
 
-	// If already authenticated, redirect to unlock
 	onMount(async () => {
-		const { data: { session } } = await supabase.auth.getSession();
-		if (session) {
-			goto('/vault/unlock');
+		await initAuth();
+		const auth = getAuthState();
+		if (auth.isUnlocked) {
+			goto('/vault');
 		}
 	});
 
@@ -25,18 +25,13 @@
 		loading = true;
 
 		try {
-			const { error: authError } = await supabase.auth.signInWithPassword({
-				email: email.trim().toLowerCase(),
-				password
-			});
+			const result = await login(email.trim().toLowerCase(), password);
 
-			if (authError) {
-				error = authError.message === 'Invalid login credentials'
-					? t('login.error.invalid')
-					: authError.message;
-				errorKey++;
+			if (result.success) {
+				goto('/vault');
 			} else {
-				goto('/vault/unlock');
+				error = result.error || t('login.error.invalid');
+				errorKey++;
 			}
 		} catch (e: any) {
 			error = e.message || t('login.error.generic');
@@ -88,7 +83,7 @@
 
 				<!-- Password -->
 				<div>
-					<label for="password" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">{t('login.password_placeholder')}</label>
+					<label for="password" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Master Password</label>
 					<input
 						id="password"
 						type="password"
@@ -96,11 +91,6 @@
 						placeholder="••••••••••••"
 						class="w-full px-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[var(--fv-ash)] text-sm focus:outline-none fv-input-glow transition-all duration-300"
 					/>
-					<div class="mt-2 text-right">
-						<a href="/forgot-password" class="text-xs text-[var(--fv-cyan)] hover:underline transition-colors duration-200">
-							{t('login.forgot')}
-						</a>
-					</div>
 				</div>
 
 				<!-- Error -->

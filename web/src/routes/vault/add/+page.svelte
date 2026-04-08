@@ -11,8 +11,6 @@
 	const vault = getVaultState();
 	const auth = getAuthState();
 
-	const canAdd = true;
-
 	// Determine if editing
 	const editId = $derived($page.url.searchParams.get('edit'));
 	const existingEntry = $derived(editId ? vault.entries.find((e) => e.id === editId) ?? null : null);

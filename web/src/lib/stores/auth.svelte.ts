@@ -1,28 +1,49 @@
-import { supabase } from '$lib/supabase';
-import { deriveKEK, unwrapVEK, wrapVEK, generateVEK, generateSalt, bytesToHex } from '$lib/crypto';
-import type { User, Session } from '@supabase/supabase-js';
+import { deriveKEK, unwrapVEK, wrapVEK, generateVEK, generateSalt, bytesToHex, hexToBytes } from '$lib/crypto';
 
 // ─── Private state (VEK never persisted) ───
 let _vek: Uint8Array | null = null;
 
 // ─── Reactive Svelte 5 state ───
-let _user: User | null = $state(null);
-let _session: Session | null = $state(null);
+let _userId: string | null = $state(null);
+let _email: string | null = $state(null);
 let _isAuthenticated = $state(false);
 let _isUnlocked = $state(false);
 let _loading = $state(true);
-let _isPro = $state(true);
-let _masterPassword: string | null = null; // kept briefly for profile bootstrap
+let _isPro = $state(true); // Always true in self-hosted
+let _masterPassword: string | null = null;
+
+// ─── Auto-lock (default 5 minutes) ───
+let _autoLockTimeout = 5 * 60 * 1000;
+let _inactivityTimer: ReturnType<typeof setTimeout> | null = null;
+
+function resetInactivityTimer() {
+	if (_inactivityTimer) clearTimeout(_inactivityTimer);
+	if (_autoLockTimeout > 0 && _isUnlocked) {
+		_inactivityTimer = setTimeout(() => lockVault(), _autoLockTimeout);
+	}
+}
+
+if (typeof window !== 'undefined') {
+	['mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach(evt => {
+		window.addEventListener(evt, resetInactivityTimer, { passive: true });
+	});
+}
 
 // ─── Public accessors ───
 export function getAuthState() {
 	return {
-		get user() { return _user; },
-		get session() { return _session; },
+		get user() { return _userId ? { id: _userId, email: _email } : null; },
+		get userId() { return _userId; },
+		get email() { return _email; },
 		get isAuthenticated() { return _isAuthenticated; },
 		get isUnlocked() { return _isUnlocked; },
 		get loading() { return _loading; },
-		get isPro() { return _isPro; }
+		get isPro() { return _isPro; },
+		get autoLockTimeout() { return _autoLockTimeout; },
+		set autoLockTimeout(ms: number) {
+			_autoLockTimeout = ms;
+			resetInactivityTimer();
+		}
 	};
 }
 
@@ -30,108 +51,83 @@ export function getVEK(): Uint8Array | null {
 	return _vek;
 }
 
-export async function refreshProStatus(): Promise<boolean> {
-	if (!_user) return false;
-	try {
-		const { data: profile, error } = await supabase
-			.from('profiles')
-			.select('is_pro')
-			.eq('id', _user.id)
-			.single();
-
-		if (!error) {
-			_isPro = profile?.is_pro === true;
-		}
-	} catch {
-		// ignore network errors; keep previous local state
-	}
-	return _isPro;
-}
-
-// ─── Browser Extension Bridge ───
-// Sends session and VEK to the FyxxVault extension automatically.
-// Uses both postMessage (for content script in isolated world) and custom events.
-function bridgeToExtension() {
-	if (typeof window === 'undefined') return;
-
-	if (_session) {
-		window.dispatchEvent(new CustomEvent('fyxxvault-bridge-session', {
-			detail: {
-				access_token: _session.access_token,
-				refresh_token: _session.refresh_token
-			}
-		}));
-	}
-
-	if (_vek) {
-		const vekHex = bytesToHex(_vek);
-		// Custom event (same-world listeners)
-		window.dispatchEvent(new CustomEvent('fyxxvault-bridge-vek', { detail: vekHex }));
-		// postMessage (cross-world — content script isolated world can read this)
-		window.postMessage({ type: '__FYXX_VEK__', payload: vekHex }, window.location.origin);
-	}
-}
-
-// Listen for extension requesting current state
-if (typeof window !== 'undefined') {
-	window.addEventListener('fyxxvault-extension-ready', () => bridgeToExtension());
-}
-
-// ─── Initialize: listen for auth changes ───
+// ─── Initialize: check if profile exists ───
 let _initialized = false;
-export function initAuth() {
+export async function initAuth() {
 	if (_initialized) return;
 	_initialized = true;
 
-	// onAuthStateChange fires INITIAL_SESSION first (reads from localStorage),
-	// then TOKEN_REFRESHED, SIGNED_IN, SIGNED_OUT etc.
-	// This is the recommended way to restore sessions in Supabase v2.
-	const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-		_session = session;
-		_user = session?.user ?? null;
-		_isAuthenticated = !!session;
-		_loading = false;
-
-		// If session expired, try to refresh it
-		if (event === 'TOKEN_REFRESHED' && session) {
+	try {
+		const res = await fetch('/api/profile');
+		if (res.ok) {
+			// Profile exists and we have a session cookie
+			const profile = await res.json();
 			_isAuthenticated = true;
+			// User needs to unlock vault with master password
+		} else if (res.status === 401) {
+			const data = await res.json();
+			if (data.exists) {
+				// User exists but no session — needs login
+				_isAuthenticated = false;
+			} else {
+				// No user — first launch, needs registration
+				_isAuthenticated = false;
+			}
+		} else {
+			// No profile — first launch
+			_isAuthenticated = false;
+		}
+	} catch {
+		_isAuthenticated = false;
+	}
+
+	_loading = false;
+}
+
+// ─── Login with email + master password ───
+export async function login(email: string, masterPassword: string): Promise<{ success: boolean; error?: string }> {
+	try {
+		// Authenticate and get session
+		const loginRes = await fetch('/api/auth/login', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ email, password: masterPassword })
+		});
+
+		if (!loginRes.ok) {
+			const err = await loginRes.json();
+			return { success: false, error: err.error || 'Identifiants incorrects.' };
 		}
 
-		if (session) bridgeToExtension();
-	});
+		const loginData = await loginRes.json();
+		_userId = loginData.userId;
+		_email = email;
+		_isAuthenticated = true;
 
-	// Fallback: if onAuthStateChange hasn't fired after 2s, stop loading
-	setTimeout(() => {
-		if (_loading) {
-			_loading = false;
-		}
-	}, 2000);
+		// Now unlock the vault
+		return await unlockVault(masterPassword);
+	} catch (e: any) {
+		return { success: false, error: e.message || 'Erreur de connexion.' };
+	}
 }
 
 // ─── Unlock vault with master password ───
 export async function unlockVault(masterPassword: string): Promise<{ success: boolean; error?: string }> {
-	if (!_user) return { success: false, error: 'Non authentifié.' };
-
 	try {
-		// Fetch profile
-		const { data: profile, error: profileError } = await supabase
-			.from('profiles')
-			.select('wrapped_vek, vek_salt, vek_rounds, is_pro')
-			.eq('id', _user.id)
-			.single();
-
-		if (profileError && profileError.code === 'PGRST116') {
-			// No profile yet — first login from web, create one
-			return await bootstrapProfile(masterPassword);
-		}
-
-		if (profileError) {
+		const res = await fetch('/api/profile');
+		if (!res.ok) {
+			if (res.status === 404) {
+				// No profile yet — first login, create one
+				return await bootstrapProfile(masterPassword);
+			}
 			return { success: false, error: 'Erreur lors du chargement du profil.' };
 		}
 
+		const profile = await res.json();
+
 		// Decode stored bytes
-		const wrappedVek = decodeSupabaseBytes(profile.wrapped_vek);
-		const salt = decodeSupabaseBytes(profile.vek_salt);
+		const wrappedVek = hexToBytes(profile.wrapped_vek);
+		const salt = hexToBytes(profile.vek_salt);
 		const rounds = profile.vek_rounds || 210_000;
 
 		// Derive KEK and unwrap VEK
@@ -140,23 +136,20 @@ export async function unlockVault(masterPassword: string): Promise<{ success: bo
 
 		_vek = vek;
 		_isUnlocked = true;
-		_isPro = profile.is_pro === true;
-		bridgeToExtension();
+		_isPro = true; // Always true in self-hosted
+		resetInactivityTimer();
 		return { success: true };
 	} catch (e: any) {
 		console.error('Unlock failed:', e);
-		// Most likely a wrong password → AES-GCM decryption error
 		if (e?.name === 'OperationError' || e?.message?.includes('decrypt')) {
-			return { success: false, error: 'Mot de passe maître incorrect.' };
+			return { success: false, error: 'Mot de passe maitre incorrect.' };
 		}
 		return { success: false, error: e.message || 'Erreur inconnue.' };
 	}
 }
 
-// ─── Bootstrap profile for first-time web login ───
+// ─── Bootstrap profile for first-time setup ───
 async function bootstrapProfile(masterPassword: string): Promise<{ success: boolean; error?: string }> {
-	if (!_user) return { success: false, error: 'Non authentifié.' };
-
 	try {
 		const salt = generateSalt();
 		const rounds = 210_000;
@@ -165,23 +158,26 @@ async function bootstrapProfile(masterPassword: string): Promise<{ success: bool
 		const kek = await deriveKEK(masterPassword, salt, rounds);
 		const wrappedVek = await wrapVEK(vek, kek);
 
-		const { error: insertError } = await supabase.from('profiles').insert({
-			id: _user.id,
-			wrapped_vek: encodeToSupabaseBytes(wrappedVek),
-			vek_salt: encodeToSupabaseBytes(salt),
-			vek_rounds: rounds
+		const res = await fetch('/api/profile', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				wrapped_vek: bytesToHex(wrappedVek),
+				vek_salt: bytesToHex(salt),
+				vek_rounds: rounds
+			})
 		});
 
-		if (insertError) {
-			return { success: false, error: 'Erreur lors de la création du profil.' };
+		if (!res.ok) {
+			return { success: false, error: 'Erreur lors de la creation du profil.' };
 		}
 
 		_vek = vek;
 		_isUnlocked = true;
-		bridgeToExtension();
+		resetInactivityTimer();
 		return { success: true };
 	} catch (e: any) {
-		return { success: false, error: e.message || 'Erreur lors de la création du profil.' };
+		return { success: false, error: e.message || 'Erreur lors de la creation du profil.' };
 	}
 }
 
@@ -190,6 +186,7 @@ export function lockVault() {
 	_vek = null;
 	_isUnlocked = false;
 	_masterPassword = null;
+	if (_inactivityTimer) clearTimeout(_inactivityTimer);
 }
 
 // ─── Logout ───
@@ -197,10 +194,12 @@ export async function logout() {
 	_vek = null;
 	_isUnlocked = false;
 	_masterPassword = null;
-	_user = null;
-	_session = null;
+	_userId = null;
+	_email = null;
 	_isAuthenticated = false;
-	await supabase.auth.signOut();
+	if (_inactivityTimer) clearTimeout(_inactivityTimer);
+	// Clear session cookie
+	document.cookie = 'session_user=; Max-Age=0; path=/';
 }
 
 // ─── Change master password ───
@@ -208,24 +207,21 @@ export async function changeMasterPassword(
 	currentPassword: string,
 	newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
-	if (!_user || !_vek) return { success: false, error: 'Coffre non déverrouillé.' };
+	if (!_vek) return { success: false, error: 'Coffre non deverrouille.' };
 
 	try {
-		// Verify current password by deriving KEK and trying unwrap
-		const { data: profile } = await supabase
-			.from('profiles')
-			.select('wrapped_vek, vek_salt, vek_rounds')
-			.eq('id', _user.id)
-			.single();
+		// Verify current password by fetching profile and trying unwrap
+		const res = await fetch('/api/profile');
+		if (!res.ok) return { success: false, error: 'Profil introuvable.' };
 
-		if (!profile) return { success: false, error: 'Profil introuvable.' };
+		const profile = await res.json();
 
-		const salt = decodeSupabaseBytes(profile.vek_salt);
+		const salt = hexToBytes(profile.vek_salt);
 		const rounds = profile.vek_rounds || 210_000;
 
 		// Verify current password
 		const currentKek = await deriveKEK(currentPassword, salt, rounds);
-		const wrappedVek = decodeSupabaseBytes(profile.wrapped_vek);
+		const wrappedVek = hexToBytes(profile.wrapped_vek);
 		await unwrapVEK(wrappedVek, currentKek); // throws if wrong password
 
 		// Re-wrap VEK with new password
@@ -233,20 +229,17 @@ export async function changeMasterPassword(
 		const newKek = await deriveKEK(newPassword, newSalt, rounds);
 		const newWrappedVek = await wrapVEK(_vek, newKek);
 
-		// Update Supabase auth password
-		const { error: authError } = await supabase.auth.updateUser({ password: newPassword });
-		if (authError) return { success: false, error: authError.message };
-
 		// Update profile
-		const { error: profileError } = await supabase
-			.from('profiles')
-			.update({
-				wrapped_vek: encodeToSupabaseBytes(newWrappedVek),
-				vek_salt: encodeToSupabaseBytes(newSalt)
+		const updateRes = await fetch('/api/profile', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				wrapped_vek: bytesToHex(newWrappedVek),
+				vek_salt: bytesToHex(newSalt)
 			})
-			.eq('id', _user.id);
+		});
 
-		if (profileError) return { success: false, error: 'Erreur lors de la mise à jour du profil.' };
+		if (!updateRes.ok) return { success: false, error: 'Erreur lors de la mise a jour du profil.' };
 
 		return { success: true };
 	} catch (e: any) {
@@ -255,31 +248,4 @@ export async function changeMasterPassword(
 		}
 		return { success: false, error: e.message || 'Erreur inconnue.' };
 	}
-}
-
-// ─── Supabase BYTEA helpers ───
-// Supabase returns BYTEA as hex-encoded string with \\x prefix
-function decodeSupabaseBytes(value: any): Uint8Array {
-	if (value instanceof Uint8Array) return value;
-	if (value instanceof ArrayBuffer) return new Uint8Array(value);
-
-	// Supabase returns BYTEA as "\\x<hex>" string
-	if (typeof value === 'string') {
-		let hex = value;
-		if (hex.startsWith('\\x')) hex = hex.slice(2);
-		if (hex.startsWith('0x')) hex = hex.slice(2);
-
-		const bytes = new Uint8Array(hex.length / 2);
-		for (let i = 0; i < hex.length; i += 2) {
-			bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
-		}
-		return bytes;
-	}
-
-	throw new Error('Unexpected BYTEA format');
-}
-
-function encodeToSupabaseBytes(bytes: Uint8Array): string {
-	const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-	return '\\x' + hex;
 }

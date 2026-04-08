@@ -101,24 +101,24 @@
 			]
 		},
 		{
-			title: 'Abonnement',
+			title: 'Self-Hosted',
 			icon: 'M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z M7 7h.01',
 			color: 'var(--fv-gold)',
 			items: [
 				{
-					id: 'sub-1',
-					question: "Quelle est la difference entre Gratuit et Pro ?",
-					answer: "L'offre Gratuite inclut le stockage de mots de passe, le generateur, l'AutoFill et la synchronisation entre appareils. L'offre Pro ajoute : les codes TOTP (2FA) integres, la generation d'emails masques via addy.io, la surveillance automatique de fuites de donnees (HIBP), le stockage illimite d'entrees, le mode panique, et le support prioritaire."
+					id: 'sh-1',
+					question: "FyxxVault est-il vraiment gratuit ?",
+					answer: "Oui, FyxxVault self-hosted est 100% gratuit et open source. Toutes les fonctionnalites sont incluses sans aucune limitation : stockage illimite, TOTP, surveillance HIBP, import/export, et plus encore."
 				},
 				{
-					id: 'sub-2',
-					question: "Comment annuler mon abonnement ?",
-					answer: "Vous pouvez annuler votre abonnement a tout moment depuis les parametres de votre compte, section Abonnement. L'annulation prend effet a la fin de la periode en cours — vous conservez l'acces aux fonctionnalites Pro jusqu'a la fin de la periode payee. Vous pouvez aussi contacter contact@fyxxvault.com."
+					id: 'sh-2',
+					question: "Ou sont stockees mes donnees ?",
+					answer: "Vos donnees sont stockees localement sur votre serveur dans une base SQLite (~/.fyxxvault/data/). Rien ne quitte votre machine. Le chiffrement AES-256-GCM est applique cote client avant le stockage."
 				},
 				{
-					id: 'sub-3',
-					question: "Quels moyens de paiement acceptez-vous ?",
-					answer: "Les paiements sont traites par Stripe, une plateforme de paiement securisee. Nous acceptons les cartes Visa, Mastercard, American Express, et les autres moyens de paiement pris en charge par Stripe selon votre pays. Vos informations bancaires ne sont jamais stockees sur nos serveurs."
+					id: 'sh-3',
+					question: "Comment faire une sauvegarde ?",
+					answer: "Utilisez la commande 'fyxxvault backup' ou le bouton Backup dans le Panel d'administration. Cela cree une copie du fichier de base de donnees. Vous pouvez aussi telecharger la base depuis le Panel."
 				}
 			]
 		},

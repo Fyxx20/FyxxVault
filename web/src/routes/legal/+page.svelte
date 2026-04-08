@@ -51,9 +51,9 @@
 					</div>
 					<div class="fv-glass legal-card">
 						<h3>Base de donnees et authentification</h3>
-						<p><strong>Supabase, Inc.</strong></p>
-						<p>Hebergement des donnees en Union europeenne</p>
-						<p><a href="https://supabase.com" target="_blank" rel="noopener">www.supabase.com</a></p>
+						<p><strong>SQLite (self-hosted)</strong></p>
+						<p>Stockage local sur votre serveur</p>
+						<p>Aucun tiers implique</p>
 					</div>
 				</div>
 			</section>

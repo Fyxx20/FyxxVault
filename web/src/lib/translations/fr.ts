@@ -312,12 +312,13 @@ const fr: Record<string, string> = {
 
 	// ── Import ─────────────────────────────────────────────────────────
 	'import.title': 'Importer des donnees',
-	'import.subtitle': 'Bitwarden, 1Password ou CSV generique',
+	'import.subtitle': 'Samsung Pass, Bitwarden, 1Password ou CSV generique',
 	'import.drag': 'Glisse ton fichier ici',
 	'import.or_click': 'ou clique pour parcourir',
 	'import.preview': "Apercu de l'import",
 	'import.format_bitwarden': 'Bitwarden',
 	'import.format_1password': '1Password',
+	'import.format_samsung': 'Samsung Pass',
 	'import.format_csv': 'CSV generique',
 	'import.duplicates': 'Gestion des doublons',
 	'import.skip': 'Ignorer',
@@ -335,6 +336,7 @@ const fr: Record<string, string> = {
 	'import.supported_formats': 'Formats supportes',
 	'import.bitwarden_path': 'Parametres > Exporter le coffre > Format CSV',
 	'import.1password_path': 'Fichier > Exporter > Format CSV',
+	'import.samsung_path': 'Samsung Pass > Parametres > Exporter les donnees > Format CSV',
 	'import.csv_format': 'Colonnes: title, username, password, url, notes',
 	'import.error.format': 'Format non supporte. Utilisez un fichier CSV ou JSON.',
 	'import.error.empty': 'Le fichier est vide ou invalide.',

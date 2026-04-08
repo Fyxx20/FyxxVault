@@ -1,7 +1,7 @@
 {
-	"name": "web",
+	"name": "fyxxvault-self-hosted",
 	"private": true,
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -12,19 +12,20 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "^7.0.0",
-		"@sveltejs/adapter-netlify": "^6.0.4",
+		"@sveltejs/adapter-node": "^5.0.0",
 		"@sveltejs/kit": "^2.50.2",
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
+		"@types/better-sqlite3": "^7.6.0",
 		"svelte": "^5.54.0",
 		"svelte-check": "^4.4.2",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1"
 	},
 	"dependencies": {
-		"@supabase/supabase-js": "^2.100.1",
 		"@tailwindcss/vite": "^4.2.2",
-		"stripe": "^21.0.1",
+		"better-sqlite3": "^11.0.0",
+		"jspdf": "^2.5.2",
+		"qrcode": "^1.5.0",
 		"tailwindcss": "^4.2.2"
 	}
 }

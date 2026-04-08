@@ -64,7 +64,7 @@
 					</div>
 					<div>
 						<h3 class="text-lg font-bold text-white">Auditable & Transparent</h3>
-						<p class="text-sm text-[var(--fv-smoke)] mt-1">Architecture documentée, Row Level Security sur Supabase, rotation automatique des clés, détection de jailbreak, SSL pinning.</p>
+						<p class="text-sm text-[var(--fv-smoke)] mt-1">Architecture documentée, SQLite WAL mode, rotation automatique des clés, permissions fichier 0600, chiffrement AES-256-GCM.</p>
 					</div>
 				</div>
 			</div>

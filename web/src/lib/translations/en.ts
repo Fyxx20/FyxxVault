@@ -312,12 +312,13 @@ const en: Record<string, string> = {
 
 	// ── Import ─────────────────────────────────────────────────────────
 	'import.title': 'Import Data',
-	'import.subtitle': 'Bitwarden, 1Password or Generic CSV',
+	'import.subtitle': 'Samsung Pass, Bitwarden, 1Password or Generic CSV',
 	'import.drag': 'Drag your file here',
 	'import.or_click': 'or click to browse',
 	'import.preview': 'Import Preview',
 	'import.format_bitwarden': 'Bitwarden',
 	'import.format_1password': '1Password',
+	'import.format_samsung': 'Samsung Pass',
 	'import.format_csv': 'Generic CSV',
 	'import.duplicates': 'Duplicate Handling',
 	'import.skip': 'Skip',
@@ -335,6 +336,7 @@ const en: Record<string, string> = {
 	'import.supported_formats': 'Supported Formats',
 	'import.bitwarden_path': 'Settings > Export Vault > CSV Format',
 	'import.1password_path': 'File > Export > CSV Format',
+	'import.samsung_path': 'Samsung Pass > Settings > Export data > CSV Format',
 	'import.csv_format': 'Columns: title, username, password, url, notes',
 	'import.error.format': 'Unsupported format. Use a CSV or JSON file.',
 	'import.error.empty': 'File is empty or invalid.',

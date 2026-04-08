@@ -1,5 +1,4 @@
-import { supabase } from '$lib/supabase';
-import { encryptEntry, decryptEntry } from '$lib/crypto';
+import { encryptEntry, decryptEntry, hexToBytes, bytesToHex } from '$lib/crypto';
 import { getVEK, getAuthState } from './auth.svelte';
 import type { VaultEntry } from '$lib/types';
 
@@ -61,25 +60,20 @@ export async function loadEntries(): Promise<void> {
 	_loading = true;
 
 	try {
-		const { data, error } = await supabase
-			.from('vault_items')
-			.select('id, user_id, encrypted_blob, updated_at, deleted_at')
-			.eq('user_id', auth.user.id)
-			.is('deleted_at', null)
-			.order('updated_at', { ascending: false });
-
-		if (error) {
-			console.error('Failed to load vault items:', error);
+		const res = await fetch('/api/vault');
+		if (!res.ok) {
+			console.error('Failed to load vault items');
 			_loading = false;
 			return;
 		}
 
+		const data = await res.json();
+
 		const decrypted: VaultEntry[] = [];
 		for (const row of data ?? []) {
 			try {
-				const blob = decodeSupabaseBytes(row.encrypted_blob);
+				const blob = hexToBytes(row.encrypted_blob);
 				const entry = await decryptEntry(blob, vek);
-				// Ensure the entry ID matches the DB row ID
 				entry.id = row.id;
 				decrypted.push(entry);
 			} catch (e) {
@@ -99,19 +93,21 @@ export async function loadEntries(): Promise<void> {
 export async function addEntry(entry: VaultEntry): Promise<{ success: boolean; error?: string; needsPro?: boolean }> {
 	const vek = getVEK();
 	const auth = getAuthState();
-	if (!vek || !auth.user) return { success: false, error: 'Coffre non déverrouillé.' };
+	if (!vek || !auth.user) return { success: false, error: 'Coffre non deverrouille.' };
 
 	try {
 		const blob = await encryptEntry(entry, vek);
 
-		const { error } = await supabase.from('vault_items').insert({
-			id: entry.id,
-			user_id: auth.user.id,
-			encrypted_blob: encodeToSupabaseBytes(blob),
-			updated_at: new Date().toISOString()
+		const res = await fetch('/api/vault', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				id: entry.id,
+				encrypted_blob: bytesToHex(blob)
+			})
 		});
 
-		if (error) return { success: false, error: error.message };
+		if (!res.ok) return { success: false, error: 'Erreur lors de l\'ajout.' };
 
 		_entries = [entry, ..._entries];
 		return { success: true };
@@ -124,43 +120,43 @@ export async function addEntry(entry: VaultEntry): Promise<{ success: boolean; e
 export async function updateEntry(entry: VaultEntry): Promise<{ success: boolean; error?: string }> {
 	const vek = getVEK();
 	const auth = getAuthState();
-	if (!vek || !auth.user) return { success: false, error: 'Coffre non déverrouillé.' };
+	if (!vek || !auth.user) return { success: false, error: 'Coffre non deverrouille.' };
 
 	try {
 		entry.lastModifiedAt = new Date().toISOString();
 		const blob = await encryptEntry(entry, vek);
 
-		const { error } = await supabase
-			.from('vault_items')
-			.update({
-				encrypted_blob: encodeToSupabaseBytes(blob),
-				updated_at: new Date().toISOString()
+		const res = await fetch('/api/vault', {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				id: entry.id,
+				encrypted_blob: bytesToHex(blob)
 			})
-			.eq('id', entry.id)
-			.eq('user_id', auth.user.id);
+		});
 
-		if (error) return { success: false, error: error.message };
+		if (!res.ok) return { success: false, error: 'Erreur lors de la mise a jour.' };
 
 		_entries = _entries.map((e) => (e.id === entry.id ? entry : e));
 		return { success: true };
 	} catch (e: any) {
-		return { success: false, error: e.message || 'Erreur lors de la mise à jour.' };
+		return { success: false, error: e.message || 'Erreur lors de la mise a jour.' };
 	}
 }
 
 // ─── Delete entry (soft delete) ───
 export async function deleteEntry(id: string): Promise<{ success: boolean; error?: string }> {
 	const auth = getAuthState();
-	if (!auth.user) return { success: false, error: 'Non authentifié.' };
+	if (!auth.user) return { success: false, error: 'Non authentifie.' };
 
 	try {
-		const { error } = await supabase
-			.from('vault_items')
-			.update({ deleted_at: new Date().toISOString() })
-			.eq('id', id)
-			.eq('user_id', auth.user.id);
+		const res = await fetch('/api/vault', {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ id })
+		});
 
-		if (error) return { success: false, error: error.message };
+		if (!res.ok) return { success: false, error: 'Erreur lors de la suppression.' };
 
 		_entries = _entries.filter((e) => e.id !== id);
 		if (_selectedEntryId === id) _selectedEntryId = null;
@@ -209,7 +205,6 @@ export function getSecurityStats() {
 	const reused = passwords.length - uniquePasswords.size;
 	const noMfa = entries.filter((e) => e.category === 'login' && !e.mfaEnabled).length;
 
-	// Entries not modified in 6+ months
 	const sixMonthsAgo = new Date();
 	sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 	const expired = entries.filter((e) => new Date(e.lastModifiedAt) < sixMonthsAgo).length;
@@ -227,29 +222,4 @@ export function resetVault() {
 	_searchQuery = '';
 	_activeFilter = 'all';
 	_selectedEntryId = null;
-}
-
-// ─── Supabase BYTEA helpers ───
-function decodeSupabaseBytes(value: any): Uint8Array {
-	if (value instanceof Uint8Array) return value;
-	if (value instanceof ArrayBuffer) return new Uint8Array(value);
-
-	if (typeof value === 'string') {
-		let hex = value;
-		if (hex.startsWith('\\x')) hex = hex.slice(2);
-		if (hex.startsWith('0x')) hex = hex.slice(2);
-
-		const bytes = new Uint8Array(hex.length / 2);
-		for (let i = 0; i < hex.length; i += 2) {
-			bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
-		}
-		return bytes;
-	}
-
-	throw new Error('Unexpected BYTEA format');
-}
-
-function encodeToSupabaseBytes(bytes: Uint8Array): string {
-	const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-	return '\\x' + hex;
 }

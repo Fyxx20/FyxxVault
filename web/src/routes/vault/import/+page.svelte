@@ -8,7 +8,7 @@
 
 	let dragActive = $state(false);
 	let file = $state<File | null>(null);
-	let format = $state<'auto' | 'bitwarden' | '1password' | 'generic'>('auto');
+	let format = $state<'auto' | 'bitwarden' | '1password' | 'samsung' | 'generic'>('auto');
 	let detectedFormat = $state('');
 	let parsedEntries = $state<VaultEntry[]>([]);
 	let parseError = $state('');
@@ -109,6 +109,10 @@
 		if (headerStr.includes('title') && headerStr.includes('url') && headerStr.includes('username')) {
 			return '1password';
 		}
+		// Samsung Pass: url,username,password (3 columns, no title)
+		if (header.length === 3 && headerStr.includes('url') && headerStr.includes('username') && headerStr.includes('password') && !headerStr.includes('title') && !headerStr.includes('name')) {
+			return 'samsung';
+		}
 		return 'generic';
 	}
 
@@ -124,6 +128,23 @@
 				category: mapBitwardenType(row['type'] || ''),
 				isFavorite: row['favorite'] === '1',
 				tags: row['tags'] ? row['tags'].split(',').map(s => s.trim()) : []
+			});
+		} else if (fmt === 'samsung') {
+			const url = row['url'] || '';
+			let title = '';
+			try {
+				const hostname = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
+				title = hostname.replace(/^(www|m|login|accounts?)\./, '').split('.')[0];
+				title = title.charAt(0).toUpperCase() + title.slice(1);
+			} catch {
+				title = url.split('/')[0] || t('import.untitled');
+			}
+			return newVaultEntry({
+				title,
+				username: row['username'] || '',
+				password: row['password'] || '',
+				website: url,
+				category: 'login'
 			});
 		} else if (fmt === '1password') {
 			return newVaultEntry({
@@ -292,7 +313,7 @@
 			<div class="flex items-center justify-between mb-4">
 				<div>
 					<h2 class="text-sm font-bold text-white">{t('import.preview')}</h2>
-					<p class="text-[10px] text-[var(--fv-smoke)]">{detectedFormat === 'bitwarden' ? t('import.format_bitwarden') : detectedFormat === '1password' ? t('import.format_1password') : t('import.format_csv')} — {parsedEntries.length} {parsedEntries.length > 1 ? t('import.items') : t('import.item')}</p>
+					<p class="text-[10px] text-[var(--fv-smoke)]">{detectedFormat === 'bitwarden' ? t('import.format_bitwarden') : detectedFormat === '1password' ? t('import.format_1password') : detectedFormat === 'samsung' ? t('import.format_samsung') : t('import.format_csv')} — {parsedEntries.length} {parsedEntries.length > 1 ? t('import.items') : t('import.item')}</p>
 				</div>
 				<label class="flex items-center gap-2 text-xs text-[var(--fv-smoke)] cursor-pointer">
 					<input type="checkbox" checked={selectedEntries.size === parsedEntries.length} onchange={toggleAll} class="accent-[var(--fv-cyan)]" />
@@ -385,6 +406,7 @@
 			<p class="text-xs text-[var(--fv-smoke)] mb-4">{t('import.or_click')}</p>
 
 			<div class="flex justify-center gap-4 text-[10px] text-[var(--fv-ash)]">
+				<span>{t('import.format_samsung')} CSV</span>
 				<span>{t('import.format_bitwarden')} CSV</span>
 				<span>{t('import.format_1password')} CSV</span>
 				<span>{t('import.format_csv')}</span>
@@ -413,6 +435,13 @@
 					<div>
 						<p class="text-xs text-white font-medium">{t('import.format_1password')}</p>
 						<p class="text-[10px] text-[var(--fv-smoke)]">{t('import.1password_path')}</p>
+					</div>
+				</div>
+				<div class="flex items-start gap-3">
+					<span class="text-base">📱</span>
+					<div>
+						<p class="text-xs text-white font-medium">{t('import.format_samsung')}</p>
+						<p class="text-[10px] text-[var(--fv-smoke)]">{t('import.samsung_path')}</p>
 					</div>
 				</div>
 				<div class="flex items-start gap-3">

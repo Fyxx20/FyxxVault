@@ -115,12 +115,6 @@
 
 <div class="max-w-2xl mx-auto">
 	<h1 class="text-2xl font-extrabold text-white mb-8 tracking-tight">{t('settings.title')}</h1>
-	{#if false}
-		<div class="mb-4 p-3 rounded-xl bg-[var(--fv-gold)]/10 border border-[var(--fv-gold)]/25">
-			<p class="text-xs text-[var(--fv-gold)] font-medium">{proSyncMessage}</p>
-		</div>
-	{/if}
-
 	<!-- Account info card with avatar -->
 	<div class="settings-card p-6 mb-4">
 		<div class="flex items-center gap-4 mb-5">
@@ -149,148 +143,6 @@
 			</div>
 		</div>
 	</div>
-
-	<!-- Plan info (removed - all free now) -->
-	{#if false}
-	<div class="settings-card p-6 mb-4 hidden">
-		<div class="settings-card-border-left" style="background: var(--fv-cyan);"></div>
-		<h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-			Plan
-			{t('settings.section.subscription')}
-		</h2>
-
-		{#if auth.isPro}
-			<!-- Pro user: manage subscription -->
-			<div class="p-4 rounded-xl bg-[var(--fv-gold)]/[0.04] border border-[var(--fv-gold)]/10 mb-4">
-				<div class="flex items-center justify-between mb-1">
-					<span class="text-sm font-bold text-[var(--fv-gold)]">{'\u{1F451}'} FyxxVault Pro</span>
-					<span class="px-2.5 py-0.5 rounded-full bg-[var(--fv-success)]/10 text-[10px] font-bold text-[var(--fv-success)]">{t('common.active')}</span>
-				</div>
-				<p class="text-[11px] text-[var(--fv-smoke)]">{t('settings.pro_desc')}</p>
-			</div>
-
-			<div>
-				<button
-					onclick={handleManageBilling}
-					disabled={billingLoading}
-					class="w-full settings-sub-action p-3 rounded-xl hover:bg-white/[0.04] transition-all duration-200"
-				>
-					<div class="settings-sub-left">
-						<div class="settings-sub-icon">
-							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-						</div>
-						<div class="settings-sub-text">
-							<span class="settings-sub-title">{billingLoading ? t('common.loading') : t('settings.payment_method')}</span>
-							<p class="text-[10px] text-[var(--fv-ash)]">{t('settings.update_card')}</p>
-						</div>
-					</div>
-					<svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-				</button>
-
-				<button
-					onclick={handleManageBilling}
-					disabled={billingLoading}
-					class="w-full settings-sub-action p-3 rounded-xl hover:bg-white/[0.04] transition-all duration-200"
-				>
-					<div class="settings-sub-left">
-						<div class="settings-sub-icon">
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-						</div>
-						<div class="settings-sub-text">
-							<span class="settings-sub-title">{t('settings.change_plan')}</span>
-							<p class="text-[10px] text-[var(--fv-ash)]">{t('settings.change_plan_desc')}</p>
-						</div>
-					</div>
-					<svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-				</button>
-
-				<button
-					onclick={handleManageBilling}
-					disabled={billingLoading}
-					class="w-full settings-sub-action p-3 rounded-xl hover:bg-white/[0.04] transition-all duration-200"
-				>
-					<div class="settings-sub-left">
-						<div class="settings-sub-icon">
-							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-cyan)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-						</div>
-						<div class="settings-sub-text">
-							<span class="settings-sub-title">{t('settings.invoices')}</span>
-							<p class="text-[10px] text-[var(--fv-ash)]">{t('settings.invoices_desc')}</p>
-						</div>
-					</div>
-					<svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-				</button>
-
-				<div class="settings-separator my-2"></div>
-
-				<button
-					onclick={handleManageBilling}
-					disabled={billingLoading}
-					class="w-full settings-sub-action p-3 rounded-xl hover:bg-[var(--fv-danger)]/[0.04] transition-all duration-200 group"
-				>
-					<div class="settings-sub-left">
-						<div class="settings-sub-icon">
-							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fv-danger)" stroke-width="2" opacity="0.7"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-						</div>
-						<div class="settings-sub-text">
-							<span class="settings-sub-title text-[var(--fv-smoke)] group-hover:text-[var(--fv-danger)] transition-colors">{t('settings.cancel_sub')}</span>
-						</div>
-					</div>
-					<svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fv-ash)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-				</button>
-			</div>
-		{:else}
-			<!-- Free user: upgrade prompt -->
-			<div class="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] mb-4">
-				<div class="flex items-center justify-between mb-1">
-					<span class="text-sm font-bold text-[var(--fv-smoke)]">{t('settings.plan_free')}</span>
-					<span class="px-2.5 py-0.5 rounded-full bg-white/10 text-[10px] font-bold text-[var(--fv-ash)]">{t('settings.free_limit')}</span>
-				</div>
-				<p class="text-[11px] text-[var(--fv-ash)]">{t('settings.upgrade_prompt')}</p>
-			</div>
-
-			<div class="space-y-3">
-				<!-- Plan selector -->
-				<div class="flex gap-2">
-					<button
-						onclick={() => selectedPlan = 'monthly'}
-						class="flex-1 p-3 rounded-xl text-center transition-all duration-200 {selectedPlan === 'monthly' ? 'bg-[var(--fv-gold)]/10 border border-[var(--fv-gold)]/30 text-[var(--fv-gold)]' : 'bg-white/[0.03] border border-white/[0.06] text-[var(--fv-smoke)]'}"
-					>
-						<div class="text-lg font-extrabold">4,99{'\u20AC'}</div>
-						<div class="text-[10px] font-medium opacity-70">{t('settings.per_month')}</div>
-					</button>
-					<button
-						onclick={() => selectedPlan = 'yearly'}
-						class="flex-1 p-3 rounded-xl text-center transition-all duration-200 relative {selectedPlan === 'yearly' ? 'bg-[var(--fv-gold)]/10 border border-[var(--fv-gold)]/30 text-[var(--fv-gold)]' : 'bg-white/[0.03] border border-white/[0.06] text-[var(--fv-smoke)]'}"
-					>
-						<span class="absolute -top-2 right-2 px-2 py-0.5 rounded-full bg-[var(--fv-success)] text-[8px] font-bold text-[#050a15]">{t('settings.discount')}</span>
-						<div class="text-lg font-extrabold">49,99{'\u20AC'}</div>
-						<div class="text-[10px] font-medium opacity-70">{t('settings.per_year')}</div>
-					</button>
-				</div>
-
-				<!-- Features included -->
-				<div class="space-y-2 px-1">
-					{#each [t('settings.feature.unlimited'), t('settings.feature.dark_web'), t('settings.feature.emails'), t('settings.feature.sharing'), t('settings.feature.support')] as feature}
-						<div class="flex items-center gap-2">
-							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fv-gold)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-							<span class="text-xs text-[var(--fv-smoke)]">{feature}</span>
-						</div>
-					{/each}
-				</div>
-
-				<button
-					onclick={handleCheckout}
-					disabled={checkoutLoading}
-					class="w-full py-3 rounded-xl text-sm font-bold transition-all duration-200 {checkoutLoading ? 'opacity-60' : 'hover:translate-y-[-1px] hover:shadow-lg hover:shadow-[var(--fv-gold)]/20'}"
-					style="background: linear-gradient(135deg, var(--fv-gold), var(--fv-gold-light, #ffda6b)); color: #1a1a2e;"
-				>
-					{checkoutLoading ? t('settings.redirecting') : selectedPlan === 'monthly' ? t('settings.upgrade_monthly') : t('settings.upgrade_yearly')}
-				</button>
-			</div>
-		{/if}
-	</div>
-	{/if}
 
 	<!-- Security -->
 	<div class="settings-card p-6 mb-4">
@@ -483,10 +335,6 @@
 		border-radius: 20px;
 		overflow: hidden;
 	}
-	.settings-card-danger {
-		border-color: rgba(239, 68, 68, 0.1);
-	}
-
 	/* Colored left border */
 	.settings-card-border-left {
 		position: absolute;
@@ -543,35 +391,4 @@
 		border-color: rgba(0, 212, 255, 0.3);
 	}
 
-	/* Subscription action rows (fixed alignment) */
-	.settings-sub-action {
-		display: grid;
-		grid-template-columns: 1fr auto;
-		align-items: center;
-		column-gap: 12px;
-	}
-	.settings-sub-left {
-		display: grid;
-		grid-template-columns: 20px minmax(0, 1fr);
-		align-items: center;
-		column-gap: 12px;
-		min-width: 0;
-	}
-	.settings-sub-icon {
-		width: 20px;
-		height: 20px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		overflow: hidden;
-	}
-	.settings-sub-text {
-		min-width: 0;
-		text-align: left;
-	}
-	.settings-sub-title {
-		display: block;
-		font-size: 14px;
-		color: var(--fv-mist);
-	}
 </style>

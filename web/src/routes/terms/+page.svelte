@@ -79,14 +79,8 @@
 			</section>
 
 			<section class="legal-section">
-				<h2>5. Paiement</h2>
-				<p>Le paiement est effectue par carte bancaire via la plateforme securisee <strong>Stripe</strong>. Les moyens de paiement acceptes sont :</p>
-				<ul>
-					<li>Cartes Visa, Mastercard, American Express</li>
-					<li>Autres moyens pris en charge par Stripe</li>
-				</ul>
-				<p>Le paiement est preleve automatiquement au debut de chaque periode (mensuelle ou annuelle). L'Utilisateur recoit une facture par email a chaque paiement.</p>
-				<p>En cas d'echec de paiement, l'Editeur se reserve le droit de suspendre l'acces aux fonctionnalites Pro apres un delai de grace de 7 jours.</p>
+				<h2>5. Tarification</h2>
+				<p>FyxxVault self-hosted est entierement gratuit et open source. Aucun paiement n'est requis.</p>
 			</section>
 
 			<section class="legal-section">

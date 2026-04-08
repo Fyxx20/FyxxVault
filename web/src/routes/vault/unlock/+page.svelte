@@ -154,8 +154,8 @@
 					</button>
 
 					<div class="text-center">
-						<a href="/forgot-password" class="text-xs text-[var(--fv-cyan)] hover:underline transition-colors duration-200">
-							{t('unlock.forgot')}
+						<a href="/login" class="text-xs text-[var(--fv-cyan)] hover:underline transition-colors duration-200">
+							{t('unlock.back_to_login')}
 						</a>
 					</div>
 				</form>

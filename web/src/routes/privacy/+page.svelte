@@ -66,7 +66,7 @@
 				</ul>
 
 				<h3>3.4 Donnees de paiement</h3>
-				<p>Les paiements sont traites par <strong>Stripe</strong>. Nous ne stockons jamais vos numeros de carte bancaire. Stripe nous transmet uniquement un identifiant de transaction et le statut du paiement. Consultez la <a href="https://stripe.com/fr/privacy" target="_blank" rel="noopener">politique de confidentialite de Stripe</a>.</p>
+				<p>FyxxVault self-hosted est 100% gratuit. Aucune donnee de paiement n'est collectee.</p>
 			</section>
 
 			<section class="legal-section">
@@ -106,24 +106,9 @@
 						</thead>
 						<tbody>
 							<tr>
-								<td>Supabase</td>
-								<td>Base de donnees, authentification</td>
-								<td>Union europeenne (EU)</td>
-							</tr>
-							<tr>
-								<td>Netlify</td>
-								<td>Hebergement du site web</td>
-								<td>Etats-Unis (clauses contractuelles types)</td>
-							</tr>
-							<tr>
-								<td>Stripe</td>
-								<td>Traitement des paiements</td>
-								<td>Etats-Unis / EU (certifie Privacy Shield)</td>
-							</tr>
-							<tr>
-								<td>addy.io</td>
-								<td>Generation d'emails masques (optionnel)</td>
-								<td>Union europeenne</td>
+								<td>SQLite</td>
+								<td>Base de donnees locale</td>
+								<td>Votre serveur (self-hosted)</td>
 							</tr>
 							<tr>
 								<td>HIBP (Have I Been Pwned)</td>
@@ -133,7 +118,7 @@
 						</tbody>
 					</table>
 				</div>
-				<p>Tous nos sous-traitants sont lies par des accords de traitement des donnees conformes au RGPD. Les donnees hebergees sur Supabase sont situees dans l'Union europeenne.</p>
+				<p>En mode self-hosted, toutes vos donnees restent sur votre propre serveur. Aucun tiers n'a acces a vos donnees chiffrees.</p>
 			</section>
 
 			<section class="legal-section">
@@ -163,8 +148,6 @@
 				<h2>9. Partage avec des tiers</h2>
 				<p>Nous ne partageons vos donnees personnelles qu'avec les prestataires mentionnes en section 6, et uniquement dans la mesure necessaire au fonctionnement du service :</p>
 				<ul>
-					<li><strong>Stripe</strong> : votre email et les informations de paiement pour le traitement des transactions.</li>
-					<li><strong>addy.io</strong> : uniquement si vous activez la fonctionnalite d'emails masques (aucune donnee du coffre n'est partagee).</li>
 					<li><strong>HIBP</strong> : verification anonymisee par k-anonymity (seuls les 5 premiers caracteres du hash SHA-1 sont envoyes, jamais le mot de passe).</li>
 				</ul>
 				<p>Nous ne vendons, ne louons et ne communiquons jamais vos donnees a des fins commerciales ou publicitaires.</p>
@@ -193,13 +176,13 @@
 					<li>Transport securise via TLS 1.3</li>
 					<li>Architecture zero-knowledge : la cle de chiffrement ne quitte jamais votre appareil</li>
 					<li>Hashage des mots de passe maitre cote serveur via bcrypt</li>
-					<li>Politique de securite stricte sur l'infrastructure (Supabase RLS)</li>
+					<li>Politique de securite stricte sur l'infrastructure (SQLite WAL, permissions 0600)</li>
 				</ul>
 			</section>
 
 			<section class="legal-section">
 				<h2>12. Transferts internationaux</h2>
-				<p>Les donnees de votre coffre-fort sont hebergees dans l'Union europeenne via Supabase. Certains prestataires (Netlify, Stripe) peuvent traiter des donnees aux Etats-Unis, sous le couvert de clauses contractuelles types approuvees par la Commission europeenne, garantissant un niveau de protection adequat.</p>
+				<p>En mode self-hosted, toutes les donnees restent sur votre serveur. Aucun transfert international n'est effectue par FyxxVault. Seule la verification HIBP (optionnelle) communique un prefixe de hash anonymise vers un service externe.</p>
 			</section>
 
 			<section class="legal-section">

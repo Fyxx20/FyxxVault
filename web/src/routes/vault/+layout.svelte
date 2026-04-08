@@ -4,11 +4,7 @@
 	import { onMount } from 'svelte';
 	import { getAuthState, logout, lockVault, initAuth } from '$lib/stores/auth.svelte';
 	import { resetVault, getSecurityStats } from '$lib/stores/vault.svelte';
-	import { inboxUnreadCount } from '$lib/stores/email-badge';
-	import { unreadAnnouncementsCount, checkUnreadAnnouncements } from '$lib/stores/announcements-badge';
-	import { supabase } from '$lib/supabase';
 	import { t, getLang, setLang } from '$lib/i18n.svelte';
-	import SupportChat from '$lib/components/SupportChat.svelte';
 
 	let { children } = $props();
 
@@ -31,17 +27,9 @@
 	});
 
 	async function checkMaintenance() {
-		try {
-			const res = await fetch('/api/admin/maintenance');
-			if (res.ok) {
-				const data = await res.json();
-				maintenanceMode = data.maintenance === true;
-			}
-		} catch {
-			maintenanceMode = false;
-		} finally {
-			maintenanceChecked = true;
-		}
+		// Self-hosted: no maintenance mode
+		maintenanceMode = false;
+		maintenanceChecked = true;
 	}
 
 	// Current path (reactive via store auto-subscription)
@@ -103,92 +91,27 @@
 	});
 
 	function handleLock() {
-		// Clear VEK and redirect to unlock — keep Supabase session alive
 		resetVault();
 		lockVault();
-		inboxUnreadCount.set(0);
 		goto('/vault/unlock');
 	}
 
-	async function refreshInboxBadge() {
-		if (!auth.session?.access_token || !auth.isUnlocked) return;
-		try {
-			const res = await fetch(`/api/email/messages?folder=inbox&t=${Date.now()}`, {
-				cache: 'no-store',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${auth.session.access_token}`
-				}
-			});
-			if (!res.ok) return;
-			const data = await res.json();
-			if (data?.unreadCounts?.inbox !== undefined) {
-				inboxUnreadCount.set(data.unreadCounts.inbox ?? 0);
-			}
-		} catch {
-			// Silent fail: badge is best-effort.
-		}
+	// Security alert dot
+	const securityStats = $derived(auth.isUnlocked ? getSecurityStats() : null);
+	const hasSecurityAlert = $derived(securityStats ? (securityStats.weak > 0 || securityStats.reused > 0) : false);
+
+	const navItems = [
+		{ path: '/vault', label: () => t('nav.vault'), icon: 'vault', color: 'var(--fv-cyan)', mobileIcon: true },
+		{ path: '/vault/security', label: () => t('nav.security'), icon: 'shield', color: 'var(--fv-violet)', mobileIcon: true },
+		{ path: '/vault/identity', label: () => t('nav.identity'), icon: 'identity', color: '#10b981', mobileIcon: true },
+		{ path: '/vault/settings', label: () => t('nav.settings'), icon: 'settings', color: 'var(--fv-smoke)', mobileIcon: true },
+		{ path: '/panel', label: () => 'Panel', icon: 'panel', color: '#3b82f6', mobileIcon: true }
+	];
+
+	function isActive(path: string): boolean {
+		if (path === '/vault') return currentPath === '/vault' || currentPath === '/vault/add' || currentPath === '/vault/import';
+		return currentPath.startsWith(path);
 	}
-
-	onMount(() => {
-		refreshInboxBadge();
-		// Check unread announcements (fallback IDs)
-		checkUnreadAnnouncements(['ann-identity-generator', 'ann-multilingual', 'fallback-1', 'fallback-2']);
-		const onFocus = () => refreshInboxBadge();
-		const onVisibility = () => {
-			if (!document.hidden) refreshInboxBadge();
-		};
-		window.addEventListener('focus', onFocus);
-		document.addEventListener('visibilitychange', onVisibility);
-		return () => {
-			window.removeEventListener('focus', onFocus);
-			document.removeEventListener('visibilitychange', onVisibility);
-		};
-	});
-
-	$effect(() => {
-		if (!auth.isUnlocked || !auth.session?.access_token) return;
-		const id = setInterval(refreshInboxBadge, 3000);
-		return () => clearInterval(id);
-	});
-
-	$effect(() => {
-		const userId = auth.user?.id;
-		if (!auth.isUnlocked || !userId) return;
-
-		const channel = supabase
-			.channel(`inbox-badge-${userId}`)
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					schema: 'public',
-					table: 'emails',
-					filter: `user_id=eq.${userId}`
-				},
-				(payload) => {
-					// Fast path: increment instantly on a new unread inbox email.
-					if (payload.eventType === 'INSERT') {
-						const row = payload.new as { folder?: string; is_read?: boolean };
-						if (row.folder === 'inbox' && row.is_read === false) {
-							inboxUnreadCount.update((count) => count + 1);
-							return;
-						}
-					}
-
-					// For updates/deletes/moves, refresh from server for correctness.
-					refreshInboxBadge();
-				}
-			)
-			.subscribe((status) => {
-				if (status === 'SUBSCRIBED') refreshInboxBadge();
-			});
-
-		return () => {
-			supabase.removeChannel(channel);
-		};
-	});
-
 
 	// Logout confirmation
 	let showLogoutToast = $state(false);
@@ -201,28 +124,9 @@
 		setTimeout(async () => {
 			showLogoutToast = false;
 			resetVault();
-			inboxUnreadCount.set(0);
 			await logout();
 			goto('/login');
 		}, 1300);
-	}
-
-	// Security alert dot
-	const securityStats = $derived(auth.isUnlocked ? getSecurityStats() : null);
-	const hasSecurityAlert = $derived(securityStats ? (securityStats.weak > 0 || securityStats.reused > 0) : false);
-
-	const navItems = [
-		{ path: '/vault', label: () => t('nav.vault'), icon: 'vault', color: 'var(--fv-cyan)', mobileIcon: true },
-		{ path: '/vault/security', label: () => t('nav.security'), icon: 'shield', color: 'var(--fv-violet)', mobileIcon: true },
-		{ path: '/vault/emails', label: () => t('nav.messaging'), icon: 'mail', color: '#3b82f6', mobileIcon: true },
-		{ path: '/vault/identity', label: () => t('nav.identity'), icon: 'identity', color: '#10b981', mobileIcon: true },
-		{ path: '/vault/announcements', label: () => t('nav.announcements'), icon: 'megaphone', color: 'var(--fv-gold)', mobileIcon: true },
-		{ path: '/vault/settings', label: () => t('nav.settings'), icon: 'settings', color: 'var(--fv-smoke)', mobileIcon: true }
-	];
-
-	function isActive(path: string): boolean {
-		if (path === '/vault') return currentPath === '/vault' || currentPath === '/vault/add' || currentPath === '/vault/import';
-		return currentPath.startsWith(path);
 	}
 </script>
 
@@ -333,11 +237,6 @@
 								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 									<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
 								</svg>
-							{:else if item.icon === 'mail'}
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-									<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-									<polyline points="22,6 12,13 2,6"/>
-								</svg>
 							{:else if item.icon === 'settings'}
 								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 									<circle cx="12" cy="12" r="3"/>
@@ -349,29 +248,17 @@
 									<circle cx="8" cy="12" r="2"/>
 									<path d="M14 9h4M14 12h4M14 15h2"/>
 								</svg>
-							{:else if item.icon === 'megaphone'}
+							{:else if item.icon === 'panel'}
 								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-									<path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
+									<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+									<line x1="8" y1="21" x2="16" y2="21"/>
+									<line x1="12" y1="17" x2="12" y2="21"/>
 								</svg>
 							{/if}
 						</div>
 						{item.label()}
 						{#if item.icon === 'shield' && hasSecurityAlert}
 							<span class="ml-auto w-2 h-2 rounded-full bg-[var(--fv-danger)] shrink-0 security-alert-dot"></span>
-						{:else if item.icon === 'mail' && $inboxUnreadCount > 0}
-							<span class="ml-auto flex items-center gap-1.5 shrink-0">
-								<span class="w-2 h-2 rounded-full bg-[var(--fv-danger)] security-alert-dot"></span>
-								<span class="px-2 py-0.5 rounded-full text-[10px] font-bold leading-none text-[var(--fv-abyss)] bg-[var(--fv-cyan)] shadow-[0_0_12px_rgba(0,212,255,0.35)]">
-									{$inboxUnreadCount > 99 ? '99+' : $inboxUnreadCount}
-								</span>
-							</span>
-						{:else if item.icon === 'megaphone' && $unreadAnnouncementsCount > 0}
-							<span class="ml-auto flex items-center gap-1.5 shrink-0">
-								<span class="w-2 h-2 rounded-full bg-[var(--fv-gold)] shrink-0 security-alert-dot"></span>
-								<span class="px-2 py-0.5 rounded-full text-[10px] font-bold leading-none text-[var(--fv-abyss)] bg-[var(--fv-gold)] shadow-[0_0_12px_rgba(234,179,8,0.35)]">
-									{$unreadAnnouncementsCount}
-								</span>
-							</span>
 						{/if}
 					</a>
 				{/each}
@@ -482,24 +369,15 @@
 							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
 						{:else if item.icon === 'shield'}
 							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-						{:else if item.icon === 'mail'}
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
 						{:else if item.icon === 'settings'}
 							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
 						{:else if item.icon === 'identity'}
 							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M14 9h4M14 12h4M14 15h2"/></svg>
-						{:else if item.icon === 'megaphone'}
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+						{:else if item.icon === 'panel'}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
 						{/if}
 						{#if item.icon === 'shield' && hasSecurityAlert}
 							<span class="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-[var(--fv-danger)] security-alert-dot"></span>
-						{:else if item.icon === 'mail' && $inboxUnreadCount > 0}
-							<span class="absolute top-0 right-0 w-2 h-2 rounded-full bg-[var(--fv-danger)] security-alert-dot"></span>
-							<span class="absolute top-0 right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-[var(--fv-cyan)] text-[9px] font-bold text-[var(--fv-abyss)] flex items-center justify-center shadow-[0_0_10px_rgba(0,212,255,0.35)]">
-								{$inboxUnreadCount > 99 ? '99+' : $inboxUnreadCount}
-							</span>
-						{:else if item.icon === 'megaphone' && $unreadAnnouncementsCount > 0}
-							<span class="absolute top-0 right-1 w-2 h-2 rounded-full bg-[var(--fv-gold)] security-alert-dot"></span>
 						{/if}
 						<span class="text-[9px] font-semibold">{item.label().split(' ')[0]}</span>
 					</a>
@@ -507,10 +385,6 @@
 			</div>
 		</nav>
 	</div>
-{/if}
-
-{#if auth.isUnlocked}
-	<SupportChat />
 {/if}
 
 <style>
@@ -587,32 +461,6 @@
 	@keyframes alertPulse {
 		0%, 100% { box-shadow: 0 0 6px rgba(239, 68, 68, 0.3); }
 		50% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.6); }
-	}
-
-	/* Pro upsell card with animated gradient border */
-	.pro-upsell-card {
-		position: relative;
-		background: linear-gradient(135deg, rgba(255, 200, 55, 0.08), rgba(255, 200, 55, 0.03));
-		border: 1px solid transparent;
-		background-clip: padding-box;
-	}
-	.pro-upsell-card::before {
-		content: '';
-		position: absolute;
-		inset: -1px;
-		border-radius: 17px;
-		padding: 1px;
-		background: linear-gradient(135deg, rgba(255, 200, 55, 0.4), rgba(255, 200, 55, 0.1), rgba(138, 92, 246, 0.2), rgba(255, 200, 55, 0.4));
-		background-size: 300% 300%;
-		animation: proGradientBorder 4s ease-in-out infinite;
-		-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-		-webkit-mask-composite: xor;
-		mask-composite: exclude;
-		pointer-events: none;
-	}
-	@keyframes proGradientBorder {
-		0%, 100% { background-position: 0% 50%; }
-		50% { background-position: 100% 50%; }
 	}
 
 	/* User section glassmorphism */
