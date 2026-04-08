@@ -255,9 +255,7 @@ download_fyxxvault() {
   fi
 
   # Show downloaded structure
-  echo -e "    ${D}├── web/           SvelteKit application${NC}"
-  echo -e "    ${D}├── extension/     Chrome extension${NC}"
-  echo -e "    ${D}├── ios/           iOS app${NC}"
+  echo -e "    ${D}├── web/           Application${NC}"
   echo -e "    ${D}└── self-hosted/   CLI & scripts${NC}"
 }
 
@@ -363,38 +361,17 @@ show_success() {
   echo -e "    ${G}╚═══════════════════════════════════════════════════╝${NC}"
   echo ""
   echo ""
-  echo -e "    ${B}${W}Get started${NC}"
-  echo -e "    ${D}$(printf '%.0s─' $(seq 1 48))${NC}"
+  echo -e "    ${B}${W}Copiez-collez cette commande pour lancer :${NC}"
   echo ""
-  echo -e "    ${W}1.${NC} Start the server:"
-  echo -e "       ${C}\$ fyxxvault start${NC}"
+  echo -e "    ${C}~/.fyxxvault/bin/fyxxvault start${NC}"
   echo ""
-  echo -e "    ${W}2.${NC} Open in your browser:"
-  echo -e "       ${C}➜ http://localhost:${PORT}${NC}"
-  echo ""
-  echo -e "    ${W}3.${NC} Open the management panel:"
-  echo -e "       ${C}\$ fyxxvault-panel${NC}"
+  echo -e "    ${D}Puis ouvrez :${NC} ${C}http://localhost:${PORT}${NC}"
   echo ""
   echo ""
-  echo -e "    ${B}${W}Useful commands${NC}"
-  echo -e "    ${D}$(printf '%.0s─' $(seq 1 48))${NC}"
-  echo ""
-  echo -e "    ${C}fyxxvault start${NC}      ${D}Start the server${NC}"
-  echo -e "    ${C}fyxxvault stop${NC}       ${D}Stop the server${NC}"
-  echo -e "    ${C}fyxxvault status${NC}     ${D}Server status & DB info${NC}"
-  echo -e "    ${C}fyxxvault backup${NC}     ${D}Backup the database${NC}"
-  echo -e "    ${C}fyxxvault-panel${NC}      ${D}Open management panel${NC}"
-  echo ""
-  echo ""
-  echo -e "    ${D}Data:  ~/.fyxxvault/data/fyxxvault.db${NC}"
-  echo -e "    ${D}Logs:  ~/.fyxxvault/logs/fyxxvault.log${NC}"
-  echo -e "    ${D}App:   ~/.fyxxvault/app/${NC}"
+  echo -e "    ${D}Apres avoir redemarre votre terminal, vous pourrez${NC}"
+  echo -e "    ${D}utiliser directement :${NC} ${C}fyxxvault start${NC}"
   echo ""
   echo -e "    ${V}Your passwords. Your server. Your rules.${NC}"
-  echo ""
-
-  # Restart shell hint
-  echo -e "    ${Y}!${NC}  ${D}Run${NC} source ~/.zshrc ${D}or restart your terminal for CLI access${NC}"
   echo ""
 }
 

@@ -1,54 +1,38 @@
 # FyxxVault — Windows
 
-## Installation
+## 1. Installer
 
-**Methode 1 — Double-clic :**
+Ouvrez **PowerShell** (clic droit menu Demarrer → Terminal) et collez :
 
-1. Telecharger [Install FyxxVault.bat](https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/windows/Install%20FyxxVault.bat)
-2. Double-cliquer dessus
-3. Si SmartScreen bloque : "Informations complementaires" > "Executer quand meme"
-
-**Methode 2 — PowerShell :**
-
-```powershell
+```
 irm https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/windows/install.ps1 | iex
 ```
 
-Puis lancez :
+L'installation est 100% automatique (environ 2 minutes).
 
-```powershell
+## 2. Lancer
+
+Fermez et rouvrez PowerShell, puis tapez :
+
+```
 fyxxvault start
 ```
 
-Ouvrez **http://localhost:3000** — c'est pret.
+## 3. Ouvrir
+
+Allez sur **http://localhost:3000** dans votre navigateur et creez votre compte.
 
 ---
 
 ## Prerequis
 
-| | |
-|---|---|
-| **Windows** | 10 ou 11 |
-| **Node.js** | 18+ — [nodejs.org](https://nodejs.org) |
-| **git** | [git-scm.com](https://git-scm.com/download/win) |
-
----
-
-## Commandes
-
-```powershell
-fyxxvault start        # Demarrer le serveur
-fyxxvault stop         # Arreter
-fyxxvault status       # Statut + infos DB
-fyxxvault backup       # Sauvegarder la base
-fyxxvault check        # Verification d'integrite
-```
-
----
+- **Windows 10 ou 11**
+- **Node.js 18+** → [Telecharger ici](https://nodejs.org)
+- **git** → [Telecharger ici](https://git-scm.com/download/win)
 
 ## Desinstaller
 
-```powershell
+```
 fyxxvault stop
 Remove-Item -Recurse -Force "$env:USERPROFILE\.fyxxvault"
 ```

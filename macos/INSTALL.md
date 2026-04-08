@@ -1,49 +1,38 @@
 # FyxxVault — macOS
 
-## Installation
+## 1. Installer
 
-Ouvrez **Terminal** et collez :
+Ouvrez **Terminal** (Spotlight → tapez "Terminal") et collez cette ligne :
 
-```bash
+```
 curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/macos/install.sh | bash
 ```
 
-Puis lancez :
+L'installation est 100% automatique (environ 2 minutes).
 
-```bash
-fyxxvault start
+## 2. Lancer
+
+A la fin de l'installation, copiez la commande affichee :
+
+```
+~/.fyxxvault/bin/fyxxvault start
 ```
 
-Ouvrez **http://localhost:3000** — c'est pret.
+## 3. Ouvrir
+
+Allez sur **http://localhost:3000** dans votre navigateur et creez votre compte.
 
 ---
 
 ## Prerequis
 
-| | |
-|---|---|
-| **macOS** | 12+ (Monterey ou plus recent) |
-| **Node.js** | 18+ — [nodejs.org](https://nodejs.org) |
-| **git** | `xcode-select --install` |
-
----
-
-## Commandes
-
-```bash
-fyxxvault start        # Demarrer le serveur
-fyxxvault stop         # Arreter
-fyxxvault status       # Statut + infos DB
-fyxxvault backup       # Sauvegarder la base
-fyxxvault check        # Verification d'integrite
-fyxxvault-panel        # Panel de gestion
-```
-
----
+- **macOS 12+** (Monterey ou plus recent)
+- **Node.js 18+** → [Telecharger ici](https://nodejs.org)
+- **git** → Tapez `xcode-select --install` dans Terminal
 
 ## Desinstaller
 
-```bash
-fyxxvault stop
+```
+~/.fyxxvault/bin/fyxxvault stop
 rm -rf ~/.fyxxvault
 ```
