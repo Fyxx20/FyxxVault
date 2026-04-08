@@ -20,7 +20,14 @@ export const GET: RequestHandler = async ({ cookies }) => {
 	const user = db.getUserById(userId);
 	if (!profile) return json({ error: 'Profile not found' }, { status: 404 });
 
-	return json({ ...profile, email: user?.email });
+	// Normalize field names for client compatibility
+	return json({
+		wrapped_vek: profile.encrypted_vek,
+		vek_salt: profile.vek_salt,
+		vek_iv: profile.vek_iv,
+		vek_rounds: 210_000,
+		email: user?.email
+	});
 };
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
@@ -37,11 +44,14 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	const passwordHash = await hashPassword(password);
 
 	db.createUser(userId, email, passwordHash);
-	db.upsertProfile({
-		id: userId,
-		wrapped_vek: encrypted_vek,
+	db.createProfile({
+		user_id: userId,
+		encrypted_vek: encrypted_vek,
 		vek_salt,
-		vek_rounds: 100000
+		vek_iv: vek_iv || '',
+		master_hint: master_hint || '',
+		is_pro: 1,
+		created_at: new Date().toISOString()
 	});
 
 	cookies.set('session_user', userId, {
@@ -61,13 +71,13 @@ export const PUT: RequestHandler = async ({ request, cookies }) => {
 	const { encrypted_vek, vek_salt, vek_iv, master_hint } = await request.json();
 
 	const updates: Record<string, string> = {};
-	if (encrypted_vek) updates.wrapped_vek = encrypted_vek;
+	if (encrypted_vek) updates.encrypted_vek = encrypted_vek;
 	if (vek_salt) updates.vek_salt = vek_salt;
 
 	if (Object.keys(updates).length === 0) {
 		return json({ error: 'No fields to update' }, { status: 400 });
 	}
 
-	db.updateProfile(userId, updates as { wrapped_vek: string; vek_salt: string });
+	db.updateProfile(userId, updates as Partial<{ encrypted_vek: string; vek_salt: string }>);
 	return json({ success: true });
 };

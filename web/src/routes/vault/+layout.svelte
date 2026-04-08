@@ -37,10 +37,10 @@
 	const isAdmin = $derived(auth.user?.email === ADMIN_EMAIL);
 	const showMaintenance = $derived(maintenanceMode && !isAdmin && maintenanceChecked);
 
-	// Auth guards
+	// Auth guards — redirect to unlock (no login page anymore)
 	$effect(() => {
 		if (!auth.loading && !auth.isAuthenticated) {
-			goto('/login');
+			goto('/vault/unlock');
 		}
 	});
 
@@ -124,8 +124,8 @@
 		setTimeout(async () => {
 			showLogoutToast = false;
 			resetVault();
-			await logout();
-			goto('/login');
+			lockVault();
+			goto('/vault/unlock');
 		}, 1300);
 	}
 </script>
@@ -291,11 +291,12 @@
 			<div class="relative z-10 px-3 py-2">
 				<div class="user-section-card p-2.5 rounded-xl mb-1">
 					<div class="flex items-center gap-3">
-						<div class="user-avatar w-9 h-9 rounded-full bg-gradient-to-br from-[var(--fv-cyan)] to-[var(--fv-violet)] flex items-center justify-center text-xs font-bold text-white">
-							{auth.user?.email?.charAt(0).toUpperCase() ?? '?'}
+						<div class="user-avatar w-9 h-9 rounded-full bg-gradient-to-br from-[var(--fv-cyan)] to-[var(--fv-violet)] flex items-center justify-center">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
 						</div>
 						<div class="flex-1 min-w-0">
-							<p class="text-xs text-white font-medium truncate">{auth.user?.email ?? ''}</p>
+							<p class="text-xs text-white font-medium">Coffre local</p>
+							<p class="text-[10px] text-[var(--fv-ash)]">Self-hosted</p>
 						</div>
 					</div>
 				</div>
@@ -304,11 +305,9 @@
 					class="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-[var(--fv-smoke)] hover:text-[var(--fv-danger)] hover:bg-[var(--fv-danger)]/10 transition-all duration-200"
 				>
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-						<polyline points="16 17 21 12 16 7"/>
-						<line x1="21" y1="12" x2="9" y2="12"/>
+						<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
 					</svg>
-					{t('sidebar.logout')}
+					Verrouiller
 				</button>
 			</div>
 			</div><!-- end bottom section -->

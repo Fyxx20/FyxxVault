@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getAuthState, unlockVault, initAuth } from '$lib/stores/auth.svelte';
+	import { onMount } from 'svelte';
+	import { getAuthState, unlockVault, initAuth, login } from '$lib/stores/auth.svelte';
 	import { t } from '$lib/i18n.svelte';
 
 	const auth = getAuthState();
@@ -10,15 +11,19 @@
 	let error = $state('');
 	let unlockSuccess = $state(false);
 	let errorKey = $state(0);
+	let needsLogin = $state(false);
 
-	// Initialize auth listener
-	initAuth();
-
-	// Redirect if not authenticated
-	$effect(() => {
-		if (!auth.loading && !auth.isAuthenticated) {
-			goto('/login');
-		}
+	onMount(async () => {
+		await initAuth();
+		// Check if user exists at all
+		try {
+			const res = await fetch('/api/status');
+			const data = await res.json();
+			if (!data.hasUser) {
+				goto('/setup', { replaceState: true });
+				return;
+			}
+		} catch {}
 	});
 
 	// Redirect if already unlocked
@@ -28,10 +33,17 @@
 		}
 	});
 
+	// Check if we need login vs just unlock
+	$effect(() => {
+		if (!auth.loading && !auth.isAuthenticated) {
+			needsLogin = true;
+		}
+	});
+
 	async function handleUnlock() {
 		error = '';
 		if (!masterPassword) {
-			error = t('unlock.error.required');
+			error = 'Mot de passe requis.';
 			errorKey++;
 			return;
 		}
@@ -39,21 +51,27 @@
 		loading = true;
 
 		try {
-			const result = await unlockVault(masterPassword);
+			let result;
+			if (needsLogin) {
+				// Need to login first (no session), then unlock
+				result = await login('local@fyxxvault', masterPassword);
+			} else {
+				// Already authenticated, just unlock
+				result = await unlockVault(masterPassword);
+			}
+
 			if (result.success) {
 				unlockSuccess = true;
 				setTimeout(() => goto('/vault'), 800);
 			} else {
-				error = result.error || t('unlock.error.failed');
+				error = result.error || 'Mot de passe incorrect.';
 				errorKey++;
 			}
 		} catch (e: any) {
-			if (e?.message?.includes('Web Crypto API')) {
-				error = t('unlock.error.crypto');
-			} else if (e?.name === 'OperationError' || e?.message?.includes('decrypt') || e?.message?.includes('importKey')) {
-				error = t('unlock.error.decrypt');
+			if (e?.name === 'OperationError' || e?.message?.includes('decrypt')) {
+				error = 'Mot de passe maitre incorrect.';
 			} else {
-				error = e.message || t('unlock.error.unknown');
+				error = e.message || 'Erreur inconnue.';
 			}
 			errorKey++;
 		} finally {
@@ -63,7 +81,7 @@
 </script>
 
 <svelte:head>
-	<title>{t('unlock.title')} — FyxxVault</title>
+	<title>Deverrouiller — FyxxVault</title>
 </svelte:head>
 
 <div class="unlock-page min-h-screen flex items-center justify-center px-6 py-20">
@@ -87,10 +105,8 @@
 					</svg>
 				</div>
 			</div>
-			<h1 class="text-2xl font-extrabold text-white tracking-tight">{t('unlock.title')}</h1>
-			<p class="text-sm text-[var(--fv-smoke)] mt-2">
-				{t('unlock.connected_as')} <span class="text-[var(--fv-cyan)]">{auth.user?.email ?? ''}</span>
-			</p>
+			<h1 class="text-2xl font-extrabold text-white tracking-tight">Deverrouiller le coffre</h1>
+			<p class="text-sm text-[var(--fv-smoke)] mt-2">Entre ton mot de passe maitre pour acceder a tes donnees.</p>
 		</div>
 
 		{#if unlockSuccess}
@@ -99,8 +115,8 @@
 				<div class="w-20 h-20 rounded-full bg-[var(--fv-success)]/15 flex items-center justify-center mx-auto mb-4">
 					<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--fv-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12" class="fv-check-draw"/></svg>
 				</div>
-				<p class="text-white font-semibold text-lg">{t('unlock.success')}</p>
-				<p class="text-sm text-[var(--fv-smoke)] mt-1">{t('unlock.redirecting')}</p>
+				<p class="text-white font-semibold text-lg">Coffre deverrouille !</p>
+				<p class="text-sm text-[var(--fv-smoke)] mt-1">Redirection...</p>
 			</div>
 		{:else}
 			<!-- Unlock form -->
@@ -119,7 +135,7 @@
 
 					<!-- Master password -->
 					<div>
-						<label for="master-password" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">{t('unlock.master_password')}</label>
+						<label for="master-password" class="block text-xs font-semibold text-[var(--fv-smoke)] uppercase tracking-wider mb-2">Mot de passe maitre</label>
 						<input
 							id="master-password"
 							type="password"
@@ -146,27 +162,21 @@
 					<button type="submit" disabled={loading} class="unlock-submit-btn w-full py-4 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all duration-250 {loading ? 'opacity-60 cursor-not-allowed' : ''}">
 						{#if loading}
 							<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-							{t('unlock.submitting')}
+							Deverrouillage...
 						{:else}
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-							{t('unlock.submit')}
+							Deverrouiller
 						{/if}
 					</button>
-
-					<div class="text-center">
-						<a href="/login" class="text-xs text-[var(--fv-cyan)] hover:underline transition-colors duration-200">
-							{t('unlock.back_to_login')}
-						</a>
-					</div>
 				</form>
 
 				<p class="text-center text-xs text-[var(--fv-ash)] mt-5">
-					{t('unlock.local_info')}
+					Tes donnees sont chiffrees localement. Seul ton mot de passe peut les deverrouiller.
 				</p>
 			</div>
 		{/if}
 
-		<!-- Powered by footer -->
+		<!-- Footer -->
 		<p class="text-center text-[10px] text-[var(--fv-ash)]/60 mt-8 flex items-center justify-center gap-1.5">
 			<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
 			Powered by AES-256-GCM
@@ -175,14 +185,12 @@
 </div>
 
 <style>
-	/* Page background */
 	.unlock-page {
 		position: relative;
 		background: var(--fv-abyss);
 		overflow: hidden;
 	}
 
-	/* Animated gradient mesh */
 	.unlock-bg-mesh {
 		position: fixed;
 		inset: 0;
@@ -198,37 +206,19 @@
 		100% { background-position: 100% 100%, 0% 0%; }
 	}
 
-	/* Background orbs */
 	.unlock-orb {
 		position: absolute;
 		border-radius: 50%;
 		filter: blur(120px);
 		pointer-events: none;
 	}
-	.unlock-orb-1 {
-		top: 25%;
-		left: 20%;
-		width: 400px;
-		height: 400px;
-		background: var(--fv-cyan);
-		opacity: 0.06;
-		animation: orbFloat 20s ease-in-out infinite alternate;
-	}
-	.unlock-orb-2 {
-		bottom: 25%;
-		right: 20%;
-		width: 400px;
-		height: 400px;
-		background: var(--fv-violet);
-		opacity: 0.06;
-		animation: orbFloat 20s ease-in-out infinite alternate-reverse;
-	}
+	.unlock-orb-1 { top: 25%; left: 20%; width: 400px; height: 400px; background: var(--fv-cyan); opacity: 0.06; animation: orbFloat 20s ease-in-out infinite alternate; }
+	.unlock-orb-2 { bottom: 25%; right: 20%; width: 400px; height: 400px; background: var(--fv-violet); opacity: 0.06; animation: orbFloat 20s ease-in-out infinite alternate-reverse; }
 	@keyframes orbFloat {
 		0% { transform: translate(0, 0); }
 		100% { transform: translate(30px, -20px); }
 	}
 
-	/* Logo icon with glow */
 	.unlock-logo-icon {
 		box-shadow: 0 0 30px rgba(0, 212, 255, 0.25), 0 0 60px rgba(138, 92, 246, 0.15);
 		animation: logoGlow 3s ease-in-out infinite;
@@ -238,7 +228,6 @@
 		50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.35), 0 0 80px rgba(138, 92, 246, 0.2); transform: scale(1.03); }
 	}
 
-	/* Unlock card glass */
 	.unlock-card {
 		background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
 		backdrop-filter: blur(24px);
@@ -248,7 +237,6 @@
 		box-shadow: 0 16px 64px rgba(0,0,0,0.3);
 	}
 
-	/* Lock icon with pulse glow ring */
 	.unlock-lock-icon {
 		background: rgba(255,255,255,0.04);
 		border: 1px solid rgba(255,255,255,0.08);
@@ -260,7 +248,6 @@
 		50% { box-shadow: 0 0 0 12px rgba(0, 212, 255, 0.05), 0 0 30px rgba(0, 212, 255, 0.1); }
 	}
 
-	/* Input with cyan glow on focus */
 	.unlock-input {
 		background: rgba(255,255,255,0.04);
 		border: 1px solid rgba(255,255,255,0.1);
@@ -271,11 +258,12 @@
 		background: rgba(255,255,255,0.06);
 	}
 
-	/* Submit button: gradient with shimmer */
 	.unlock-submit-btn {
 		background: linear-gradient(135deg, var(--fv-cyan), var(--fv-violet));
 		position: relative;
 		overflow: hidden;
+		border: none;
+		cursor: pointer;
 	}
 	.unlock-submit-btn::after {
 		content: '';
