@@ -38,43 +38,23 @@ Most password managers store your data on their servers, charge monthly fees, or
 
 ## Quick Start
 
-Choose your platform and run the one-line installer:
+Choose your platform, download the installer, and double-click:
 
-| Platform | Command |
-|----------|---------|
-| **macOS** | `curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/macos/install.sh \| bash` |
-| **Linux** | `curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/linux/install.sh \| bash` |
-| **Windows** | `irm https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/windows/install.ps1 \| iex` |
+| Platform | Download | Alternative |
+|----------|----------|-------------|
+| **macOS** | [Install FyxxVault.command](macos/) | `curl -fsSL .../macos/install.sh \| bash` |
+| **Linux** | [Install FyxxVault.sh](linux/) | `curl -fsSL .../linux/install.sh \| bash` |
+| **Windows** | [Install FyxxVault.bat](windows/) | `irm .../windows/install.ps1 \| iex` |
 
-> Detailed guides: [macOS](macos/INSTALL.md) · [Linux](linux/INSTALL.md) · [Windows](windows/INSTALL.md)
+> **Step-by-step guides:** [macOS](macos/INSTALL.md) · [Linux](linux/INSTALL.md) · [Windows](windows/INSTALL.md)
 
-The animated installer checks requirements, downloads, builds, and sets up the CLI — all in one go.
-
-Then start the server:
+The installer downloads, builds, and sets everything up. Then:
 
 ```bash
 fyxxvault start
 ```
 
-Open **http://localhost:3000** and create your account.
-
-### Management Panel
-
-Run `fyxxvault-panel` to open an interactive terminal dashboard with:
-- **Live server status** — PID, uptime, port
-- **Database stats** — size, users, entries, backups
-- **One-key actions** — start/stop/restart, backup, integrity check, logs, security audit
-- **Port configuration** — change port on the fly
-- **Auto-update** — pull latest & rebuild
-
-### Manual install
-
-```bash
-git clone https://github.com/Fyxx20/FyxxVault.git
-cd FyxxVault/web
-npm install && npm run build
-node build/index.js
-```
+Open **http://localhost:3000** — done.
 
 ### CLI Commands
 
@@ -103,7 +83,6 @@ fyxxvault uninstall    # Uninstall instructions
 | Dark web monitoring (HIBP) | :white_check_mark: |
 | Identity generator | :white_check_mark: |
 | Secure sharing | :white_check_mark: |
-| Chrome extension with autofill | :white_check_mark: |
 | CSV import (Chrome, 1Password, Bitwarden, Samsung Pass) | :white_check_mark: |
 | CSV / JSON export | :white_check_mark: |
 | Emergency Kit PDF | :white_check_mark: |
@@ -118,7 +97,7 @@ fyxxvault uninstall    # Uninstall instructions
                     Your Device
 ┌─────────────────────────────────────────────┐
 │                                             │
-│   Browser / Extension                       │
+│   Browser                                   │
 │   ┌───────────────────────────────┐         │
 │   │  AES-256-GCM encryption      │         │
 │   │  PBKDF2-SHA256 key derivation │         │
@@ -171,7 +150,6 @@ FyxxVault implements a **zero-knowledge architecture**:
 | Web app | SvelteKit 5, Svelte 5, Tailwind CSS 4, TypeScript |
 | Server | SvelteKit + adapter-node |
 | Database | SQLite via better-sqlite3 (WAL mode) |
-| Extension | Chrome MV3, TypeScript, Vite |
 | Encryption | Web Crypto API (AES-256-GCM, PBKDF2-SHA256) |
 | Auth | Cookie-based sessions, PBKDF2 password hashing |
 
@@ -181,26 +159,10 @@ FyxxVault implements a **zero-knowledge architecture**:
 
 ```
 FyxxVault/
-├── web/                        # SvelteKit web application
-│   ├── src/
-│   │   ├── lib/
-│   │   │   ├── server/db.ts    # SQLite database module
-│   │   │   ├── stores/         # Auth & vault state (Svelte 5 runes)
-│   │   │   ├── emergencyKit.ts # PDF emergency kit generator
-│   │   │   └── translations/   # i18n (fr/en)
-│   │   └── routes/
-│   │       ├── api/            # REST endpoints
-│   │       │   ├── auth/       # Login
-│   │       │   ├── vault/      # CRUD
-│   │       │   ├── profile/    # Registration & profile
-│   │       │   └── panel/      # Admin (status, backup, logs)
-│   │       ├── vault/          # Main app pages
-│   │       └── panel/          # Admin dashboard
-│   └── build/                  # Production output (adapter-node)
-├── extension/                  # Chrome browser extension (MV3)
-├── macos/                      # macOS installer + guide
-├── linux/                      # Linux installer + guide
-├── windows/                    # Windows installer + guide
+├── macos/                      # macOS: double-click installer + guide
+├── linux/                      # Linux: double-click installer + guide
+├── windows/                    # Windows: double-click installer + guide
+├── web/                        # Application source code
 ├── self-hosted/
 │   ├── bin/fyxxvault.js        # CLI tool
 │   └── scripts/init-db.js     # Database initializer
