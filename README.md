@@ -40,8 +40,14 @@ Most password managers store your data on their servers, charge monthly fees, or
 
 ### One-line install
 
+**macOS / Linux:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/install.ps1 | iex
 ```
 
 The animated installer will:
