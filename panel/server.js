@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import http from 'http';
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
@@ -16,14 +16,33 @@ const LOG_FILE = path.join(LOG_DIR, 'fyxxvault.log');
 // ─── Process helpers ───
 
 function isRunning() {
-  if (!fs.existsSync(PID_FILE)) return false;
-  const pid = parseInt(fs.readFileSync(PID_FILE, 'utf8').trim());
-  try { process.kill(pid, 0); return true; } catch { return false; }
+  // First check PID file
+  if (fs.existsSync(PID_FILE)) {
+    const pid = parseInt(fs.readFileSync(PID_FILE, 'utf8').trim());
+    try { process.kill(pid, 0); return true; } catch {}
+  }
+  // Fallback: check if port is responding
+  return isPortAlive();
+}
+
+function isPortAlive() {
+  try {
+    const result = execSync(`lsof -ti:${VAULT_PORT} 2>/dev/null`, { encoding: 'utf8' }).trim();
+    return result.length > 0;
+  } catch { return false; }
 }
 
 function getPid() {
-  if (!fs.existsSync(PID_FILE)) return null;
-  return parseInt(fs.readFileSync(PID_FILE, 'utf8').trim());
+  if (fs.existsSync(PID_FILE)) {
+    const pid = parseInt(fs.readFileSync(PID_FILE, 'utf8').trim());
+    try { process.kill(pid, 0); return pid; } catch {}
+  }
+  // Fallback: find PID from port
+  try {
+    const result = execSync(`lsof -ti:${VAULT_PORT} 2>/dev/null`, { encoding: 'utf8' }).trim();
+    if (result) return parseInt(result.split('\n')[0]);
+  } catch {}
+  return null;
 }
 
 function getDbSize() {
@@ -70,11 +89,15 @@ function startServer() {
 function stopServer() {
   if (!isRunning()) return { ok: false, error: 'not_running' };
   const pid = getPid();
-  try {
-    process.kill(pid, 'SIGTERM');
-    // Also kill child processes (the node server spawns children)
-    try { process.kill(-pid, 'SIGTERM'); } catch {}
-  } catch {}
+  if (pid) {
+    try {
+      process.kill(pid, 'SIGTERM');
+      try { process.kill(-pid, 'SIGTERM'); } catch {}
+    } catch {}
+  } else {
+    // Fallback: kill by port
+    try { execSync(`lsof -ti:${VAULT_PORT} | xargs kill 2>/dev/null`); } catch {}
+  }
   if (fs.existsSync(PID_FILE)) fs.unlinkSync(PID_FILE);
   return { ok: true, pid };
 }
