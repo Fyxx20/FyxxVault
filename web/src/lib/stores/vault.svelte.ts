@@ -176,7 +176,7 @@ export async function toggleFavorite(id: string): Promise<void> {
 
 // ─── Export vault as CSV ───
 export function exportCSV(): string {
-	const headers = ['Title', 'Username', 'Password', 'Website', 'Category', 'Notes', 'Tags'];
+	const headers = ['Title', 'Username', 'Password', 'Website', 'Category', 'Notes', 'Tags', 'TOTP'];
 	const rows = _entries.map((e) => [
 		e.title,
 		e.username,
@@ -184,7 +184,8 @@ export function exportCSV(): string {
 		e.website,
 		e.category,
 		e.notes.replace(/\n/g, ' '),
-		e.tags.join('; ')
+		e.tags.join('; '),
+		e.mfaSecret || ''
 	]);
 
 	const csvContent = [
