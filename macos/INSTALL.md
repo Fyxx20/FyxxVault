@@ -3,10 +3,11 @@
 ## Installation
 
 1. Telecharger **[Install FyxxVault.command](https://raw.githubusercontent.com/Fyxx20/FyxxVault/main/macos/Install%20FyxxVault.command)**
-2. Double-cliquer dessus
-3. C'est tout
+2. **Clic droit** sur le fichier > **Ouvrir** (important : ne pas double-cliquer)
+3. Cliquer **Ouvrir** dans la popup de confirmation
+4. L'installation se lance automatiquement
 
-> Si macOS bloque le fichier : clic droit > Ouvrir > Ouvrir quand meme
+> **Pourquoi clic droit ?** macOS bloque par defaut les fichiers telecharges d'internet. Le clic droit > Ouvrir permet de contourner cette protection une seule fois.
 
 ### Ou via Terminal
 
